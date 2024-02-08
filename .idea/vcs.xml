@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/OSM-binary" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/benchmark" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/cpp-statsd-client" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/cxxopts" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/date" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/dirent" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/fastcov" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/googletest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/just_gtfs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/just_gtfs/doctest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/libosmium" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/libosmium/test/data-tests/osm-testdata" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/lz4" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/microtar" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/protozero" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/pybind11" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/rapidjson" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/rapidjson/thirdparty/gtest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/robin-hood-hashing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/valhalla/third_party/tz" vcs="Git" />
+  </component>
+</project>
