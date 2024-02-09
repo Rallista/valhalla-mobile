@@ -1,5 +1,7 @@
 #/bin/sh
 
+set -e
+
 # if the first argument is clean, then clean the build directory
 if [ "$1" == "clean" ]; then
     echo "Cleaning the build directory"

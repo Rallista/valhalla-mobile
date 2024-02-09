@@ -24,7 +24,10 @@ let package = Package(
         .target(
             name: "ValhallaObjc",
             dependencies: ["ValhallaWrapper"],
-            path: "apple/Sources/ValhallaObjc"
+            path: "apple/Sources/ValhallaObjc",
+            linkerSettings: [
+                .linkedLibrary("z"),
+            ]
         ),
         .binaryTarget(
             name: "ValhallaWrapper",

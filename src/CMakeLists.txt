@@ -10,6 +10,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+# set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/install/lib)
+# set(CMAKE_INSTALL_BINDIR ${CMAKE_BINARY_DIR}/install/bin)
+
+# Include FetchContent for Protobuf & Curl
+include(FetchContent)
 
 # Disable package config for statics.
 # TODO: Delete this
@@ -38,7 +43,6 @@ message(STATUS "Protobuf fetching from github...")
 
 # Fetch Protobuf source code
 # https://cmake.org/cmake/help/latest/module/FetchContent.html#overriding-where-to-find-cmakelists-txt
-include(FetchContent)
 FetchContent_Declare(
     protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
@@ -77,7 +81,7 @@ target_link_libraries(valhalla_wrapper PRIVATE protobuf::libprotobuf)
 
 # VALHALLA ---------------------------------------------------------
 
-add_subdirectory(valhalla)
+add_subdirectory(valhalla EXCLUDE_FROM_ALL)
 target_link_libraries(valhalla_wrapper PRIVATE valhalla)
 target_include_directories(valhalla_wrapper PRIVATE valhalla/valhalla)
 install(DIRECTORY valhalla/valhalla DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
@@ -110,16 +114,30 @@ endforeach()
 
 # Date (valhalla/third_party) ---------------------------------------------------------
 
-install(DIRECTORY valhalla/third_party/date/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+if (APPLE)
+    # Configure the date library
+    set(BUILD_TZ_LIB ON CACHE INTERNAL "")
+    set(MANUAL_TZ_DB ON CACHE INTERNAL "")
+
+    add_subdirectory(valhalla/third_party/date date)
+    target_link_libraries(valhalla_wrapper PRIVATE date)
+    target_include_directories(valhalla_wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+endif()
 
 # Install the valhalla_wrapper library
 
 install(TARGETS 
     valhalla
+    valhalla-baldr
     valhalla-loki
-    valhalla-thor
+    valhalla-meili
+    valhalla-midgard
     valhalla-odin
-    valhalla-proto
+    valhalla-sif
+    valhalla-skadi
+    valhalla-thor
     valhalla-tyr
-    valhalla_wrapper 
+    valhalla-proto
+    valhalla_wrapper
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
