@@ -10,11 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
-# set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/install/lib)
-# set(CMAKE_INSTALL_BINDIR ${CMAKE_BINARY_DIR}/install/bin)
-
-# Include FetchContent for Protobuf & Curl
-include(FetchContent)
 
 # Disable package config for statics.
 # TODO: Delete this
@@ -24,9 +19,11 @@ include(FetchContent)
 if (APPLE)
     message(STATUS "Configured for APPLE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-deprecated-builtins")
-    # TODO: Delete if not needed
-    # set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.valhalla.libvalhalla_wrapper")
-    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
+    # TODO: Delete/clean up
+    # set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.valhalla.valhalla-mobile")
+    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer")
+    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
 endif()
 
 # Create the project library
@@ -43,6 +40,7 @@ message(STATUS "Protobuf fetching from github...")
 
 # Fetch Protobuf source code
 # https://cmake.org/cmake/help/latest/module/FetchContent.html#overriding-where-to-find-cmakelists-txt
+include(FetchContent)
 FetchContent_Declare(
     protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
