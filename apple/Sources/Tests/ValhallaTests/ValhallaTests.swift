@@ -37,10 +37,17 @@ final class TestValhallaActor: ValhallaTestCase {
         let response = valhalla.route(request: request)
         
         guard let data = response.data(using: .utf8) else {
+            print(response)
             XCTFail("Response could not be converted to utf8 data for parsing.")
             return
         }
         
-        XCTAssertEqual(try serializeValue(data, keys: "trip", "status_message"), "Found route between points")
+        guard let statusMessage = try? serializeValue(data, keys: "trip", "status_message") else {
+            print(response)
+            XCTFail("Could not parse status message from response.")
+            return
+        }
+
+        XCTAssertEqual(statusMessage, "Found route between points")
     }
 }
