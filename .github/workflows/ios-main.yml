@@ -20,7 +20,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Build for iOS & iOS Simulator
-      run: ./build.sh ios clean
+      run: |
+        git submodule update --init --recursive
+        ./build.sh ios clean
 
     - name: Test on ${{ matrix.destination }}
       run: xcodebuild -scheme ${scheme} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
