@@ -82,6 +82,7 @@ jobs:
         prerelease: true
         draft: true
         generateReleaseNotes: true
+        tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
       
     - name: Generate and commit the Package.swift
