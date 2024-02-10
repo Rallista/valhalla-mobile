@@ -16,6 +16,10 @@ jobs:
         ]
 
     steps:
+    - name: Install conan
+      run: |
+        brew install conan
+
     - name: Checkout Valhalla
       uses: actions/checkout@v4
 
