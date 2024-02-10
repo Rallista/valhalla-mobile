@@ -5,12 +5,22 @@ set -e
 
 # if the first argument is clean, then clean the build directory
 if [ "$2" == "clean" ]; then
-    echo "Cleaning the build directory"
-    rm -rf build
+    if [ "$1" == "ios" ]; then
+        echo "Cleaning the iOS build directory"
+        rm -rf build/iphoneos
+        rm -rf build/iphonesimulator
+        rm -rf build/ios
+    else if [ "$1" == "android" ]; then
+        echo "Cleaning the Android build directory"
+        rm -rf build/android
+    else
+        echo "Cleaning the build directory"
+        rm -rf build
+    fi
 fi
 
 if [ "$2" == "clean-all" ]; then
-    echo "Cleaning the build and protoc directory"
+    echo "Cleaning all, all builds and protoc directory..."
     rm -rf build
     rm -rf protoc
 fi
@@ -23,7 +33,7 @@ else
     echo "Protoc already exists in the ./protoc directory. If you want to rebuild it, delete the directory and run this script again."
 fi
 
-if [ "$1" == "ios" ]; then
+if [ "$1" == "ios" ] || [ "$1" == "all" ]; then
     echo "Building iOS"
     ./scripts/build_apple.sh iphoneos
     ./scripts/build_apple.sh iphonesimulator
@@ -32,14 +42,15 @@ if [ "$1" == "ios" ]; then
     ./scripts/create_xcframework.sh
 fi
 
-if [ "$1" == "android" ]; then
+if [ "$1" == "android" ] || [ "$1" == "all" ]; then
     echo "Building Android..."
     ./scripts/build_android.sh arm64-v8a
     ./scripts/build_android.sh armeabi-v7a
     ./scripts/build_android.sh x86_64
     ./scripts/build_android.sh x86
 
-    # TODO: Move the .so files to the correct location
+    echo "Moving Android .so files to the correct directory"
+    ./scripts/move_android_so.sh
 fi
 
 echo "Done!"
