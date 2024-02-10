@@ -24,3 +24,7 @@ xcuserdata
 DerivedData/
 *.xcodeproj
 
+# Artifacts
+valhalla-wrapper.xcframework
+valhalla-wrapper.xcframework.zip
+libvalhalla-wrapper.so

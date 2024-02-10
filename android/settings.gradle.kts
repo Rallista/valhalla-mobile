@@ -13,7 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "valhalla-mobile"
-include(":app")
-include(":valhalla-wrapper")
-include(":wrapper")
+rootProject.name = "valhalla"
+include(":valhalla")

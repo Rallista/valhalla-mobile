@@ -1,0 +1,77 @@
+name: Valhalla Mobile iOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    strategy:
+      matrix:
+        destination: [
+          'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+        ]
+
+    steps:
+    - name: Checkout Valhalla
+      uses: actions/checkout@v4
+
+    - name: Build for iOS & iOS Simulator
+      run: |
+        git submodule update --init --recursive
+        ./build.sh ios clean
+
+    - name: Test on ${{ matrix.destination }}
+      run: xcodebuild -scheme ${scheme} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
+
+    - name: Zip the xcframework
+      run: |
+        cd build/apple
+        zip -r valhalla-wrapper.xcframework.zip valhalla-wrapper.xcframework
+        mv valhalla-wrapper.xcframework.zip ../../
+        cd ../../
+
+    - name: Upload xcframework zip output
+      uses: actions/upload-artifact@v4
+      with:
+        name: valhalla-wrapper.xcframework.zip
+        path: |
+          valhalla-wrapper.xcframework.zip
+
+  release-ios:
+    runs-on: macos-14
+    needs: build-and-test
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+    - name: Checkout Valhalla
+      uses: actions/checkout@v4
+
+    - name: Download the xcframework artifact from the build-and-test
+      uses: actions/download-artifact@v4
+      with:
+        name: valhalla-wrapper.xcframework.zip
+
+    - name: Write the xcframework to Package.swift
+      run: |
+        ./scripts/write_xcframework_spm.sh
+
+    - uses: ncipollo/release-action@v1
+      with:
+        prerelease: true
+        draft: true
+        generateReleaseNotes: true
+        artifacts: "valhalla-wrapper.xcframework.zip"
+      
+    - name: Generate and commit the Package.swift
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "Update Package.swift with new xcframework [ci skip]"
+        git push
+    
