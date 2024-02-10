@@ -1,7 +1,9 @@
 # The MIT License (MIT)
 
-Copyright (c) <year> Adventure Consortium Inc (dba Rallista)
-Copyright (c) 2018-<year> Valhalla contributors  
+Copyright (c) 2024 Adventure Consortium Inc (dba Rallista)
+
+Copyright (c) 2018 Valhalla contributors  
+
 Copyright (c) 2015-2017 Mapillary AB, Mapzen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
