@@ -10,7 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/valhalla_wrapper" />
+            <option value="$PROJECT_DIR$/valhalla-wrapper" />
             <option value="$PROJECT_DIR$/wrapper" />
           </set>
         </option>

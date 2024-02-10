@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 # Set the project name
-project(valhalla_mobile)
+project(valhalla-mobile)
 
 # Valhalla requires at least C++17
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
@@ -11,27 +11,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
-# Disable package config for statics.
-# TODO: Delete this
-# set(WITH_PKGCONFIG OFF)
-
 # Configure OSX
 if (APPLE)
     message(STATUS "Configured for APPLE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-deprecated-builtins")
-    # TODO: Delete/clean up
-    # set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.valhalla.valhalla-mobile")
-    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer")
-    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
-    # set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
-endif()
 
-# Create the project library
+    # tvOS and watchOS modifications
+    if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*") 
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
+    endif()
+endif()
 
 # WRAPPER ---------------------------------------------------------
 
 add_subdirectory(wrapper)
-target_include_directories(valhalla_wrapper PUBLIC wrapper/include)
+target_include_directories(valhalla-wrapper PUBLIC wrapper/include)
 install(DIRECTORY wrapper/include DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # PROTOBUF ---------------------------------------------------------
@@ -75,13 +69,14 @@ if (NOT Protobuf_FOUND)
 endif()
 
 # Link Protobuf
-target_link_libraries(valhalla_wrapper PRIVATE protobuf::libprotobuf)
+
+target_link_libraries(valhalla-wrapper PRIVATE protobuf::libprotobuf)
 
 # VALHALLA ---------------------------------------------------------
 
 add_subdirectory(valhalla EXCLUDE_FROM_ALL)
-target_link_libraries(valhalla_wrapper PRIVATE valhalla)
-target_include_directories(valhalla_wrapper PRIVATE valhalla/valhalla)
+target_link_libraries(valhalla-wrapper PRIVATE valhalla)
+target_include_directories(valhalla-wrapper PRIVATE valhalla/valhalla)
 install(DIRECTORY valhalla/valhalla DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # Valhalla proto files
@@ -118,12 +113,12 @@ if (APPLE)
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
 
     add_subdirectory(valhalla/third_party/date date)
-    target_link_libraries(valhalla_wrapper PRIVATE date)
-    target_include_directories(valhalla_wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
+    target_link_libraries(valhalla-wrapper PRIVATE date)
+    target_include_directories(valhalla-wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif()
 
-# Install the valhalla_wrapper library
+# Install the valhalla-wrapper library
 
 install(TARGETS 
     valhalla
@@ -137,5 +132,5 @@ install(TARGETS
     valhalla-thor
     valhalla-tyr
     valhalla-proto
-    valhalla_wrapper
+    valhalla-wrapper
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

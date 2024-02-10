@@ -16,3 +16,11 @@
 local.properties
 
 .vscode
+
+# Swift PM
+Packages
+.build/
+xcuserdata
+DerivedData/
+*.xcodeproj
+

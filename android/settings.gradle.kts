@@ -15,5 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "valhalla-mobile"
 include(":app")
-include(":valhalla_wrapper")
+include(":valhalla-wrapper")
 include(":wrapper")

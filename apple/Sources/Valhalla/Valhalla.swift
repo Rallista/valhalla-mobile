@@ -12,7 +12,7 @@ public final class Valhalla: ValhallaProviding {
     
     public required init(configPath: String) {
         do {
-            try TZDatabaseManager.injectIntoMain()
+            try TZDatabaseManager.injectIntoLibrary()
         } catch {
             // If you're circumventing this libraries injection, download tzdata.tar and put in your bundle. https://www.iana.org/time-zones
             assertionFailure("tzdata was not inject into Bundle.main. This can be avoided by including tzdata.tar in your main bundle.")

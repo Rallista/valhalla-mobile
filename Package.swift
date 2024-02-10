@@ -5,8 +5,8 @@ let package = Package(
     name: "ValhallaMobile",
     platforms: [
         .iOS(.v13),
-        .watchOS(.v6),
         .tvOS(.v13),
+        .watchOS(.v6),
         .macOS(.v10_13)
     ],
     products: [
@@ -32,13 +32,11 @@ let package = Package(
             name: "ValhallaObjc",
             dependencies: ["ValhallaWrapper"],
             path: "apple/Sources/ValhallaObjc",
-            linkerSettings: [
-                .linkedLibrary("z"),
-            ]
+            linkerSettings: [.linkedLibrary("z")]
         ),
         .binaryTarget(
             name: "ValhallaWrapper",
-            path: "build/valhalla_wrapper.xcframework"
+            path: "build/apple/valhalla-wrapper.xcframework"
         ),
         .testTarget(
             name: "ValhallaTests",
