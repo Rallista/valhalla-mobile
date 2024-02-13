@@ -14,7 +14,7 @@ enum ValhallaFileManager {
             throw ValhallaFileManagerError.systemDirNotFound("applicationSupport")
         }
         
-        let configURL = applicationDir.appendingPathComponent("valhalla/config.json")
+        let configURL = applicationDir.appendingPathComponent("valhalla-config.json")
         let data = try JSONEncoder().encode(config)
 
         try data.write(to: configURL)

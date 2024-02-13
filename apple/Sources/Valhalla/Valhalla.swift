@@ -16,7 +16,7 @@ public final class Valhalla: ValhallaProviding {
 
     public convenience init(_ config: ValhallaConfig) throws {
         let configURL = try ValhallaFileManager.saveConfigTo(config)
-        self.init(configPath: configURL.absoluteString)
+        self.init(configPath: configURL.relativePath)
     }
 
     public required init(configPath: String) {
@@ -41,9 +41,9 @@ public final class Valhalla: ValhallaProviding {
             throw ValhallaError.encodingNotUtf8("resultData")
         }
         
-        if let error = try? JSONDecoder().decode(<#T##type: Decodable.Protocol##Decodable.Protocol#>, from: <#T##Data#>)
-        
-        
+        if let error = try? JSONDecoder().decode(ValhallaErrorModel.self, from: resultData) {
+            throw ValhallaError.valhallaError(error.code, error.message)
+        }
         
         return try JSONDecoder().decode(RouteResponse.self, from: resultData)
     }

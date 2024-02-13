@@ -24,7 +24,6 @@ swiftformat .openapi-temp/OpenAPIClient/Classes/OpenAPIsModels
 # Move the generated files to the correct directory
 mv .openapi-temp/OpenAPIClient/Classes/OpenAPIsModels/* $apple_generated_dir/Models
 mv .openapi-temp/OpenAPIClient/Classes/OpenAPIs/Models.swift $apple_generated_dir/Models/Support/Models.swift
-mv .openapi-temp/OpenAPIClient/Classes/OpenAPIs/Extensions.swift $apple_generated_dir/Models/Support/Extensions.swift
 mv .openapi-temp/OpenAPIClient/Classes/OpenAPIs/Validation.swift $apple_generated_dir/Models/Support/Validation.swift
 
 echo "Generating Valhalla Kotlin..."
