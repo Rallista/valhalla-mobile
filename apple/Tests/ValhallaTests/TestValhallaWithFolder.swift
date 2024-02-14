@@ -1,29 +1,13 @@
+import XCTest
 import ValhallaModels
 @testable import Valhalla
-import XCTest
 
-final class TestValhallaActor: XCTestCase {
-    var defaultConfig = ValhallaConfig(tileExtract: Bundle.module.url(forResource: "TestData/valhalla_tiles", withExtension: "tar"))
+final class TestValhallaWithFolder: XCTestCase {
+    var defaultConfig: ValhallaConfig!
     
-    /// Validate an incorrect configuration (config file not found).
-    func testNoConfigFile() throws {
-        let valhalla = Valhalla(configPath: "missing.json")
-
-        let request = RouteRequest(
-            locations: [
-                RoutingWaypoint(lat: 38.429719, lon: -108.827425),
-                RoutingWaypoint(lat: 38.4604331, lon: -108.8817009)
-            ],
-            costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
-        )
-        
-        do {
-            let _ = try valhalla.route(request: request)
-            XCTFail("route should throw cannot open file missing.json")
-        } catch let error as ValhallaError {
-            XCTAssertEqual(error, .valhallaError(-1, "Cannot open file missing.json"))
-        }
+    override func setUp() async throws {
+        let tilesDirectoryURL = Bundle.module.resourceURL!.appendingPathComponent("TestData/valhalla_tiles", isDirectory: true)
+        defaultConfig = try ValhallaConfig(tilesDir: tilesDirectoryURL)
     }
 
     /// Validate a valhalla error that requires all configuration to be set up properly.
@@ -63,5 +47,6 @@ final class TestValhallaActor: XCTestCase {
         let response = try valhalla.route(request: request)
 
         XCTAssertEqual(response.trip.statusMessage, "Found route between points")
+        XCTAssertEqual(response.trip.legs.first?.shape, "sarhhAlthqnERzHxDvsAx@fa@c@|[uDpn@iJ~h@sMte@yQxd@oUl^ei@nm@sq@rx@sqAzvA}LfN_OdLsZrRo|@l\\ea@jReWbQoSjXiIvKyPf[cJrPaCnEsBfEup@ltAyS|b@oUp`@m~@fuA}\\fa@iQ|NqFtEw_@xSkl@pRc~@bV_a@`H{Qt@oNi@qUsFq|@q]qMsGw]{VqUeTsSmV_Uud@iOqc@ae@idBmXu|@_P}e@oLsWyMcRqNcLoNeIgMyEuOoDgLq@iUg@cVpAm]pFed@`NkWjJ_XjPwQlToOpX{K`^wF~Y_Gfz@wKjcB{Adg@b@nc@nB|UvDvWrJj^z`B`hDtQnYbMdR`p@lq@n^hh@|}AloC~Oja@~Id^~G|g@vBxe@]ji@{Efa@yLzm@sUpi@eQpX_`@ve@}^vc@utAz~AuWpZuLjMsR~I{RlFqU[ic@wLu}Aux@{]gP}WaHua@uE}a@bB{N`Cca@pQe[|WyRjYoPj_@{XfhAiK~`AsDbhAEbt@vFnqA~Fvp@~Lbr@nNf^hR|XvYrXfSpL~TlH~UtElXpItUhKl\\vS~W|W~Zrl@rQpq@jCpW`@vY}Ani@kAvYi@zY|Aph@pBzo@nBxg@fApQhBbPrClMfFjOxIrPzHbKvUvXdIxJ`HhJnInMlG`M`CnGrCfJhClL|@lHnApNb@tRSpSg@fKo@|GuCfPoCfKuCnIcFlLqFnJkHbJkF~EeIbGgL`GoIzCuGtAwGlA{FZgJLiJ_@}K_BgJ}BwJgE{JaGqS_O{hAuz@oxAcdAeNiFq^eI{AQ")
     }
 }
