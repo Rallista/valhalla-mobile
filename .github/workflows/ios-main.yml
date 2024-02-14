@@ -9,13 +9,25 @@ on:
 jobs:
   build-and-test:
     runs-on: macos-14
+    timeout-minutes: 120
     strategy:
       matrix:
+        scheme: [ 
+          ValhallaMobile 
+        ]
         destination: [
           'platform=iOS Simulator,name=iPhone 15,OS=17.2'
         ]
 
     steps:
+    - name: Install conan
+      run: |
+        brew install conan
+
+    - name: Install boost
+      run: |
+        brew install boost
+
     - name: Checkout Valhalla
       uses: actions/checkout@v4
 
@@ -24,8 +36,8 @@ jobs:
         git submodule update --init --recursive
         ./build.sh ios clean
 
-    - name: Test on ${{ matrix.destination }}
-      run: xcodebuild -scheme ${scheme} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
+    - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
+      run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
 
     - name: Zip the xcframework
       run: |
@@ -46,6 +58,7 @@ jobs:
     needs: build-and-test
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout Valhalla
@@ -60,11 +73,16 @@ jobs:
       run: |
         ./scripts/write_xcframework_spm.sh
 
+    - name: Get version tag
+      id: version
+      run: ./scripts/version_bump.sh
+
     - uses: ncipollo/release-action@v1
       with:
         prerelease: true
         draft: true
         generateReleaseNotes: true
+        tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
       
     - name: Generate and commit the Package.swift
@@ -73,5 +91,6 @@ jobs:
         git config user.email github-actions@github.com
         git add .
         git commit -m "Update Package.swift with new xcframework [ci skip]"
+        git tag -a v${{ steps.version.outputs.version }} -m "Version v${{ steps.version.outputs.version }}"
         git push
     

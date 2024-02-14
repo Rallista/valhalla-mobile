@@ -7,7 +7,8 @@ let useLocalBinary = true
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
     name: "ValhallaWrapper",
-    path: "build/apple/valhalla-wrapper.xcframework")
+    path: "build/apple/valhalla-wrapper.xcframework"
+)
 
 // CI will replace the nils with the actual values when building a release
 let binaryURL: String = "https://github.com/Rallista/valhalla-mobile/releases/download//valhalla-wrapper.xcframework.zip"
@@ -17,7 +18,8 @@ if !useLocalBinary {
     binaryTarget = .binaryTarget(
         name: "ValhallaWrapper",
         url: binaryURL,
-        checksum: binaryChecksum)
+        checksum: binaryChecksum
+    )
 }
 
 let package = Package(
@@ -31,18 +33,26 @@ let package = Package(
     products: [
         .library(
             name: "Valhalla",
-            targets: ["Valhalla"])
+            targets: ["Valhalla"]
+        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4")
+        .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.1")),
+        .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
     ],
     targets: [
+        .target(
+            name: "ValhallaModels",
+            dependencies: ["AnyCodable"],
+            path: "apple/Sources/Generated"
+        ),
         .target(
             name: "Valhalla",
             dependencies: [
                 "ValhallaObjc",
                 "ValhallaWrapper",
-                .product(name: "Light-Swift-Untar", package: "Light-Swift-Untar")
+                "ValhallaModels",
+                .product(name: "Light-Swift-Untar", package: "Light-Swift-Untar"),
             ],
             path: "apple/Sources/Valhalla",
             resources: [.copy("SupportData")]
@@ -59,7 +69,7 @@ let package = Package(
             dependencies: ["Valhalla"],
             path: "apple/Tests/ValhallaTests",
             resources: [.copy("TestData")]
-        )
+        ),
     ],
     cLanguageStandard: .gnu17,
     cxxLanguageStandard: .cxx17

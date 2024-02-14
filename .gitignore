@@ -28,3 +28,6 @@ DerivedData/
 valhalla-wrapper.xcframework
 valhalla-wrapper.xcframework.zip
 libvalhalla-wrapper.so
+
+# Openapi temp
+.openapi-temp

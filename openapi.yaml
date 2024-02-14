@@ -1,0 +1,3542 @@
+openapi: 3.0.1
+info:
+  version: 3.0.4
+  title: Valhalla API Definition
+  contact:
+    name: Valhalla
+    url: 'https://github.com/valhalla/valhalla'
+components:
+  schemas:
+    requestId:
+      type: string
+      description: An identifier to disambiguate requests (echoed by the server).
+      example: kesklinn
+    coordinate:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+          description: The latitude of a point in the shape.
+          example: 59.436884
+        lon:
+          type: number
+          format: double
+          description: The longitude of a point in the shape.
+          example: 24.742595
+      required:
+        - lat
+        - lon
+    valhallaLongUnits:
+      type: string
+      enum:
+        - miles
+        - kilometers
+      default: kilometers
+    valhallaLanguages:
+      type: string
+      enum:
+        - bg-BG
+        - ca-ES
+        - cs-CZ
+        - da-DK
+        - de-DE
+        - el-GR
+        - en-GB
+        - en-US-x-pirate
+        - en-US
+        - es-ES
+        - et-EE
+        - fi-FI
+        - fr-FR
+        - hi-IN
+        - hu-HU
+        - it-IT
+        - ja-JP
+        - nb-NO
+        - nl-NL
+        - pl-PL
+        - pt-BR
+        - pt-PT
+        - ro-RO
+        - ru-RU
+        - sk-SK
+        - sl-SI
+        - sv-SE
+        - tr-TR
+        - uk-UA
+      default: en-US
+    simpleRoutingWaypoint:
+      allOf:
+        - $ref: '#/components/schemas/coordinate'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - break
+                - through
+                - via
+                - break_through
+              description: >-
+                A `break` represents the start or end of a leg, and allows reversals. A `through` location is an
+                intermediate waypoint that must be visited between `break`s, but at which reversals are not allowed.
+                A `via` is similar to a `through` except that reversals are allowed. A `break_through` is similar
+                to a `break` in that it can be the start/end of a leg, but does not allow reversals.
+              default: break
+    routingWaypoint:
+      allOf:
+        - $ref: '#/components/schemas/simpleRoutingWaypoint'
+        - type: object
+          properties:
+            heading:
+              type: integer
+              description: >-
+                The preferred direction of travel when starting the route, in integer clockwise degrees from north.
+                North is 0, south is 180, east is 90, and west is 270.
+              minimum: 0
+              maximum: 360
+            heading_tolerance:
+              type: integer
+              description: >-
+                The tolerance (in degrees) determining whether a street is considered the same direction.
+              minimum: 0
+              maximum: 360
+              default: 60
+            minimum_reachability:
+              type: integer
+              description: >-
+                The minimum number of nodes that must be reachable for a given edge to consider that edge as
+                belonging to a connected region. If a candidate edge has fewer connections, it will be considered
+                a disconnected island.
+              minimum: 0
+              default: 50
+            radius:
+              type: integer
+              description: >-
+                The distance (in meters) to look for candidate edges around the location for purposes of snapping
+                locations to the route graph. If there are no candidates within this distance, the closest candidate
+                within a reasonable search distance will be used. This is subject to clamping by internal limits.
+              minimum: 0
+              default: 0
+            rank_candidates:
+              type: boolean
+              description: >-
+                If true, candidates will be ranked according to their distance from the target location as well as other
+                factors. If false, candidates will only be ranked using their distance from the target.
+              default: true
+            preferred_side:
+              type: string
+              enum:
+                - same
+                - opposite
+                - either
+              description: >-
+                If the location is not offset from the road centerline or is closest to an intersection,
+                this option has no effect. Otherwise, the preferred side of street is used to determine
+                whether or not the location should be visited from the same, opposite or either side
+                of the road with respect to the side of the road the given locale drives on.
+            node_snap_tolerance:
+              type: integer
+              description: >-
+                During edge correlation this is the tolerance (in meters) used to determine whether or not to
+                snap to the intersection rather than along the street, if the snap location is within this
+                distance from the intersection, the intersection is used instead.
+              minimum: 0
+              default: 5
+            street_side_tolerance:
+              type: integer
+              description: >-
+                A tolerance in meters from the edge centerline used for determining the side of the street that the
+                location is on. If the distance to the centerline is less than this tolerance, no side will be
+                inferred. Otherwise, the left or right side will be selected depending on the direction of travel.
+              minimum: 0
+              default: 5
+            street_side_max_distance:
+              type: integer
+              description: >-
+                A tolerance in meters from the edge centerline used for determining the side of the street that the
+                location is on. If the distance to the centerline is greater than this tolerance, no side will be
+                inferred. Otherwise, the left or right side will be selected depending on the direction of travel.
+              minimum: 0
+              default: 1000
+            search_filter:
+              type: object
+              properties:
+                exclude_tunnel:
+                  type: boolean
+                  description: Excludes roads marked as tunnels
+                  default: false
+                exclude_bridge:
+                  type: boolean
+                  description: Excludes roads marked as bridges
+                  default: false
+                exclude_ramp:
+                  type: boolean
+                  description: Excludes roads marked as ramps
+                  default: false
+                exclude_closures:
+                  type: boolean
+                  description: Excludes roads marked as closed
+                  default: true
+                min_road_class:
+                  description: The lowest road class allowed
+                  default: service_other
+                  allOf:
+                    - $ref: '#/components/schemas/roadClass'
+                max_road_class:
+                  description: The highest road class allowed
+                  default: motorway
+                  allOf:
+                    - $ref: '#/components/schemas/roadClass'
+    routingResponseWaypoint:
+      allOf:
+        - $ref: '#/components/schemas/simpleRoutingWaypoint'
+        - type: object
+          properties:
+            original_index:
+              type: integer
+              description: The original index of the location (locations may be reordered for optimized routes)
+              minimum: 0
+    mapMatchWaypoint:
+      allOf:
+        - $ref: '#/components/schemas/simpleRoutingWaypoint'
+        - type: object
+          properties:
+            time:
+              type: integer
+              description: >-
+                The timestamp of the waypoint, in seconds. This can inform the map matching algorithm about when the
+                point was measured. A UNIX timestamp, or any increasing integer sequence measuring seconds from some
+                reference point can be used.
+    roadClass:
+      type: string
+      enum:
+        - motorway
+        - trunk
+        - primary
+        - secondary
+        - tertiary
+        - unclassified
+        - residential
+        - service_other
+      description: Class of road (ranked in descending order)
+    costingModel:
+      type: string
+      enum:
+        - auto
+        - bus
+        - taxi
+        - truck
+        - bicycle
+        - bikeshare
+        - motor_scooter
+        - motorcycle
+        - pedestrian
+      description: >-
+        Costing models for determining the most optimal route to take. Note that bikeshare and motorcycle are
+        still in beta. While Valhalla supports multimodal routing, we do not currently process transit data and
+        have excluded it from the list. See https://valhalla.readthedocs.io/en/latest/api/turn-by-turn/api-reference/#costing-models
+        for detailed descriptions of each model.
+    isochroneCostingModel:
+      type: string
+      enum:
+        - auto
+        - bicycle
+        - pedestrian
+    matrixCostingModel:
+      type: string
+      enum:
+        - auto
+        - bus
+        - hov
+        - taxi
+        - truck
+        - bicycle
+        - bikeshare
+        - motor_scooter
+        - motorcycle
+        - pedestrian
+    mapMatchCostingModel:
+      type: string
+      enum:
+        - auto
+        - bicycle
+        - bus
+        - pedestrian
+    costingOptions:
+      type: object
+      properties:
+        auto:
+          $ref: '#/components/schemas/autoCostingOptions'
+        bus:
+          $ref: '#/components/schemas/autoCostingOptions'
+        taxi:
+          $ref: '#/components/schemas/autoCostingOptions'
+        truck:
+          $ref: '#/components/schemas/truckCostingOptions'
+        bicycle:
+          $ref: '#/components/schemas/bicycleCostingOptions'
+        motor_scooter:
+          $ref: '#/components/schemas/motorScooterCostingOptions'
+        motorcycle:
+          $ref: '#/components/schemas/motorcycleCostingOptions'
+        pedestrian:
+          $ref: '#/components/schemas/pedestrianCostingOptions'
+    useFerryCostingOption:
+      type: number
+      format: double
+      description: >-
+        A measure of willingness to take ferries. Values near 0 attempt to avoid ferries, and values near 1
+        will favour them. Note that as some routes may be impossible without ferries, 0 does not guarantee
+        avoidance of them.
+      default: 0.5
+      minimum: 0
+      maximum: 1
+    useLivingStreetsCostingOption:
+      type: number
+      format: double
+      description: >-
+        A measure of willingness to take living streets. Values near 0 attempt to avoid them, and values near 1
+        will favour them. Note that as some routes may be impossible without living streets, 0 does not guarantee
+        avoidance of them. The default value is 0 for trucks; 0.1 for other motor vehicles; 0.5 for bicycles;
+        and 0.6 for pedestrians.
+      minimum: 0
+      maximum: 1
+    useTracksCostingOption:
+      type: number
+      format: double
+      description: >-
+        A measure of willingness to take track roads. Values near 0 attempt to avoid them, and values near 1
+        will favour them. Note that as some routes may be impossible without track roads, 0 does not guarantee
+        avoidance of them. The default value is 0 for automobiles, busses, and trucks; and 0.5 for all other
+        costing modes.
+      minimum: 0
+      maximum: 1
+    servicePenaltyCostingOption:
+      type: integer
+      description: >-
+        A penalty applied to transitions to service roads. This penalty can be used to reduce
+        the likelihood of suggesting a route with service roads unless absolutely necessary.
+        The default penalty is 15 for cars, busses, motor scooters, and motorcycles; and zero for others.
+    serviceFactorCostingOption:
+      type: number
+      format: double
+      description: >-
+        A factor that multiplies the cost when service roads are encountered. The default is 1.2 for cars and
+        busses, and 1 for trucks, motor scooters, and motorcycles.
+      default: 1
+    useHillsCostingOption:
+      type: number
+      format: double
+      description: >-
+        A measure of willingness to take tackle hills. Values near 0 attempt to avoid hills and steeper grades
+        even if it means a longer route, and values near 1 indicates that the user does not fear them.
+        Note that as some routes may be impossible without hills, 0 does not guarantee
+        avoidance of them.
+      default: 0.5
+      minimum: 0
+      maximum: 1
+    baseCostingOptions:
+      type: object
+      properties:
+        maneuver_penalty:
+          type: integer
+          description: A penalty (in seconds) applied when transitioning between roads (determined by name).
+          default: 5
+        gate_cost:
+          type: integer
+          description: The estimated cost (in seconds) when a gate is encountered.
+          default: 15
+        gate_penalty:
+          type: integer
+          description: >-
+            A penalty (in seconds) applied to the route cost when a gate is encountered. This penalty can be used
+            to reduce the likelihood of suggesting a route with gates unless absolutely necessary.
+          default: 300
+        country_crossing_cost:
+          type: integer
+          description: The estimated cost (in seconds) when encountering an international border.
+          default: 600
+        country_crossing_penalty:
+          type: integer
+          description: >-
+            A penalty applied to transitions to international border crossings. This penalty can be used to reduce
+            the likelihood of suggesting a route with border crossings unless absolutely necessary.
+          default: 0
+        service_penalty:
+          $ref: '#/components/schemas/servicePenaltyCostingOption'
+        service_factor:
+          $ref: '#/components/schemas/serviceFactorCostingOption'
+        use_living_streets:
+          $ref: '#/components/schemas/useLivingStreetsCostingOption'
+        use_ferry:
+          $ref: '#/components/schemas/useFerryCostingOption'
+    autoCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/baseCostingOptions'
+        - type: object
+          properties:
+            height:
+              type: number
+              format: double
+              description: The height of the automobile (in meters).
+              default: 1.9
+            width:
+              type: number
+              format: double
+              description: The width of the automobile (in meters).
+              default: 1.6
+            toll_booth_cost:
+              type: integer
+              description: The estimated cost (in seconds) when a toll booth is encountered.
+              default: 15
+            toll_booth_penalty:
+              type: integer
+              description: >-
+                A penalty (in seconds) applied to the route cost when a toll booth is encountered. This penalty can be
+                used to reduce the likelihood of suggesting a route with toll booths unless absolutely necessary.
+              default: 0
+            ferry_cost:
+              type: integer
+              description: The estimated cost (in seconds) when a ferry is encountered.
+              default: 300
+            use_highways:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to take highways. Values near 0 attempt to avoid highways, and values near 1
+                will favour them. Note that as some routes may be impossible without highways, 0 does not guarantee
+                avoidance of them.
+              default: 0.5
+              minimum: 0
+              maximum: 1
+            use_tolls:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to take toll roads. Values near 0 attempt to avoid tolls, and values near 1
+                will favour them. Note that as some routes may be impossible without tolls, 0 does not guarantee
+                avoidance of them.
+              default: 0.5
+              minimum: 0
+              maximum: 1
+            use_tracks:
+              $ref: '#/components/schemas/useTracksCostingOption'
+            top_speed:
+              type: integer
+              description: The top speed (in kph) that the vehicle is capable of travelling.
+              default: 140
+              minimum: 10
+              maximum: 252
+            shortest:
+              type: boolean
+              description: >-
+                If true changes the cost metric to be quasi-shortest (pure distance-based) costing. This will disable ALL
+                other costing factors.
+              default: false
+            ignore_closures:
+              type: boolean
+              description: >-
+                If true, ignores all known closures. This option cannot be set if `location.search_filter.exclude_closures`
+                is also specified.
+              default: false
+            include_hov2:
+              type: boolean
+              description: >-
+                If true, indicates the desire to include HOV roads with a 2-occupant requirement in the route
+                when advantageous.
+              default: false
+            include_hov3:
+              type: boolean
+              description: >-
+                If true, indicates the desire to include HOV roads with a 3-occupant requirement in the route
+                when advantageous.
+              default: false
+            include_hot:
+              type: boolean
+              description: >-
+                If true, indicates the desire to include toll roads which require the driver to pay a
+                toll if the occupant requirement isn't met
+              default: false
+    truckCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/autoCostingOptions'
+        - type: object
+          properties:
+            height:
+              type: number
+              format: double
+              description: The height of the truck (in meters).
+              default: 4.11
+            width:
+              type: number
+              format: double
+              description: The width of the truck (in meters).
+              default: 2.6
+            length:
+              type: number
+              format: double
+              description: The length of the truck (in meters).
+              default: 21.64
+            weight:
+              type: number
+              format: double
+              description: The weight of the truck (in tonnes).
+              default: 21.77
+            axle_load:
+              type: number
+              format: double
+              description: The axle load of the truck (in tonnes).
+              default: 9.07
+            hazmat:
+              type: boolean
+              description: Whether or not the truck is carrying hazardous materials.
+              default: false
+    bicycleCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/baseCostingOptions'
+        - type: object
+          properties:
+            bicycle_type:
+              type: string
+              enum:
+                - Road
+                - Hybrid
+                - Cross
+                - Mountain
+              default: Hybrid
+            cycling_speed:
+              type: integer
+              description: >-
+                The average comfortable travel speed (in kph) along smooth, flat roads. The costing
+                will vary the speed based on the surface, bicycle type, elevation change, etc.
+                This value should be the average sustainable cruising speed the cyclist can maintain
+                over the entire route.
+
+                The default speeds are as follows based on bicycle type:
+                  * Road - 25kph
+                  * Cross - 20kph
+                  * Hybrid - 18kph
+                  * Mountain - 16kph
+            use_roads:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to use roads alongside other vehicles. Values near 0 attempt to avoid roads
+                and stay on cycleways, and values near 1 indicate the cyclist is more comfortable on roads.
+              default: 0.5
+              minimum: 0
+              maximum: 1
+            use_hills:
+              $ref: '#/components/schemas/useHillsCostingOption'
+            avoid_bad_surfaces:
+              type: number
+              format: double
+              description: >-
+                A measure of how much the cyclist wants to avoid roads with poor surfaces relative to the type of
+                bicycle being ridden. When 0, there is no penalization of roads with poorer surfaces, and only
+                bicycle speed is taken into account. As the value approaches 1, roads with poor surfaces relative
+                to the bicycle type receive a heaver penalty, so they will only be taken if they significantly
+                reduce travel time. When the value is 1, all bad surfaces are completely avoided from the route,
+                including the start and end points.
+              default: 0.25
+              minimum: 0
+              maximum: 1
+            bss_return_cost:
+              type: integer
+              description: The estimated cost (in seconds) to return a bicycle in `bikeshare` mode.
+              default: 120
+            bss_return_penalty:
+              type: integer
+              description: A penalty (in seconds) to return a bicycle in `bikeshare` mode.
+              default: 0
+    motorScooterCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/autoCostingOptions'
+        - type: object
+          properties:
+            use_primary:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to use primary roads. Values near 0 attempt to avoid primary roads
+                and stay on roads with lower speeds, and values near 1 indicate the rider is more comfortable on
+                these roads.
+              default: 0.5
+              minimum: 0
+              maximum: 1
+            use_hills:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to take tackle hills. Values near 0 attempt to avoid hills and steeper grades
+                even if it means a longer route, and values near 1 indicates that the rider does not fear them.
+                Note that as some routes may be impossible without hills, 0 does not guarantee
+                avoidance of them.
+              default: 0.5
+              minimum: 0
+              maximum: 1
+    motorcycleCostingOptions:
+      allOf:
+        - $ref: '#/components/schemas/autoCostingOptions'
+        - type: object
+          properties:
+            use_highways:
+              type: number
+              format: double
+              description: >-
+                A measure of willingness to use highways. Values near 0 attempt to avoid highways
+                and stay on roads with lower speeds, and values near 1 indicate the rider is more comfortable on
+                these roads.
+              default: 1.0
+              minimum: 0
+              maximum: 1
+            use_trails:
+              type: number
+              format: double
+              description: >-
+                A measure of the rider's sense of adventure. Values near 0 attempt to avoid highways
+                and stay on roads with potentially unsuitable terrain (trails, tracks, unclassified, or bad surfaces),
+                and values near 1 will tend to avoid major roads and route on secondary roads.
+              default: 0.0
+              minimum: 0
+              maximum: 1
+    pedestrianCostingOptions:
+      type: object
+      properties:
+        walking_speed:
+          type: integer
+          description: Walking speed in kph.
+          default: 5.1
+          minimum: 0.5
+          maximum: 25
+        walkway_factor:
+          type: number
+          format: double
+          description: A factor that multiplies the cost when walkways are encountered.
+          default: 1
+        sidewalk_factor:
+          type: number
+          format: double
+          description: A factor that multiplies the cost when sidewalks are encountered.
+          default: 1
+        alley_factor:
+          type: number
+          format: double
+          description: A factor that multiplies the cost when alleys are encountered.
+          default: 2
+        driveway_factor:
+          type: number
+          format: double
+          description: A factor that multiplies the cost when driveways are encountered.
+          default: 5
+        step_penalty:
+          type: integer
+          description: A penalty (in seconds) added to each transition onto a path with steps or stairs.
+          default: 30
+        use_ferry:
+          $ref: '#/components/schemas/useFerryCostingOption'
+        use_living_streets:
+          $ref: '#/components/schemas/useLivingStreetsCostingOption'
+        use_tracks:
+          $ref: '#/components/schemas/useTracksCostingOption'
+        use_hills:
+          $ref: '#/components/schemas/useHillsCostingOption'
+        use_lit:
+          type: number
+          format: double
+          description: >-
+            A measure of preference for streets that are lit. 0 indicates indifference toward lit streets,
+            and 1 indicates that unlit streets should be avoided.
+            Note that even with values near 1, there is no guarantee that the returned route will include
+            lit segments.
+          default: 0
+          minimum: 0
+          maximum: 1
+        service_penalty:
+          $ref: '#/components/schemas/servicePenaltyCostingOption'
+        service_factor:
+          $ref: '#/components/schemas/serviceFactorCostingOption'
+        max_hiking_difficulty:
+          type: integer
+          description: The maximum difficulty of hiking trails allowed. This corresponds to the OSM `sac_scale`.
+          default: 1
+          minimum: 1
+          maximum: 6
+        bss_rent_cost:
+          type: integer
+          description: The estimated cost (in seconds) to rent a bicycle from a sharing station in `bikeshare` mode.
+          default: 120
+        bss_rent_penalty:
+          type: integer
+          description: A penalty (in seconds) to rent a bicycle in `bikeshare` mode.
+          default: 0
+    directionsOptions:
+      type: object
+      properties:
+        units:
+          $ref: '#/components/schemas/distanceUnit'
+        language:
+          $ref: '#/components/schemas/valhallaLanguages'
+        directions_type:
+          type: string
+          enum:
+            - none
+            - maneuvers
+            - instructions
+          default: instructions
+          description: >-
+            The level of directional narrative to include. Locations and times will always be returned,
+            but narrative generation verbosity can be controlled with this parameter.
+    distanceUnit:
+      type: string
+      enum:
+        - km
+        - mi
+      default: km
+    matrixDistance:
+      type: object
+      properties:
+        distance:
+          type: number
+          format: double
+          description: >-
+            The distance (in `units`) between the location in `sources` at `from_index`
+            and the location in `targets` at `to_index`.
+        time:
+          type: integer
+          description: >-
+            The travel time (in seconds) between the location in `sources` at `from_index`
+            and the location in `targets` at `to_index`.
+        from_index:
+          type: integer
+          description: The index of the start location in the `sources` array.
+        to_index:
+          type: integer
+          description: The index of the end location in the `targets` array.
+      required:
+        - distance
+        - time
+        - from_index
+        - to_index
+    contour:
+      type: object
+      properties:
+        time:
+          type: number
+          format: double
+          description: The time in minutes for the contour. Mutually exclusive of distance.
+          example: 15
+        distance:
+          type: number
+          format: double
+          description: The distance in km for the contour. Mutually exclusive of time.
+          example: 10.0
+        color:
+          type: string
+          description: >-
+            The color for the output contour, specified as a hex value (without a leading `#`).
+            If no color is specified, one will be assigned automatically.
+          example: aabbcc
+    mapMatchTraceOptions:
+      type: object
+      properties:
+        search_radius:
+          type: integer
+          description: The search radius, in meters, when trying to match each trace point.
+        gps_accuracy:
+          type: number
+          format: double
+          description: The accuracy of the GPS, in meters.
+        breakage_distance:
+          type: number
+          format: double
+          description: The breaking distance, in meters, between trace points.
+        interpolation_distance:
+          type: number
+          format: double
+          description: The interpolation distance, in meters, beyond which trace points are merged together.
+        turn_penalty_factor:
+          type: integer
+          description: >-
+            Penalizes turns from one road segment to next. For a pedestrian trace, you may see a back-and-forth
+            motion along the streets of your path with the default settings. Try increasing the turn penalty factor
+            to 500 to reduce jitter in the output. Note that if GPS accuracy is already good, increasing this above
+            the default will usually negatively affect the quality of map matching.
+    traceAttributeKey:
+      type: string
+      enum:
+        - edge.names
+        - edge.length
+        - edge.speed
+        - edge.road_class
+        - edge.begin_heading
+        - edge.end_heading
+        - edge.begin_shape_index
+        - edge.end_shape_index
+        - edge.traversability
+        - edge.use
+        - edge.toll
+        - edge.unpaved
+        - edge.tunnel
+        - edge.bridge
+        - edge.roundabout
+        - edge.internal_intersection
+        - edge.drive_on_right
+        - edge.surface
+        - edge.sign.exit_number
+        - edge.sign.exit_branch
+        - edge.sign.exit_toward
+        - edge.sign.exit_name
+        - edge.travel_mode
+        - edge.vehicle_type
+        - edge.pedestrian_type
+        - edge.bicycle_type
+        - edge.transit_type
+        - edge.id
+        - edge.way_id
+        - edge.weighted_grade
+        - edge.max_upward_grade
+        - edge.max_downward_grade
+        - edge.mean_elevation
+        - edge.lane_count
+        - edge.cycle_lane
+        - edge.bicycle_network
+        - edge.sac_scale
+        - edge.sidewalk
+        - edge.density
+        - edge.speed_limit
+        - edge.truck_speed
+        - edge.truck_route
+        - node.intersecting_edge.begin_heading
+        - node.intersecting_edge.from_edge_name_consistency
+        - node.intersecting_edge.to_edge_name_consistency
+        - node.intersecting_edge.driveability
+        - node.intersecting_edge.cyclability
+        - node.intersecting_edge.walkability
+        - node.intersecting_edge.use
+        - node.intersecting_edge.road_class
+        - node.elapsed_time
+        - node.admin_index
+        - node.type
+        - node.fork
+        - node.time_zone
+        - osm_changeset
+        - shape
+        - admin.country_code
+        - admin.country_text
+        - admin.state_code
+        - admin.state_text
+        - matched.point
+        - matched.type
+        - matched.edge_index
+        - matched.begin_route_discontinuity
+        - matched.end_route_discontinuity
+        - matched.distance_along_edge
+        - matched.distance_from_trace_point
+    traceAttributeFilterOptions:
+      type: object
+      properties:
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/traceAttributeKey'
+          minItems: 1
+        action:
+          type: string
+          enum:
+            - include
+            - exclude
+          description: Determines whether the list of attributes will be used as a whitelist or a blacklist.
+      required:
+        - attributes
+        - action
+    traceEdge:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          description: The name(s) of the road at this edge, if any.
+        length:
+          type: number
+          format: double
+          description: The length of this edge in `units`.
+        speed:
+          type: integer
+          description: >-
+            The speed of this edge in `units`/hr, in terms of average/free-flow speed for routing purposes.
+            This is affected by any number of factors such as the road service, vehicle type, etc. and not
+            just the posted speed limits.
+        road_class:
+          $ref: '#/components/schemas/roadClass'
+        begin_heading:
+          type: integer
+          description: The direction at the beginning of an edge. The units are degrees clockwise from north.
+        end_heading:
+          type: integer
+          description: The direction at the end of an edge. The units are degrees clockwise from north.
+        begin_shape_index:
+          type: integer
+          description: Index into the list of shape points for the start of the edge.
+        end_shape_index:
+          type: integer
+          description: Index into the list of shape points for the end of the edge.
+        traversability:
+          $ref: '#/components/schemas/traversability'
+        use:
+          $ref: '#/components/schemas/edgeUse'
+        toll:
+          type: boolean
+          description: True if the edge has a toll.
+        unpaved:
+          type: boolean
+          description: True if the edge has rough payment.
+        tunnel:
+          type: boolean
+          description: True if the edge has a tunnel.
+        bridge:
+          type: boolean
+          description: True if the edge has a bridge.
+        roundabout:
+          type: boolean
+          description: True if the edge has a roundabout.
+        internal_intersection:
+          type: boolean
+          description: True if the edge has an internal intersection.
+        drive_on_right:
+          type: boolean
+          description: True if the edge is in an area where you must drive on the right side of the road.
+        surface:
+          type: string
+          enum:
+            - paved_smooth
+            - paved
+            - paved_rough
+            - compacted
+            - dirt
+            - gravel
+            - path
+            - impassable
+          description: The type of surface for the edge.
+        sign:
+          $ref: '#/components/schemas/edgeSign'
+        travel_mode:
+          $ref: '#/components/schemas/travelMode'
+        vehicle_type:
+          type: string
+          enum:
+            - car
+            - motorcycle
+            - bus
+            - tractor_trailer
+        pedestrian_type:
+          type: string
+          enum:
+            - foot
+            - wheelchair
+            - segway
+        bicycle_type:
+          type: string
+          enum:
+            - road
+            - cross
+            - hybrid
+            - mountain
+        transit_type:
+          type: string
+          enum:
+            - tram
+            - metro
+            - rail
+            - bus
+            - ferry
+            - cable_car
+            - gondola
+            - funicular
+        id:
+          type: integer
+          format: int64
+        way_id:
+          type: integer
+          format: int64
+          description: The way identifier of the edge in OSM.
+        weighted_grade:
+          type: number
+          format: double
+          description: >-
+            The weighted grade factor. Valhalla manufactures a weighted grade from elevation data. It is a
+            measure used for hill avoidance in routing - sort of a relative energy use along an edge. But
+            since an edge in Valhalla can possibly go up and down over several hills it might not equate
+            to what you would normally think of as grade.
+        max_upward_grade:
+          type: integer
+          description: The maximum upward slope. A value of 32768 indicates no elevation data is available for this edge.
+        max_downward_grade:
+          type: integer
+          description: The maximum downward slope. A value of 32768 indicates no elevation data is available for this edge.
+        mean_elevation:
+          type: integer
+          description: >-
+            The mean elevation along the edge. Units are meters by default. If the `units` are specified
+            as miles, then the mean elevation is returned in feet. A value of 32768 indicates no elevation data is
+            available for this edge.
+        lane_count:
+          type: integer
+          description: The number of lanes for this edge.
+        cycle_lane:
+          type: string
+          enum:
+            - none
+            - shared
+            - dedicated
+            - separated
+          description: The type of cycle lane (if any) along this edge.
+        bicycle_network:
+          type: integer
+          description: >-
+            The type of bicycle network, if any. This is an integer comprised of constants bitwise or'd
+            together. For example, a route that's part of both a local and mountain network would have
+            a value of 12.
+
+            1 - National
+            2 - Regional
+            4 - Local
+            8 - Mountain
+        sac_scale:
+          type: integer
+          description: >-
+            The difficulty of the hiking trail according to the SAC scale.
+
+            0 - No Sac Scale
+            1 - Hiking
+            2 - Mountain hiking
+            3 - Demanding mountain hiking
+            4 - Alpine hiking
+            5 - Demanding alpine hiking
+            6 - Difficult alpine hiking
+        sidewalk:
+          type: string
+          enum:
+            - left
+            - right
+            - both
+            - none
+        density:
+          type: integer
+        speed_limit:
+          description: >-
+            The speed limit along the edge measured in `units`/hr. This may be either an integer or the string
+            "unlimited" if speed limit data is available. If absent, there is no speed limit data available.
+        truck_speed:
+          type: integer
+          description: >-
+            The truck speed of this edge in `units`/hr, in terms of average/free-flow speed for routing purposes.
+            This is affected by any number of factors such as the road service, vehicle type, etc. and not
+            just the posted speed limits.
+        truck_route:
+          type: boolean
+          description: True if the edge is part of a truck route/network.
+        end_node:
+          $ref: '#/components/schemas/endNode'
+    adminRegion:
+      type: object
+      properties:
+        country_code:
+          type: string
+          description: The [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code.
+        country_text:
+          type: string
+          description: The country name
+        state_code:
+          type: string
+          description: The abbreviation code for the state (varies by country).
+        state_text:
+          type: string
+          description: The state name.
+    matchedPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+          description: The latitude of the matched point.
+        lon:
+          type: number
+          format: double
+          description: The longitude of the matched point.
+        type:
+          type: string
+          enum:
+            - unmatched
+            - interpolated
+            - matched
+        edge_index:
+          type: integer
+          description: The index of the edge in the list of `edges`. This key will be missing if the point is unmatched.
+        begin_route_discontinuity:
+          type: boolean
+          description: If true, this match result is the begin location of a route discontinuity.
+          default: false
+        end_route_discontinuity:
+          type: boolean
+          description: If true, this match result is the end location of a route discontinuity.
+          default: false
+        distance_along_edge:
+          type: number
+          format: double
+          description: >-
+            The distance along the associated edge for this matched point, expressed as a value between 0 and 1.
+            For example, if the matched point is halfway along the edge, then the value will be 0.5. This key
+            will be absent if the point is unmatched.
+        distance_from_trace_point:
+          type: number
+          format: double
+          description: >-
+            The distance in meters from the trace point to the matched point. This key will be absent if the
+            point is unmatched.
+      required:
+        - lat
+        - lon
+        - type
+    heightRequest:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        shape:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+          description: REQUIRED if `encoded_polyline` is not present.
+        encoded_polyline:
+          type: string
+          description: REQUIRED if `shape` is not present. An encoded polyline (https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+        shape_format:
+          type: string
+          enum:
+            - polyline6
+            - polyline5
+          default: polyline6
+          description: Specifies whether the polyline is encoded with 6 digit precision (polyline6) or 5 digit precision (polyline5).
+        range:
+          type: boolean
+          default: false
+          description: Controls whether or not the returned array is one-dimensional (height only) or two-dimensional (with a range and height). The range dimension can be used to generate a graph or steepness gradient along a route.
+        height_precision:
+          type: integer
+          default: 0
+          minimum: 0
+          maximum: 2
+          description: >-
+            The decimal precision (number of digits after the point) of the output.
+            When 0, integer values are returned. Valid values are 0, 1, and 2.
+      example:
+        {
+          "id": "kesklinn",
+          "shape": [
+            {
+              "lat": 59.436884,
+              "lon": 24.742595
+            }
+          ],
+          "shape_format": "polyline6",
+          "range": false,
+          "height_precision": 0
+        }
+    matrixRequest:
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+          description: The list of starting locations
+          minItems: 1
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+          description: The list of ending locations
+          minItems: 1
+        costing:
+          $ref: '#/components/schemas/matrixCostingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        matrix_locations:
+          type: integer
+          description: >-
+            Only applicable to one-to-many or many-to-one requests. This defaults to all locations.
+            When specified explicitly, this option allows a partial result to be returned. This is basically
+            equivalent to "find the closest/best locations out of the full set." This can have a dramatic
+            improvement for large requests.
+        directions_options:
+          $ref: '#/components/schemas/directionsOptions'
+      required:
+        - sources
+        - targets
+        - costing
+      example:
+        {
+          "sources": [
+            {
+              "lat": 40.744014,
+              "lon": -73.990508
+            }
+          ],
+          "targets": [
+            {
+              "lat": 40.744014,
+              "lon": -73.990508
+            },
+            {
+              "lat": 40.739735,
+              "lon": -73.979713
+            },
+            {
+              "lat": 40.752522,
+              "lon": -73.985015
+            },
+            {
+              "lat": 40.750117,
+              "lon": -73.983704
+            },
+            {
+              "lat": 40.750552,
+              "lon": -73.993519
+            }
+          ],
+          "costing": "pedestrian"
+        }
+    isochroneRequest:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+        costing:
+          $ref: '#/components/schemas/isochroneCostingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        contours:
+          type: array
+          items:
+            $ref: '#/components/schemas/contour'
+          maxItems: 4
+          minItems: 1
+        polygons:
+          type: boolean
+          default: false
+          description: >-
+            If true, the generated GeoJSON will use polygons. The default is to use LineStrings.
+            Polygon output makes it easier to render overlapping areas in some visualization
+            tools (such as MapLibre renderers).
+        denoise:
+          type: number
+          format: double
+          default: 1
+          minimum: 0
+          maximum: 1
+          description: >-
+            A value in the range [0, 1] which will be used to smooth out or remove smaller contours.
+            A value of 1 will only return the largest contour for a given time value. A value of 0.5 drops any contours
+            that are less than half the area of the largest contour in the set of contours for that same time value.
+        generalize:
+          type: number
+          format: double
+          default: 200.0
+          description: >-
+            The value in meters to be used as a tolerance for Douglas-Peucker generalization.
+        show_locations:
+          type: boolean
+          default: false
+          description: >-
+            If true, then the output GeoJSON will include the input locations as two MultiPoint features: one
+            for the exact input coordinates, and a second for the route network node location that the point
+            was snapped to.
+      required:
+        - locations
+        - contours
+        - costing
+      example: >-
+        {
+          "id": "kesklinn",
+          "locations": [
+            {
+              "lat": 59.436884,
+              "lon": 24.742595
+            }
+          ],
+          "costing": "pedestrian",
+          "contours": [
+            {
+              "time": 5,
+              "color": "aabbcc"
+            }
+          ],
+          "polygons": true
+        }
+    routeRequest:
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/routingWaypoint'
+          minItems: 2
+        costing:
+          $ref: '#/components/schemas/costingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        avoid_locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/routingWaypoint'
+        avoid_polygons:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              items:
+                type: number
+                format: double
+          description: >-
+            One or multiple exterior rings of polygons in the form of nested JSON arrays.
+            Roads intersecting these rings will be avoided during path finding. Open rings will be
+            closed automatically.
+          example: [[[30, 10], [40, 40], [20, 40], [10, 20], [30, 10]]]
+        directions_options:
+          $ref: '#/components/schemas/directionsOptions'
+      required:
+        - locations
+        - costing
+      example:
+        {
+          "locations": [
+            {
+              "lon": -149.543469,
+              "lat": 60.5347155,
+              "type": "break"
+            },
+            {
+              "lon": -149.5485806,
+              "lat": 60.5349908,
+              "type": "break"
+            }
+          ],
+          "costing": "auto",
+          "costing_options": {
+            "auto": {
+              "use_tolls": 1,
+              "use_highways": 0
+            }
+          },
+          "directions_options": {
+            "units": "miles"
+          }
+        }
+    optimizedRouteRequest:
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+          description: >-
+            The list of locations. The first and last are assumed to be the start and end points, and
+            all intermediate points are locations that you want to visit along the way.
+          minItems: 3
+        costing:
+          $ref: '#/components/schemas/matrixCostingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        directions_options:
+          $ref: '#/components/schemas/directionsOptions'
+      required:
+        - locations
+        - costing
+      example:
+        {
+          "locations": [
+            {
+              "lat": 40.042072,
+              "lon": -76.306572
+            },
+            {
+              "lat": 39.992115,
+              "lon": -76.781559
+            },
+            {
+              "lat": 39.984519,
+              "lon": -76.6956
+            },
+            {
+              "lat": 39.996586,
+              "lon": -76.769028
+            },
+            {
+              "lat": 39.984322,
+              "lon": -76.706672
+            }
+          ],
+          "costing": "auto",
+          "directions_options": {
+            "units": "miles"
+          }
+        }
+    nearestRoadsRequest:
+      properties:
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+          minItems: 1
+        costing:
+          $ref: '#/components/schemas/costingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        verbose:
+          type: boolean
+          default: false
+        directions_options:
+          $ref: '#/components/schemas/directionsOptions'
+      required:
+        - locations
+      example:
+        {
+          "locations": [
+            {
+              "lat": 59.436884,
+              "lon": 24.742595
+            }
+          ],
+          "verbose": true
+        }
+    baseTraceRequest:
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        shape:
+          type: array
+          items:
+            $ref: '#/components/schemas/mapMatchWaypoint'
+          description: >-
+            REQUIRED if `encoded_polyline` is not present. Note that `break` type locations are only supported
+            when `shape_match` is set to `map_match`.
+        encoded_polyline:
+          type: string
+          description: >-
+            REQUIRED if `shape` is not present. An encoded polyline
+            (https://developers.google.com/maps/documentation/utilities/polylinealgorithm). Note that the polyline
+            must be encoded with 6 digits of precision rather than the usual 5.
+        costing:
+          $ref: '#/components/schemas/mapMatchCostingModel'
+        costing_options:
+          $ref: '#/components/schemas/costingOptions'
+        shape_match:
+          type: string
+          enum:
+            - edge_walk
+            - map_snap
+            - walk_or_snap
+          description: >-
+            Three snapping modes provide some control over how the map matching occurs.
+            `edge_walk` is fast, but requires extremely precise data that matches the route graph
+            almost perfectly. `map_snap` can handle significantly noisier data, but is very expensive.
+            `walk_or_snap`, the default, tries to use edge walking first and falls back to map matching
+            if edge walking fails.
+
+            In general, you should not need to change this parameter unless you want to trace a multi-leg
+            route with multiple `break` locations in the `shape`.
+        directions_options:
+          $ref: '#/components/schemas/directionsOptions'
+      required:
+        - costing
+    mapMatchRequest:
+      allOf:
+        - $ref: '#/components/schemas/baseTraceRequest'
+        - type: object
+          properties:
+            begin_time:
+              type: integer
+              description: >-
+                The timestamp at the start of the trace. Combined with `durations`, this provides a way to
+                include timing information for an `encoded_polyline` trace.
+            durations:
+              type: integer
+              description: >-
+                A list of durations (in seconds) between each successive pair of points in a polyline.
+            use_timestamps:
+              type: boolean
+              description: >-
+                If true, the input timestamps or durations should be used when computing elapsed time
+                for each edge along the matched path rather than the routing algorithm estimates.
+              default: false
+            trace_options:
+              $ref: '#/components/schemas/mapMatchTraceOptions'
+            linear_references:
+              type: boolean
+              description: >-
+                If true, the response will include a `linear_references` value that contains an array of
+                base64-encoded [OpenLR location references](https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf),
+                one for each graph edge of the road network matched by the trace.
+              default: false
+      example:
+        {
+          "encoded_polyline": "_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA",
+          "shape_match": "map_snap",
+          "costing": "pedestrian",
+          "directions_options": {
+            "units": "miles"
+          },
+          "linear_references": true
+        }
+    traceAttributesRequest:
+      allOf:
+        - $ref: '#/components/schemas/baseTraceRequest'
+        - type: object
+          properties:
+            filters:
+              description: >-
+                If present, provides either a whitelist or a blacklist of keys to include/exclude in the response.
+                This key is optional, and if omitted from the request, all available info will be returned.
+              allOf:
+                - $ref: '#/components/schemas/traceAttributeFilterOptions'
+      example:
+        {
+          "encoded_polyline": "_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA",
+          "shape_match": "map_snap",
+          "costing": "pedestrian",
+          "directions_options": {
+            "units": "miles"
+          }
+        }
+    tzResponse:
+      type: object
+      properties:
+        tz_id:
+          type: string
+          description: >-
+            The canonical time zone ID. In the event that multiple time zones could
+            be returned, the first one from the Unicode CLDR timezone.xml is returned.
+        base_utc_offset:
+          type: integer
+          description: The base offset, in seconds, from UTC that is normally in effect for this time zone.
+        dst_offset:
+          type: integer
+          description: >-
+            The special offset, in seconds, from UTC that is in effect for this time zone as
+            of the queried timestamp (defaults to now). If no additional offsets are in effect,
+            this value is zero. This typically reflects Daylight Saving Time, but may indicate
+            other special offsets. To get the total offset
+            in effect, add `dst_offset` and `utc_offset` together.
+      required:
+        - tz_id
+        - base_utc_offset
+        - dst_offset
+      example:
+        {
+          "tz_id": "Europe/Zurich",
+          "base_utc_offset": 3600,
+          "dst_offset": 3600
+        }
+    maneuverSignElement:
+      type: object
+      properties:
+        text:
+          type: string
+          description: The interchange sign text (varies based on the context; see the `maneuverSign` schema).
+        is_route_number:
+          type: boolean
+          description: True if the sign is a route number.
+        consecutive_count:
+          type: integer
+          description: The frequency of this sign element within a set a consecutive signs.
+      required:
+        - text
+    maneuverSign:
+      type: object
+      properties:
+        exit_number_elements:
+          type: array
+          description: A list of exit number elements. This is typically just a single value.
+          items:
+            $ref: '#/components/schemas/maneuverSignElement'
+        exit_branch_elements:
+          type: array
+          description: >-
+            A list of exit branch elements. The text is a subsequent road name or route number after the sign.
+          items:
+            $ref: '#/components/schemas/maneuverSignElement'
+        exit_toward_elements:
+          type: array
+          description: >-
+            A list of exit name elements. The text is the interchange identifier (used more frequently outside
+            the US).
+          items:
+            $ref: '#/components/schemas/maneuverSignElement'
+        exit_name_elements:
+          type: array
+          description: >-
+            A list of exit name elements. The text is the location where the road ahead goes
+            (typically a city, but occasionally a road name or route number).
+          items:
+            $ref: '#/components/schemas/maneuverSignElement'
+    travelMode:
+      type: string
+      enum:
+        - drive
+        - pedestrian
+        - bicycle
+        - transit
+    edgeSign:
+      type: object
+      properties:
+        exit_number:
+          type: array
+          items:
+            type: string
+            description: An exit number.
+            example: 91B
+        exit_branch:
+          type: array
+          items:
+            type: string
+            description: A subsequent road name or route number after the sign.
+            example: I 95 North
+        exit_toward:
+          type: array
+          items:
+            type: string
+            description: The interchange identifier (used more frequently outside the US).
+            example: New York
+        exit_name:
+          type: array
+          items:
+            type: string
+            description: >-
+              The location where the road ahead goes (typically a city, but occasionally a road name or route number).
+            example: Gettysburg Pike
+    traversability:
+      type: string
+      description: The directions in which the edge is traversable.
+      enum:
+        - forward
+        - backward
+        - both
+    edgeUse:
+      type: string
+      enum:
+        - road
+        - ramp
+        - turn_channel
+        - track
+        - driveway
+        - alley
+        - parking_aisle
+        - emergency_access
+        - drive_through
+        - culdesac
+        - living_street
+        - service_road
+        - cycleway
+        - mountain_bike
+        - sidewalk
+        - footway
+        - steps
+        - path
+        - pedestrian
+        - pedestrian_crossing
+        - bridleway
+        - rest_area
+        - service_area
+        - other
+        - ferry
+        - rail-ferry
+        - rail
+        - bus
+        - egress_connection
+        - platform_connection
+        - transit_connection
+      description: The use for the edge.
+    intersectingEdge:
+      type: object
+      properties:
+        begin_heading:
+          type: integer
+          description: The direction at the beginning of an edge. The units are degrees clockwise from north.
+        from_edge_name_consistency:
+          type: boolean
+          description: >-
+            True if this intersecting edge at the end node has consistent names with the path from the other edge.
+        to_edge_name_consistency:
+          type: boolean
+          description: >-
+            True if this intersecting edge at the end node has consistent names with the path to the other edge.
+        driveability:
+          $ref: '#/components/schemas/traversability'
+        cyclability:
+          $ref: '#/components/schemas/traversability'
+        walkability:
+          $ref: '#/components/schemas/traversability'
+        use:
+          $ref: '#/components/schemas/edgeUse'
+        road_class:
+          $ref: '#/components/schemas/roadClass'
+    nodeType:
+      type: string
+      enum:
+        - street_intersection
+        - gate
+        - bollard
+        - toll_booth
+        - multi_use_transit_stop
+        - bike_share
+        - parking
+        - motor_way_junction
+        - border_control
+    endNode:
+      type: object
+      description: The node at the end of this edge
+      properties:
+        intersecting_edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/intersectingEdge'
+          description: A set of edges intersecting this node.
+        elapsed_time:
+          type: number
+          format: double
+          description: The elapsed time along the path to arrive at this node.
+        admin_index:
+          type: integer
+          description: The index into the `admins` list in which this node lies.
+        type:
+          $ref: '#/components/schemas/nodeType'
+        fork:
+          type: boolean
+          description: True if this node is a fork.
+        time_zone:
+          type: string
+          description: The canonical TZDB identifier for the node's time zone.
+          example: America/New_York
+    transitInfo:
+      type: object
+      description: Public transit info (not currently supported).
+      additionalProperties: true
+    routeSummary:
+      type: object
+      properties:
+        time:
+          type: number
+          format: double
+          description: The estimated travel time, in seconds
+        length:
+          type: number
+          format: double
+          description: The estimated travel distance, in `units` (km or mi)
+        min_lat:
+          type: number
+          format: double
+          description: The minimum latitude of the bounding box containing the route.
+        max_lat:
+          type: number
+          format: double
+          description: The maximum latitude of the bounding box containing the route.
+        min_lon:
+          type: number
+          format: double
+          description: The minimum longitude of the bounding box containing the route.
+        max_lon:
+          type: number
+          format: double
+          description: The maximum longitude of the bounding box containing the route.
+      required:
+        - time
+        - length
+        - min_lat
+        - min_lon
+        - max_lat
+        - max_lon
+    routeManeuver:
+      type: object
+      properties:
+        type:
+          type: integer
+          description: |
+            The type of route maneuver.
+
+            | Code | Type                                |
+            |------|-------------------------------------|
+            | 0    | None                                |
+            | 1    | Start                               |
+            | 2    | Start right                         |
+            | 3    | Start left                          |
+            | 4    | Destination                         |
+            | 5    | Destination right                   |
+            | 6    | Destination left                    |
+            | 7    | Becomes                             |
+            | 8    | Continue                            |
+            | 9    | Slight right                        |
+            | 10   | Right                               |
+            | 11   | Sharp right                         |
+            | 12   | U-turn right                        |
+            | 13   | U-turn left                         |
+            | 14   | Sharp left                          |
+            | 15   | Left                                |
+            | 16   | Slight left                         |
+            | 17   | Ramp straight                       |
+            | 18   | Ramp right                          |
+            | 19   | Ramp left                           |
+            | 20   | Exit right                          |
+            | 21   | Exit left                           |
+            | 22   | Stay straight                       |
+            | 23   | Stay right                          |
+            | 24   | Stay left                           |
+            | 25   | Merge                               |
+            | 26   | Enter roundabout                    |
+            | 27   | Exit roundabout                     |
+            | 28   | Enter ferry                         |
+            | 29   | Exit ferry                          |
+            | 30   | Transit                             |
+            | 31   | Transit transfer                    |
+            | 32   | Transit remain on                   |
+            | 33   | Transit connection start            |
+            | 34   | Transit connection transfer         |
+            | 35   | Transit connection destination      |
+            | 36   | Post-transit connection destination |
+            | 37   | Merge right                         |
+            | 38   | Merge left                          |
+        instruction:
+          type: string
+          description: The written maneuver instruction.
+        verbal_transition_alert_instruction:
+          type: string
+          description: Text suitable for use as a verbal navigation alert.
+        verbal_pre_transition_instruction:
+          type: string
+          description: Text suitable for use as a verbal navigation alert immediately prior to the maneuver transition.
+        verbal_post_transition_instruction:
+          type: string
+          description: Text suitable for use as a verbal navigation alert immediately after to the maneuver transition.
+        street_names:
+          type: array
+          description: A list of street names that are consistent along the entire maneuver.
+          items:
+            type: string
+            example: A1
+        begin_street_names:
+          type: array
+          description: >-
+            A list of street names at the beginning of the maneuver, if they are different from the names at the end.
+          items:
+            type: string
+            example: A1
+        time:
+          type: number
+          format: double
+          description: The estimated time to complete the entire maneuver, in seconds.
+        length:
+          type: number
+          format: double
+          description: The length of the maneuver, in `units`.
+        begin_shape_index:
+          type: integer
+          description: The index into the list of shape points for the start of the maneuver.
+        end_shape_index:
+          type: integer
+          description: The index into the list of shape points for the end of the maneuver.
+        toll:
+          type: boolean
+          description: True any portion of the maneuver is subject to a toll.
+          default: false
+        rough:
+          type: boolean
+          description: True any portion of the maneuver is unpaved or has portions of rough pavement.
+          default: false
+        gate:
+          type: boolean
+          description: True if a gate is encountered in the course of this maneuver.
+          default: false
+        ferry:
+          type: boolean
+          description: True if a ferry is encountered in the course of this maneuver.
+          default: false
+        sign:
+          $ref: '#/components/schemas/maneuverSign'
+        roundabout_exit_count:
+          type: integer
+          description: The exit number of the roundabout to take after entering.
+        depart_instruction:
+          type: integer
+          description: The written departure time instruction (typically used in a transit maneuver).
+          example: "Depart: 8:04 AM from Seoul Station"
+        verbal_depart_instruction:
+          type: integer
+          description: Text suitable for use as a verbal departure time instruction (typically used in a transit maneuver).
+          example: "Depart at 8:04 AM from Seoul Station"
+        arrive_instruction:
+          type: integer
+          description: The written arrival time instruction (typically used in a transit maneuver).
+          example: "Arrive: 8:06 AM at City Hall"
+        verbal_arrive_instruction:
+          type: integer
+          description: Text suitable for use as a verbal departure time instruction (typically used in a transit maneuver).
+          example: "Arrive at 8:06 AM at City Hall"
+        transit_info:
+          $ref: '#/components/schemas/transitInfo'
+        verbal_multi_cue:
+          type: boolean
+          description: >-
+            True if the `verbal_pre_transition_instruction` has been appended with the verbal instruction
+            of the next maneuver.
+          default: false
+        travel_mode:
+          $ref: '#/components/schemas/travelMode'
+        travel_type:
+          type: string
+          description: >-
+            The type of travel over the maneuver. This can be thought of as a specialization of the travel mode. For
+            example, vehicular travel may be via car, motorcycle, etc.; and travel via bicycle may be via a road bike,
+            mountain bike, etc.
+          enum:
+            - car
+            - motorcycle
+            - bus
+            - tractor_trailer
+            - motor_scooter
+            - golf_cart
+            - foot
+            - wheelchair
+            - segway
+            - road
+            - cross
+            - hybrid
+            - mountain
+            - tram
+            - metro
+            - rail
+            - ferry
+            - cable_car
+            - gondola
+            - funicular
+        bss_maneuver_type:
+          type: string
+          description: Describes a bike share action when using bikeshare routing.
+          enum:
+            - NoneAction
+            - RentBikeAtBikeShare
+            - ReturnBikeAtBikeShare
+      required:
+        - type
+        - instruction
+        - time
+        - length
+        - cost
+        - begin_shape_index
+        - end_shape_index
+        - travel_mode
+        - travel_type
+    routeLeg:
+      type: object
+      properties:
+        maneuvers:
+          type: array
+          items:
+            $ref: '#/components/schemas/routeManeuver'
+          minItems: 1
+        shape:
+          type: string
+          description: >-
+            An encoded polyline (https://developers.google.com/maps/documentation/utilities/polylinealgorithm) with
+            6 digits of decimal precision.
+        summary:
+          $ref: '#/components/schemas/routeSummary'
+      required:
+        - maneuvers
+        - shape
+        - summary
+    routeResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        trip:
+          type: object
+          properties:
+            status:
+              type: integer
+              description: The response status code
+            status_message:
+              type: string
+              description: The response status message
+            units:
+              $ref: '#/components/schemas/valhallaLongUnits'
+            language:
+              $ref: '#/components/schemas/valhallaLanguages'
+            locations:
+              type: array
+              items:
+                $ref: '#/components/schemas/routingResponseWaypoint'
+            legs:
+              type: array
+              items:
+                $ref: '#/components/schemas/routeLeg'
+            summary:
+              $ref: '#/components/schemas/routeSummary'
+          required:
+            - status
+            - status_message
+            - units
+            - language
+            - locations
+            - legs
+            - summary
+      required:
+        - trip
+      example:
+        {
+          "trip": {
+            "locations": [
+              {
+                "type": "break",
+                "lat": 60.534715,
+                "lon": -149.543469,
+                "original_index": 0
+              },
+              {
+                "type": "break",
+                "lat": 60.53499,
+                "lon": -149.54858,
+                "original_index": 1
+              }
+            ],
+            "legs": [
+              {
+                "maneuvers": [
+                  {
+                    "type": 1,
+                    "instruction": "Drive west on AK 1/Seward Highway.",
+                    "verbal_pre_transition_instruction": "Drive west on Alaska 1, Seward Highway. Then You will arrive at your destination.",
+                    "verbal_post_transition_instruction": "Continue for 900 feet.",
+                    "street_names": [
+                        "AK 1",
+                        "Seward Highway"
+                    ],
+                    "time": 11.487,
+                    "length": 0.176,
+                    "cost": 15.508,
+                    "begin_shape_index": 0,
+                    "end_shape_index": 9,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "drive",
+                    "travel_type": "car"
+                  },
+                  {
+                    "type": 4,
+                    "instruction": "You have arrived at your destination.",
+                    "verbal_transition_alert_instruction": "You will arrive at your destination.",
+                    "verbal_pre_transition_instruction": "You have arrived at your destination.",
+                    "time": 0.0,
+                    "length": 0.0,
+                    "cost": 0.0,
+                    "begin_shape_index": 9,
+                    "end_shape_index": 9,
+                    "travel_mode": "drive",
+                    "travel_type": "car"
+                  }
+                ],
+                "summary": {
+                  "has_time_restrictions": false,
+                  "min_lat": 60.534715,
+                  "min_lon": -149.54858,
+                  "max_lat": 60.535008,
+                  "max_lon": -149.543469,
+                  "time": 11.487,
+                  "length": 0.176,
+                  "cost": 15.508
+                },
+                "shape": "wzvmrBxalf|GcCrX}A|Nu@jI}@pMkBtZ{@x^_Afj@Inn@`@veB"
+              }
+            ],
+            "summary": {
+              "has_time_restrictions": false,
+              "min_lat": 60.534715,
+              "min_lon": -149.54858,
+              "max_lat": 60.535008,
+              "max_lon": -149.543469,
+              "time": 11.487,
+              "length": 0.176,
+              "cost": 15.508
+            },
+            "status_message": "Found route between points",
+            "status": 0,
+            "units": "miles",
+            "language": "en-US"
+          }
+        }
+    nearestRoadsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/locateObject'
+      example:
+        [
+          {
+            "input_lon": 24.742595,
+            "input_lat": 59.436884,
+            "nodes": [ ],
+            "edges": [
+              {
+                "predicted_speeds": [ ],
+                "linear_reference": "KxGYOypEIXriAAAcABo6Uow=",
+                "edge_info": {
+                  "speed_limit": 0,
+                  "shape": "{zvjpBwtden@zG`H~EdG",
+                  "names": [
+                    "Rataskaevu"
+                  ],
+                  "bike_network": {
+                    "mountain": false,
+                    "local": false,
+                    "regional": false,
+                    "national": false
+                  },
+                  "mean_elevation": 36,
+                  "way_id": 4853850
+                },
+                "edge_id": {
+                  "id": 1800,
+                  "value": 60404861586,
+                  "tile_id": 860498,
+                  "level": 2
+                },
+                "edge": {
+                  "sidewalk_left": false,
+                  "sidewalk_right": false,
+                  "lane_count": 1,
+                  "not_thru": false,
+                  "forward": false,
+                  "bike_network": false,
+                  "round_about": false,
+                  "access": {
+                    "truck": true,
+                    "pedestrian": true,
+                    "wheelchair": true,
+                    "taxi": true,
+                    "HOV": true,
+                    "emergency": false,
+                    "motorcycle": true,
+                    "car": true,
+                    "moped": true,
+                    "bus": true,
+                    "bicycle": true,
+                    "golf_cart": true
+                  },
+                  "bridge": false,
+                  "tunnel": false,
+                  "destination_only": false,
+                  "seasonal": false,
+                  "classification": {
+                    "internal": false,
+                    "link": false,
+                    "surface": "paved",
+                    "use": "living_street",
+                    "classification": "service_other"
+                  },
+                  "toll": false,
+                  "has_sign": false,
+                  "country_crossing": false,
+                  "part_of_complex_restriction": false,
+                  "cycle_lane": "none",
+                  "end_restriction": {
+                    "truck": false,
+                    "pedestrian": false,
+                    "wheelchair": false,
+                    "taxi": false,
+                    "HOV": false,
+                    "emergency": false,
+                    "motorcycle": false,
+                    "car": false,
+                    "moped": false,
+                    "bus": false,
+                    "bicycle": false
+                  },
+                  "geo_attributes": {
+                    "curvature": 5,
+                    "max_down_slope": -7.00,
+                    "max_up_slope": 0.00,
+                    "weighted_grade": -6.67,
+                    "length": 32
+                  },
+                  "start_restriction": {
+                    "truck": false,
+                    "pedestrian": false,
+                    "wheelchair": false,
+                    "taxi": false,
+                    "HOV": false,
+                    "emergency": false,
+                    "motorcycle": false,
+                    "car": false,
+                    "moped": false,
+                    "bus": false,
+                    "bicycle": false
+                  },
+                  "traffic_signal": false,
+                  "access_restriction": false,
+                  "truck_route": false,
+                  "speeds": {
+                    "predicted": false,
+                    "constrained_flow": 0,
+                    "free_flow": 0,
+                    "type": "classified",
+                    "default": 20
+                  },
+                  "end_node": {
+                    "id": 2895,
+                    "value": 97146964626,
+                    "tile_id": 860498,
+                    "level": 2
+                  }
+                },
+                "inbound_reach": 50,
+                "distance": 2.2,
+                "percent_along": 0.54802,
+                "side_of_street": "neither",
+                "outbound_reach": 50,
+                "correlated_lon": 24.742630,
+                "live_speed": { },
+                "correlated_lat": 59.436875
+              },
+              {
+                "predicted_speeds": [ ],
+                "linear_reference": "KxGYSCpELHryAP/l/+k6QnM=",
+                "edge_info": {
+                  "speed_limit": 0,
+                  "shape": "{zvjpBwtden@zG`H~EdG",
+                  "names": [
+                    "Rataskaevu"
+                  ],
+                  "bike_network": {
+                    "mountain": false,
+                    "local": false,
+                    "regional": false,
+                    "national": false
+                  },
+                  "mean_elevation": 36,
+                  "way_id": 4853850
+                },
+                "edge_id": {
+                  "id": 7368,
+                  "value": 247235938962,
+                  "tile_id": 860498,
+                  "level": 2
+                },
+                "edge": {
+                  "sidewalk_left": false,
+                  "sidewalk_right": false,
+                  "lane_count": 1,
+                  "not_thru": false,
+                  "forward": true,
+                  "bike_network": false,
+                  "round_about": false,
+                  "access": {
+                    "truck": true,
+                    "pedestrian": true,
+                    "wheelchair": true,
+                    "taxi": true,
+                    "HOV": true,
+                    "emergency": false,
+                    "motorcycle": true,
+                    "car": true,
+                    "moped": true,
+                    "bus": true,
+                    "bicycle": true
+                  },
+                  "bridge": false,
+                  "tunnel": false,
+                  "destination_only": false,
+                  "seasonal": false,
+                  "classification": {
+                    "internal": false,
+                    "link": false,
+                    "surface": "paved",
+                    "use": "living_street",
+                    "classification": "service_other"
+                  },
+                  "toll": false,
+                  "has_sign": false,
+                  "country_crossing": false,
+                  "part_of_complex_restriction": false,
+                  "cycle_lane": "none",
+                  "end_restriction": {
+                    "truck": false,
+                    "pedestrian": false,
+                    "wheelchair": false,
+                    "taxi": false,
+                    "HOV": false,
+                    "emergency": false,
+                    "motorcycle": false,
+                    "car": false,
+                    "moped": false,
+                    "bus": false,
+                    "bicycle": false
+                  },
+                  "geo_attributes": {
+                    "curvature": 5,
+                    "max_down_slope": 0.00,
+                    "max_up_slope": 7.00,
+                    "weighted_grade": 6.67,
+                    "length": 32
+                  },
+                  "start_restriction": {
+                    "truck": false,
+                    "pedestrian": false,
+                    "wheelchair": false,
+                    "taxi": false,
+                    "HOV": false,
+                    "emergency": false,
+                    "motorcycle": false,
+                    "car": false,
+                    "moped": false,
+                    "bus": false,
+                    "bicycle": false
+                  },
+                  "traffic_signal": false,
+                  "access_restriction": false,
+                  "truck_route": false,
+                  "speeds": {
+                    "predicted": false,
+                    "constrained_flow": 0,
+                    "free_flow": 0,
+                    "type": "classified",
+                    "default": 20
+                  },
+                  "end_node": {
+                    "id": 819,
+                    "value": 27487963794,
+                    "tile_id": 860498,
+                    "level": 2
+                  }
+                },
+                "inbound_reach": 50,
+                "distance": 2.2,
+                "percent_along": 0.45198,
+                "side_of_street": "neither",
+                "outbound_reach": 50,
+                "correlated_lon": 24.742630,
+                "live_speed": { },
+                "correlated_lat": 59.436875
+              }
+            ]
+          }
+        ]
+    mapMatchRouteResponse:
+      allOf:
+        - $ref: '#/components/schemas/routeResponse'
+        - type: object
+          properties:
+            linear_references:
+              type: array
+              items:
+                type: string
+                description: >-
+                  A base64-encoded [OpenLR location reference](https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf),
+                  for a graph edge of the road network matched by the trace.
+      example:
+        {
+          "trip": {
+            "locations": [
+              {
+                "type": "break",
+                "lat": 37.807744,
+                "lon": -122.4197
+              },
+              {
+                "type": "break",
+                "lat": 37.803694,
+                "lon": -122.428416
+              }
+            ],
+            "legs": [
+              {
+                "maneuvers": [
+                  {
+                    "type": 1,
+                    "instruction": "Walk west on the walkway.",
+                    "verbal_pre_transition_instruction": "Walk west on the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 200 feet.",
+                    "time": 44.733,
+                    "length": 0.039,
+                    "cost": 44.733,
+                    "begin_shape_index": 0,
+                    "end_shape_index": 1,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left.",
+                    "verbal_transition_alert_instruction": "Turn left.",
+                    "verbal_pre_transition_instruction": "Turn left. Then Turn right onto Jefferson Street.",
+                    "verbal_post_transition_instruction": "Continue for 20 feet.",
+                    "time": 4.941,
+                    "length": 0.004,
+                    "cost": 4.941,
+                    "begin_shape_index": 1,
+                    "end_shape_index": 2,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto Jefferson Street.",
+                    "verbal_transition_alert_instruction": "Turn right onto Jefferson Street.",
+                    "verbal_pre_transition_instruction": "Turn right onto Jefferson Street.",
+                    "verbal_post_transition_instruction": "Continue for 80 feet.",
+                    "street_names": [
+                        "Jefferson Street"
+                    ],
+                    "time": 16.941,
+                    "length": 0.014,
+                    "cost": 21.941,
+                    "begin_shape_index": 2,
+                    "end_shape_index": 3,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn left onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn left onto the walkway. Then Turn right onto the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 20 feet.",
+                    "time": 4.941,
+                    "length": 0.004,
+                    "cost": 9.941,
+                    "begin_shape_index": 3,
+                    "end_shape_index": 4,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn right onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn right onto the walkway. Then Turn left onto Hyde Street.",
+                    "verbal_post_transition_instruction": "Continue for 30 feet.",
+                    "time": 6.352,
+                    "length": 0.005,
+                    "cost": 6.352,
+                    "begin_shape_index": 4,
+                    "end_shape_index": 5,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto Hyde Street.",
+                    "verbal_transition_alert_instruction": "Turn left onto Hyde Street.",
+                    "verbal_pre_transition_instruction": "Turn left onto Hyde Street.",
+                    "verbal_post_transition_instruction": "Continue for 300 feet.",
+                    "street_names": [
+                        "Hyde Street"
+                    ],
+                    "time": 58.588,
+                    "length": 0.051,
+                    "cost": 63.588,
+                    "begin_shape_index": 5,
+                    "end_shape_index": 10,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn right onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn right onto the walkway. Then Turn left onto the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 30 feet.",
+                    "time": 6.352,
+                    "length": 0.005,
+                    "cost": 11.352,
+                    "begin_shape_index": 10,
+                    "end_shape_index": 11,
+                    "rough": true,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn left onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn left onto the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 400 feet.",
+                    "time": 93.176,
+                    "length": 0.082,
+                    "cost": 93.176,
+                    "begin_shape_index": 11,
+                    "end_shape_index": 17,
+                    "rough": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn left onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn left onto the walkway. Then Turn right onto Beach Street.",
+                    "verbal_post_transition_instruction": "Continue for 40 feet.",
+                    "time": 7.764,
+                    "length": 0.006,
+                    "cost": 7.764,
+                    "begin_shape_index": 17,
+                    "end_shape_index": 18,
+                    "rough": true,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto Beach Street.",
+                    "verbal_transition_alert_instruction": "Turn right onto Beach Street.",
+                    "verbal_pre_transition_instruction": "Turn right onto Beach Street.",
+                    "verbal_post_transition_instruction": "Continue for 500 feet.",
+                    "street_names": [
+                        "Beach Street"
+                    ],
+                    "time": 110.705,
+                    "length": 0.095,
+                    "cost": 115.705,
+                    "begin_shape_index": 18,
+                    "end_shape_index": 24,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto Polk Street.",
+                    "verbal_transition_alert_instruction": "Turn left onto Polk Street.",
+                    "verbal_pre_transition_instruction": "Turn left onto Polk Street.",
+                    "verbal_post_transition_instruction": "Continue for 300 feet.",
+                    "street_names": [
+                        "Polk Street"
+                    ],
+                    "time": 68.058,
+                    "length": 0.059,
+                    "cost": 73.058,
+                    "begin_shape_index": 24,
+                    "end_shape_index": 27,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn right onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn right onto the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 400 feet.",
+                    "time": 98.0,
+                    "length": 0.084,
+                    "cost": 103.0,
+                    "begin_shape_index": 27,
+                    "end_shape_index": 32,
+                    "rough": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto Van Ness Avenue.",
+                    "verbal_transition_alert_instruction": "Turn left onto Van Ness Avenue.",
+                    "verbal_pre_transition_instruction": "Turn left onto Van Ness Avenue.",
+                    "verbal_post_transition_instruction": "Continue for 400 feet.",
+                    "street_names": [
+                        "Van Ness Avenue"
+                    ],
+                    "time": 83.294,
+                    "length": 0.073,
+                    "cost": 98.294,
+                    "begin_shape_index": 32,
+                    "end_shape_index": 38,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn right onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn right onto the walkway. Then Turn left onto the walkway.",
+                    "verbal_post_transition_instruction": "Continue for 30 feet.",
+                    "time": 7.058,
+                    "length": 0.006,
+                    "cost": 12.058,
+                    "begin_shape_index": 38,
+                    "end_shape_index": 39,
+                    "rough": true,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto the walkway.",
+                    "verbal_transition_alert_instruction": "Turn left onto the walkway.",
+                    "verbal_pre_transition_instruction": "Turn left onto the walkway. Then Turn right onto Bay Street.",
+                    "verbal_post_transition_instruction": "Continue for 50 feet.",
+                    "time": 9.882,
+                    "length": 0.008,
+                    "cost": 9.882,
+                    "begin_shape_index": 39,
+                    "end_shape_index": 40,
+                    "rough": true,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 10,
+                    "instruction": "Turn right onto Bay Street.",
+                    "verbal_transition_alert_instruction": "Turn right onto Bay Street.",
+                    "verbal_pre_transition_instruction": "Turn right onto Bay Street.",
+                    "verbal_post_transition_instruction": "Continue for 900 feet.",
+                    "street_names": [
+                        "Bay Street"
+                    ],
+                    "time": 194.823,
+                    "length": 0.171,
+                    "cost": 199.823,
+                    "begin_shape_index": 40,
+                    "end_shape_index": 45,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 15,
+                    "instruction": "Turn left onto Gough Street.",
+                    "verbal_transition_alert_instruction": "Turn left onto Gough Street.",
+                    "verbal_pre_transition_instruction": "Turn left onto Gough Street. Then You will arrive at your destination.",
+                    "verbal_post_transition_instruction": "Continue for 20 feet.",
+                    "street_names": [
+                        "Gough Street"
+                    ],
+                    "time": 3.302,
+                    "length": 0.002,
+                    "cost": 8.302,
+                    "begin_shape_index": 45,
+                    "end_shape_index": 46,
+                    "verbal_multi_cue": true,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  },
+                  {
+                    "type": 4,
+                    "instruction": "You have arrived at your destination.",
+                    "verbal_transition_alert_instruction": "You will arrive at your destination.",
+                    "verbal_pre_transition_instruction": "You have arrived at your destination.",
+                    "time": 0.0,
+                    "length": 0.0,
+                    "cost": 0.0,
+                    "begin_shape_index": 46,
+                    "end_shape_index": 46,
+                    "travel_mode": "pedestrian",
+                    "travel_type": "foot"
+                  }
+                ],
+                "summary": {
+                  "has_time_restrictions": false,
+                  "min_lat": 37.803694,
+                  "min_lon": -122.428418,
+                  "max_lat": 37.807771,
+                  "max_lon": -122.419706,
+                  "time": 818.918,
+                  "length": 0.716,
+                  "cost": 883.918
+                },
+                "shape": "uhrbgAt~{nhFrDhk@rBWfAbPvBWXfElAQhAi@dA]d[oDvIaAs@~Dp@n@r@r@^\\jAnQfDdh@lBtY`Eg@VzDXxDxAdPrD~j@zBf]TpD|C_@`\\uD|QaCZtE`Cp\\|A|UdCz^N`ClDJj@dJdDo@vGw@dKmAzWcDRdFpFq@d@dHpH`kAVbEXhEdKj_BpAO"
+              }
+            ],
+            "linear_references": [
+                "C6jyLBrisjr3Af+4//g6BA==",
+                "C6jyCxrirjr3AAAA//s6Bw==",
+                "C6jyDBriqyKUAP/j//0iAg==",
+                "C6jx/xriqTr3AAAA//w6Ag==",
+                "C6jx/xripjr0AP/2AAE6Hg==",
+                "C6jx+xripiKUAQAM/8kiHw==",
+                "C6jyARrijCKPAAAC/+8iBg==",
+                "C6jyAxrihDrvAP/0AAM6BQ==",
+                "C6jx/hrihTrzAP/5//o6Bw==",
+                "C6jx+xrigjr1AP/h//06Bw==",
+                "C6jx7RrigDr3Af++//k6Bw==",
+                "C6jxzxrifDr3AP/T//w6Ag==",
+                "C6jxuxrieTr3AAAA//g6Bw==",
+                "C6jxvBridTLSAP/1AAAyBw==",
+                "C6jxtxridDLSAP/2AAEyBg==",
+                "C6jxsxridDLWAf+d//MyBw==",
+                "C6jxhRribjLXAP/P//oyAg==",
+                "C6jxbxriazLXAP/1//8yHw==",
+                "C6jxaxriajLXAP////kyHw==",
+                "C6jxaxriZjLTAAAJ/9MyHw==",
+                "C6jxbxriUTLPAAAG/+IyBw==",
+                "C6jxcxriQzrvAP/z//86Bw==",
+                "C6jxbhriQjryAP/P//s6Bw==",
+                "C6jxVxriPzr3AP/b//w6Bw==",
+                "C6jxRhriPTr3AP/N//o6Aw==",
+                "C6jxLxriOjr3AP/4AAA6Aw==",
+                "C6jxLBriOTLXAP/9//kyBQ==",
+                "C6jxKxriNSKTAP/u//8iHw==",
+                "C6jxIxriNCKWAAAE/+siHw==",
+                "C6jxJRriKiKPAAAE/+0iHw==",
+                "C6jxJxriISKPAAAI/9kiAw==",
+                "C6jxKxriDjrvAP/0AAA6AQ==",
+                "C6jxJhriDjrzAAAB//Q6Bw==",
+                "C6jxJxriCBpxAv9s/+8aBw==",
+                "C6jw4xrh/xp3Av9a/+0aBQ==",
+                "C6jwlhrh9jLXAAAA//0yBQ=="
+            ],
+            "summary": {
+              "has_time_restrictions": false,
+              "min_lat": 37.803694,
+              "min_lon": -122.428418,
+              "max_lat": 37.807771,
+              "max_lon": -122.419706,
+              "time": 818.918,
+              "length": 0.716,
+              "cost": 883.918
+            },
+            "status_message": "Found route between points",
+            "status": 0,
+            "units": "miles",
+            "language": "en-US"
+          }
+        }
+    matrixResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        sources:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/coordinate'
+          description: The list of starting locations
+          minItems: 1
+        targets:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/coordinate'
+          description: The list of ending locations
+          minItems: 1
+        sources_to_targets:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/matrixDistance'
+          description: >-
+            The matrix of starting and ending locations, along with the computed distance and travel time.
+            The array is row-ordered. This means that the time and distance from the first location to all others
+            forms the first row of the array, followed by the time and distance from the second source location to all
+            target locations, etc.
+          minItems: 1
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/warning'
+        units:
+          $ref: '#/components/schemas/valhallaLongUnits'
+      required:
+        - sources
+        - targets
+        - sources_to_targets
+        - units
+      example:
+        {
+          "targets": [
+            [
+              {
+                "lon": -73.990508,
+                "lat": 40.744014
+              },
+              {
+                "lon": -73.979713,
+                "lat": 40.739735
+              },
+              {
+                "lon": -73.985015,
+                "lat": 40.752522
+              },
+              {
+                "lon": -73.983704,
+                "lat": 40.750117
+              },
+              {
+                "lon": -73.993519,
+                "lat": 40.750552
+              }
+            ]
+          ],
+          "sources_to_targets": [
+            [
+              {
+                "distance": 0.000,
+                "time": 0,
+                "to_index": 0,
+                "from_index": 0
+              },
+              {
+                "distance": 1.115,
+                "time": 806,
+                "to_index": 1,
+                "from_index": 0
+              },
+              {
+                "distance": 1.278,
+                "time": 909,
+                "to_index": 2,
+                "from_index": 0
+              },
+              {
+                "distance": 1.112,
+                "time": 792,
+                "to_index": 3,
+                "from_index": 0
+              },
+              {
+                "distance": 1.220,
+                "time": 869,
+                "to_index": 4,
+                "from_index": 0
+              }
+            ]
+          ],
+          "sources": [
+            [
+              {
+                "lon": -73.990508,
+                "lat": 40.744014
+              }
+            ]
+          ],
+          "units": "kilometers"
+        }
+    isochroneResponse:
+      type: object
+      required:
+        - features
+        - type
+      properties:
+        id:
+          type: string
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/isochroneFeature'
+        type:
+          type: string
+          enum:
+            - FeatureCollection
+      example:
+        {
+          "features": [
+            {
+              "properties": {
+                "fill": "#ff0000",
+                "fillOpacity": 0.33,
+                "fill-opacity": 0.33,
+                "fillColor": "#ff0000",
+                "color": "#ff0000",
+                "contour": 15,
+                "opacity": 0.33,
+                "metric": "time"
+              },
+              "geometry": {
+                "coordinates": [
+                  [
+                    -73.985021,
+                    40.753501
+                  ],
+                  [
+                    -73.983892,
+                    40.751630
+                  ],
+                  [
+                    -73.982508,
+                    40.751546
+                  ],
+                  [
+                    -73.981969,
+                    40.751014
+                  ],
+                  [
+                    -73.977881,
+                    40.739014
+                  ],
+                  [
+                    -73.979577,
+                    40.738083
+                  ],
+                  [
+                    -73.980361,
+                    40.737014
+                  ],
+                  [
+                    -73.988508,
+                    40.734670
+                  ],
+                  [
+                    -73.990508,
+                    40.733708
+                  ],
+                  [
+                    -73.991514,
+                    40.734008
+                  ],
+                  [
+                    -73.994628,
+                    40.733894
+                  ],
+                  [
+                    -73.995388,
+                    40.734134
+                  ],
+                  [
+                    -73.995662,
+                    40.734860
+                  ],
+                  [
+                    -73.996508,
+                    40.735006
+                  ],
+                  [
+                    -73.998508,
+                    40.734576
+                  ],
+                  [
+                    -74.003292,
+                    40.746014
+                  ],
+                  [
+                    -74.004016,
+                    40.749014
+                  ],
+                  [
+                    -74.002508,
+                    40.749907
+                  ],
+                  [
+                    -73.993508,
+                    40.751786
+                  ],
+                  [
+                    -73.987508,
+                    40.753970
+                  ],
+                  [
+                    -73.985021,
+                    40.753501
+                  ]
+                ],
+                "type": "LineString"
+              },
+              "type": "Feature"
+            }
+          ],
+          "type": "FeatureCollection"
+        }
+    isochroneFeature:
+      type: object
+      properties:
+        properties:
+          $ref: '#/components/schemas/isochroneProperties'
+        geometry:
+          type: object
+          # Bit of a cop-out for now since many client generators choke on the complexity of GeoJSON
+          additionalProperties: true
+        type:
+          type: string
+          enum:
+            - Feature
+    isochroneProperties:
+      type: object
+      properties:
+        fillColor:
+          type: string
+        opacity:
+          type: number
+          format: float
+        fill:
+          type: string
+        fillOpacity:
+          type: number
+          format: float
+        color:
+          type: string
+        contour:
+          type: number
+          format: float
+        metric:
+          type: string
+          enum:
+            - time
+            - distance
+    heightResponse:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        shape:
+          type: array
+          items:
+            $ref: '#/components/schemas/coordinate'
+        encoded_polyline:
+          type: string
+          description: The input polyline.
+        height:
+          type: array
+          description: >-
+            The list of heights for each point, in meters. Present only if `range` is `false`.
+            Null values indicate missing data.
+          items:
+            type: integer
+        range_height:
+          type: array
+          description: >-
+            The list of ranges and heights for each point in the shape, where each entry is an array of length 2.
+            Present only if `range` is `true`.
+            In each pair, the first element represents the range or distance along the input locations. It is the
+            cumulative distance along the previous coordinates in the shape up to the current coordinate.
+            This value for the first coordinate in the shape will always be 0.
+            The second element in the pair represents the height or elevation at the associated coordinate. The height
+            is null if no height data exists for a given location.
+            Both values are expressed in meters.
+          items:
+            type: array
+            items:
+              type: integer
+            minLength: 2
+            maxLength: 2
+      example:
+        {
+          "id": "kesklinn",
+          "shape": [
+            {
+              "lat": 59.436884,
+              "lon": 24.742595
+            }
+          ],
+          "height": [
+            37
+          ]
+        }
+    traceAttributesBaseResponse:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/traceEdge'
+          description: The list of edges matched along the path.
+        admins:
+          type: array
+          items:
+            $ref: '#/components/schemas/adminRegion'
+          description: >-
+            The set of administrative regions matched along the path. Rather than repeating this information
+            for every end node, the admins in this list are referenced by index.
+        matched_points:
+          type: array
+          items:
+            $ref: '#/components/schemas/matchedPoint'
+          description: >-
+            List of match results when using the map_snap shape match algorithm. There is a one-to-one correspondence
+            with the input set of latitude, longitude coordinates and this list of match results.
+        osm_changeset:
+          type: integer
+        shape:
+          type: string
+          description: >-
+            The encoded polyline (https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+            of the matched path.
+        confidence_score:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+    traceAttributesResponse:
+      allOf:
+        - $ref: '#/components/schemas/traceAttributesBaseResponse'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/requestId'
+            units:
+              $ref: '#/components/schemas/valhallaLongUnits'
+            alternate_paths:
+              type: array
+              items:
+                $ref: '#/components/schemas/traceAttributesBaseResponse'
+              description: Alternate paths, if any, that were not classified as the best match.
+    locateObject:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/requestId'
+        input_lat:
+          type: number
+          format: double
+          description: The input (searched) latitude.
+        input_lon:
+          type: number
+          format: double
+          description: The input (searched) longitude.
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/locateNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/locateEdge'
+    locateNode:
+      allOf:
+        - $ref: '#/components/schemas/coordinate'
+        - type: object
+          properties:
+            traffic_signal:
+              type: boolean
+            type:
+              $ref: '#/components/schemas/nodeType'
+            node_id:
+              $ref: '#/components/schemas/nodeId'
+            access:
+              $ref: '#/components/schemas/access'
+            edge_count:
+              type: integer
+            administrative:
+              $ref: '#/components/schemas/administrative'
+            intersection_type:
+              type: string
+              enum:
+                - regular
+                - false
+                - dead-end
+                - fork
+            density:
+              type: integer
+            local_edge_count:
+              type: integer
+            mode_change:
+              type: boolean
+    nodeId:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        value:
+          type: integer
+          format: int64
+        tile_id:
+          type: integer
+          format: int64
+        level:
+          type: integer
+    access:
+      type: object
+      properties:
+        golf_cart:
+          type: boolean
+        wheelchair:
+          type: boolean
+        taxi:
+          type: boolean
+        HOV:
+          type: boolean
+        truck:
+          type: boolean
+        emergency:
+          type: boolean
+        pedestrian:
+          type: boolean
+        car:
+          type: boolean
+        bus:
+          type: boolean
+        bicycle:
+          type: boolean
+        motorcycle:
+          type: boolean
+        moped:
+          type: boolean
+    administrative:
+      type: object
+      properties:
+        iso_3166-1:
+          type: string
+          description: The ISO 3166-1 alpha-2 country code of the administrative region.
+        country:
+          type: string
+          description: The full country name.
+        iso_3166-2:
+          type: string
+          description: >-
+            The ISO 3166-2 code identifying the principal subdivision (ex: provinces or states) within
+            a country.
+        state:
+          type: string
+          description: The full state or province name.
+    locateEdge:
+      type: object
+      properties:
+        edge_id:
+          $ref: '#/components/schemas/nodeId'
+        correlated_lat:
+          type: number
+          format: double
+        correlated_lon:
+          type: number
+          format: double
+        percent_along:
+          type: number
+          format: double
+        side_of_street:
+          type: string
+          enum:
+            - left
+            - right
+            - neither
+        linear_reference:
+          type: string
+          description: >-
+            A base64-encoded [OpenLR location reference](https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf),
+            for a graph edge of the road network matched by the query.
+        outbound_reach:
+          type: integer
+        heading:
+          type: number
+          format: float
+        inbound_reach:
+          type: integer
+        distance:
+          type: number
+          format: float
+        predicted_speeds:
+          type: array
+          items:
+            type: integer
+          description: >-
+            Predicted speed information based on historical data. If available, this will include 2016 entries.
+            Each entry represents 5 minutes, where the first entry represents midnight on Monday, the second entry
+            represents 00:05 on Monday, etc.
+        edge_info:
+          $ref: '#/components/schemas/locateEdgeInfo'
+        edge:
+          $ref: '#/components/schemas/locateDetailedEdge'
+        warnings:
+          type: array
+          items:
+            type: string
+    locateEdgeInfo:
+      type: object
+      properties:
+        mean_elevation:
+          type: number
+          format: float
+          description: The mean elevation, in meters, relative to sea level.
+        shape:
+          type: string
+          description: >-
+            An encoded polyline (https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+            Note that the polyline is always encoded with 6 digits of precision, whereas most implementations default
+            to 5.
+        names:
+          type: array
+          items:
+            type: string
+          description: A list of names that the edge goes by.
+        bike_network:
+          $ref: '#/components/schemas/bikeNetwork'
+        way_id:
+          type: integer
+    locateDetailedEdge:
+      type: object
+      properties:
+        sidewalk_left:
+          type: boolean
+          description: Is there a sidewalk to the left of the edge?
+        sidewalk_right:
+          type: boolean
+          description: Is there a sidewalk to the right of the edge?
+        lane_count:
+          type: integer
+        stop_sign:
+          type: boolean
+          description: Is there a stop sign at end of the directed edge?
+        sac_scale:
+          type: string
+          enum:
+            - none
+            - hiking
+            - mountain hiking
+            - demanding mountain hiking
+            - alpine hiking
+            - demanding alpine hiking
+            - difficult alpine hiking
+        yield_sign:
+          type: boolean
+          description: Is there a yield sign at end of the directed edge?
+        not_thru:
+          type: boolean
+          description: Does the edge lead to a "no-through" region?
+        forward:
+          type: boolean
+          description: Is the edge info forward? If false, then reverse is implied.
+        end_node:
+          $ref: '#/components/schemas/nodeId'
+        truck_route:
+          type: boolean
+          description: Is the edge part of a truck route/network?
+        speeds:
+          $ref: '#/components/schemas/speeds'
+        bike_network:
+          type: boolean
+          description: Is the edge part of a bicycle network?
+        round_about:
+          type: boolean
+          description: Is the edge part of a roundabout?
+        traffic_signal:
+          type: boolean
+          description: Is there a traffic signal at the end of the directed edge?
+        access_restriction:
+          type: boolean
+          description: Is there a general restriction or access condition?
+        destination_only:
+          type: boolean
+          description: Is the edge destination only? If so, it will not be routed through.
+        geo_attributes:
+          $ref: '#/components/schemas/geoAttributes'
+        start_restriction:
+          $ref: '#/components/schemas/restrictions'
+        cycle_lane:
+          type: string
+          description: >-
+            Indication of the type of cycle lane (if any) present along an edge.
+          enum:
+            - none
+            - shared
+            - dedicated
+            - separated
+        end_restriction:
+          $ref: '#/components/schemas/restrictions'
+        seasonal:
+          type: boolean
+          description: Is access seasonal (ex. no access in winter)?
+        country_crossing:
+          type: boolean
+          description: Does the edge cross into a new country?
+        part_of_complex_restriction:
+          type: boolean
+          description: Is the edge part of a complex restriction?
+        has_sign:
+          type: boolean
+          description: Do exit signs exist for the edge?
+        access:
+          $ref: '#/components/schemas/restrictions'
+        bridge:
+          type: boolean
+          description: Is the edge part of a bridge?
+        classification:
+          $ref: '#/components/schemas/highwayClassification'
+        toll:
+          type: boolean
+          description: Is the edge part of a toll road?
+        tunnel:
+          type: boolean
+          description: Is the edge part of a tunnel?
+    bikeNetwork:
+      type: object
+      properties:
+        mountain:
+          type: boolean
+        local:
+          type: boolean
+        regional:
+          type: boolean
+        national:
+          type: boolean
+    speeds:
+      type: object
+      properties:
+        predicted:
+          type: boolean
+          description: Does this edge have predicted (historical) speed records?
+        constrained_flow:
+          type: integer
+          description: Speed when there is no traffic, in kph.
+        free_flow:
+          type: integer
+          description: Speed when there is heavy traffic, in kph.
+        type:
+          type: string
+          enum:
+            - classified
+            - tagged
+          description: >-
+            The type of speed which is used when setting default speeds. When `tagged`, the explicit `max_speed`
+            tags from OpenStreetMap are being used. When `classified`, the values are being inferred from the
+            highway classification.
+        default:
+          type: integer
+          description: >-
+            The default speed used for calculations. NOTE: Values greater than 250 are used for special cases
+            and should not be treated as literal.
+    geoAttributes:
+      type: object
+      properties:
+        curvature:
+          type: integer
+          description: Curvature factor.
+        max_down_slope:
+          type: number
+          format: float
+          description: >-
+            The maximum downward slope. Uses 1 degree precision for slopes to -16 degrees, and 4 degree
+            precision afterwards (up to a max of -76 degrees).
+        max_up_slope:
+          type: number
+          format: float
+          description: >-
+            The maximum upward slope. Uses 1 degree precision for slopes to 16 degrees, and 4 degree
+            precision afterwards (up to a max of 76 degrees).
+        weighted_grade:
+          type: number
+          format: float
+          description: The weighted estimate of the grade.
+        length:
+          type: integer
+          description: The length of the edge, in meters.
+    restrictions:
+      type: object
+      properties:
+        golf_cart:
+          type: boolean
+        truck:
+          type: boolean
+        pedestrian:
+          type: boolean
+        wheelchair:
+          type: boolean
+        taxi:
+          type: boolean
+        HOV:
+          type: boolean
+        emergency:
+          type: boolean
+        motorcycle:
+          type: boolean
+        car:
+          type: boolean
+        moped:
+          type: boolean
+        bus:
+          type: boolean
+        bicycle:
+          type: boolean
+    highwayClassification:
+      type: object
+      properties:
+        internal:
+          type: boolean
+          description: Is the edge internal to an intersection?
+        link:
+          type: boolean
+          description: Is the edge a ramp or turn channel?
+        surface:
+          type: string
+          description: >-
+            A representation of the smoothness of the highway. This is used for costing and access checks based on
+            the vehicle type.
+          enum:
+            - paved_smooth
+            - paved
+            - paved_rough
+            - compacted
+            - dirt
+            - gravel
+            - path
+            - impassable
+        use:
+          type: string
+          enum:
+            - road
+            - ramp
+            - turn_channel
+            - track
+            - driveway
+            - alley
+            - parking_aisle
+            - emergency_access
+            - drive_through
+            - culdesac
+            - living_street
+            - service_road
+            - cycleway
+            - mountain_bike
+            - sidewalk
+            - footway
+            - elevator
+            - steps
+            - escalator
+            - path
+            - pedestrian
+            - bridleway
+            - pedestrian_crossing
+            - rest_area
+            - service_area
+            - other
+            - rail
+            - ferry
+            - rail-ferry
+            - bus
+            - egress_connection
+            - platform_connnection
+            - transit_connection
+            - construction
+        classification:
+          type: string
+          description: >-
+            The classification/importance of the road/path. Used for a variety of purposes including
+            fallback speed estimation and access for certain vehicle types.
+          enum:
+            - motorway
+            - trunk
+            - primary
+            - secondary
+            - tertiary
+            - unclassified
+            - residential
+            - service_other
+    warning:
+      type: object
+      properties:
+        text:
+          type: string
+        code:
+          type: integer
