@@ -91,6 +91,6 @@ jobs:
         git config user.email github-actions@github.com
         git add .
         git commit -m "Update Package.swift with new xcframework [ci skip]"
-        git tag -a v${{ steps.version.outputs.version }} -m "Version v${{ steps.version.outputs.version }}"
+        git tag -a ${{ steps.version.outputs.version }}-actual -m "Version v${{ steps.version.outputs.version }}"
         git push
     
