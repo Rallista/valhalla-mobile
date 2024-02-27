@@ -62,6 +62,8 @@ jobs:
     steps:
     - name: Checkout Valhalla
       uses: actions/checkout@v4
+      with: 
+        fetch-depth: 0
 
     - name: Configure Git
       run: |
