@@ -5,6 +5,17 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      bump_version_scheme:
+        type: choice
+        description: 'Release'
+        required: true
+        default: 'patch'
+        options:
+        - 'patch'
+        - 'minor'
+        - 'major'
 
 jobs:
   build-and-test:
@@ -75,7 +86,7 @@ jobs:
 
     - name: Get version tag
       id: version
-      run: ./scripts/version_bump.sh
+      run: ./scripts/version_bump.sh ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'patch' || inputs.bump_version_scheme }}
 
     - uses: ncipollo/release-action@v1
       with:
