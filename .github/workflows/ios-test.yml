@@ -1,0 +1,40 @@
+name: iOS Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    timeout-minutes: 120
+    strategy:
+      matrix:
+        scheme: [ 
+          ValhallaMobile 
+        ]
+        destination: [
+          'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+        ]
+
+    steps:
+    - name: Install conan
+      run: |
+        brew install conan
+
+    - name: Install boost
+      run: |
+        brew install boost
+
+    - name: Checkout Valhalla
+      uses: actions/checkout@v4
+
+    - name: Build for iOS & iOS Simulator
+      run: |
+        git submodule update --init --recursive
+        ./build.sh ios clean
+
+    - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
+      run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
