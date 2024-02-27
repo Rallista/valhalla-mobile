@@ -1,9 +1,7 @@
-name: Valhalla Mobile iOS
+name: iOS Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
     inputs:
@@ -18,17 +16,9 @@ on:
         - 'major'
 
 jobs:
-  build-and-test:
+  build-release:
     runs-on: macos-14
     timeout-minutes: 120
-    strategy:
-      matrix:
-        scheme: [ 
-          ValhallaMobile 
-        ]
-        destination: [
-          'platform=iOS Simulator,name=iPhone 15,OS=17.2'
-        ]
 
     steps:
     - name: Install conan
@@ -47,9 +37,6 @@ jobs:
         git submodule update --init --recursive
         ./build.sh ios clean
 
-    - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
-      run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
-
     - name: Zip the xcframework
       run: |
         cd build/apple
@@ -64,16 +51,22 @@ jobs:
         path: |
           valhalla-wrapper.xcframework.zip
 
-  release-ios:
+  draft-release:
     runs-on: macos-14
-    needs: build-and-test
+    needs: build-release
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout Valhalla
       uses: actions/checkout@v4
+
+    - name: Configure Git
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
 
     - name: Download the xcframework artifact from the build-and-test
       uses: actions/download-artifact@v4
@@ -81,8 +74,7 @@ jobs:
         name: valhalla-wrapper.xcframework.zip
 
     - name: Write the xcframework to Package.swift
-      run: |
-        ./scripts/write_xcframework_spm.sh
+      run: ./scripts/write_xcframework_spm.sh
 
     - name: Get version tag
       id: version
@@ -98,10 +90,39 @@ jobs:
       
     - name: Generate and commit the Package.swift
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
         git add .
         git commit -m "Update Package.swift with new xcframework [ci skip]"
         git tag -a ${{ steps.version.outputs.version }}-actual -m "Version v${{ steps.version.outputs.version }}"
         git push
+
+    - name: Output version
+      run: echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
     
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: draft-release
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Get the actual commit for the tag
+        id: get-commit
+        run: echo ::set-output name=commit::$(git rev-list -n 1 ${{ needs.draft-release.outputs.version }}-actual)
+
+      - name: Update Tag to Specific Commit
+        uses: octokit/request-action@v2.x
+        with:
+          route: PATCH /repos/{owner}/{repo}/git/refs/tags/${{ needs.draft-release.outputs.version }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          sha: ${{ steps.get-commit.outputs.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
