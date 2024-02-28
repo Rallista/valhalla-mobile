@@ -58,6 +58,10 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
     
     steps:
     - name: Checkout Valhalla
@@ -90,12 +94,10 @@ jobs:
         tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
       
-    - name: Generate and commit the Package.swift
-      run: |
-        git add .
-        git commit -m "Update Package.swift with new xcframework [ci skip]"
-        git tag -a ${{ steps.version.outputs.version }}-actual -m "Version v${{ steps.version.outputs.version }}"
-        git push
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Publish Package.swift and bump version to ${{ steps.version.outputs.version }} [skip ci]"
+        tagging_message: "${{ steps.version.outputs.version }}"
 
     - name: Output version
       run: echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
