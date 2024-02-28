@@ -93,11 +93,13 @@ jobs:
         generateReleaseNotes: true
         tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
-      
+    
+    # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
     - uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: "Publish Package.swift and bump version to ${{ steps.version.outputs.version }} [skip ci]"
         tagging_message: "${{ steps.version.outputs.version }}"
+        push_options: --force
 
     - name: Output version
       run: echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
