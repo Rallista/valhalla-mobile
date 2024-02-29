@@ -90,7 +90,7 @@ jobs:
     - uses: ncipollo/release-action@v1
       with:
         prerelease: true
-        # draft: true
+        draft: true
         generateReleaseNotes: true
         tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
@@ -105,31 +105,31 @@ jobs:
     - name: Output version
       run: echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
     
-  # publish-release:
-  #   runs-on: ubuntu-latest
-  #   needs: draft-release
-  #   steps:
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: draft-release
+    steps:
 
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with: 
-  #         fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
 
-  #     - name: Configure Git
-  #       run: |
-  #         git config user.name github-actions
-  #         git config user.email github-actions@github.com
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
-  #     - name: Get the actual commit for the tag
-  #       id: get-commit
-  #       run: echo ::set-output name=commit::$(git rev-list -n 1 ${{ needs.draft-release.outputs.version }}-actual)
+      - name: Get the actual commit for the tag
+        id: get-commit
+        run: echo ::set-output name=commit::$(git rev-list -n 1 ${{ needs.draft-release.outputs.version }}-actual)
 
-  #     - name: Update Tag to Specific Commit
-  #       uses: octokit/request-action@v2.x
-  #       with:
-  #         route: PATCH /repos/{owner}/{repo}/git/refs/tags/${{ needs.draft-release.outputs.version }}
-  #         owner: ${{ github.repository_owner }}
-  #         repo: ${{ github.event.repository.name }}
-  #         sha: ${{ steps.get-commit.outputs.sha }}
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Tag to Specific Commit
+        uses: octokit/request-action@v2.x
+        with:
+          route: PATCH /repos/{owner}/{repo}/git/refs/tags/${{ needs.draft-release.outputs.version }}
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          sha: ${{ steps.get-commit.outputs.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
