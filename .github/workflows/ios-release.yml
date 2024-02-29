@@ -89,7 +89,6 @@ jobs:
 
     - uses: ncipollo/release-action@v1
       with:
-        prerelease: true
         draft: true
         generateReleaseNotes: true
         tag: ${{ steps.version.outputs.version }}
@@ -103,7 +102,8 @@ jobs:
         push_options: --force
 
     - name: Output version
-      run: echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+      run: |
+        echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
     
   publish-release:
     runs-on: ubuntu-latest
@@ -130,6 +130,5 @@ jobs:
           route: PATCH /repos/{owner}/{repo}/git/refs/tags/${{ needs.draft-release.outputs.version }}
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
-          sha: ${{ steps.get-commit.outputs.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
