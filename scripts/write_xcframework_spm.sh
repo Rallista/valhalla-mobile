@@ -1,12 +1,9 @@
 
 # Get the zip file of the xcframework from ci   
-upload_url=$1
-xcframework_zip="valhalla-wrapper.xcframework.zip"
+release_url=$1
 
 # Get the checksum of the xcframework file.
 xcframework_checksum=$(shasum -a 256 ${xcframework_zip} | awk '{print $1}')
-# release_url="https://github.com/Rallista/valhalla-mobile/releases/download/${release_dir}/${xcframework_zip}"
-release_url="${upload_url}/${xcframework_zip}"
 
 echo "Checksum: ${xcframework_checksum}"
 echo "Release URL: ${release_url}"
