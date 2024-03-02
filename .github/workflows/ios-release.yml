@@ -93,7 +93,7 @@ jobs:
         artifacts: "valhalla-wrapper.xcframework.zip"
     
     - name: Write the xcframework to Package.swift
-      run: ./scripts/write_xcframework_spm.sh ${{ steps.release.outputs.id }}
+      run: ./scripts/write_xcframework_spm.sh ${{ steps.release.outputs.upload_url }}
 
     # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
     - uses: stefanzweifel/git-auto-commit-action@v5
