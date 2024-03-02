@@ -126,9 +126,9 @@ jobs:
         id: get-commit
         run: echo ::set-output name=commit::$(git rev-list -n 1 ${{ needs.draft-release.outputs.version }}-actual)
 
-      # - name: Update Tag to Specific Commit
-      #   uses: octokit/request-action@v2.x
-      #   with:
-      #     route: PATCH /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/git/refs/tags/${{ needs.draft-release.outputs.version }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Tag to Specific Commit
+        uses: octokit/request-action@v2.x
+        with:
+          route: PATCH /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/git/refs/tags/${{ needs.draft-release.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
