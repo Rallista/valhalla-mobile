@@ -80,20 +80,21 @@ jobs:
       with:
         name: valhalla-wrapper.xcframework.zip
 
-    - name: Write the xcframework to Package.swift
-      run: ./scripts/write_xcframework_spm.sh
-
     - name: Get version tag
       id: version
       run: ./scripts/version_bump.sh ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'patch' || inputs.bump_version_scheme }}
 
     - uses: ncipollo/release-action@v1
+      id: release
       with:
         draft: true
         generateReleaseNotes: true
         tag: ${{ steps.version.outputs.version }}
         artifacts: "valhalla-wrapper.xcframework.zip"
     
+    - name: Write the xcframework to Package.swift
+      run: ./scripts/write_xcframework_spm.sh ${{ steps.release.outputs.id }}
+
     # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
     - uses: stefanzweifel/git-auto-commit-action@v5
       with:
