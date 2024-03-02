@@ -94,7 +94,8 @@ jobs:
     
     - name: Write the xcframework to Package.swift
       run: | 
-        echo "::debug ::${{ steps.release.outputs.assets }}"
+        echo "::debug ::${{ steps.release.outputs.assets[0].browser_download_url }}"
+        echo "::debug ::${{ steps.release.outputs.assets[0]['browser_download_url'] }}"
         ./scripts/write_xcframework_spm.sh ${{ steps.release.outputs.assets[0].browser_download_url }}
 
     # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
