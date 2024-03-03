@@ -87,6 +87,7 @@ jobs:
     - uses: softprops/action-gh-release@v1
       id: release
       with:
+        draft: true
         generate_release_notes: true
         tag_name: ${{ steps.version.outputs.version }}
         files: "valhalla-wrapper.xcframework.zip"

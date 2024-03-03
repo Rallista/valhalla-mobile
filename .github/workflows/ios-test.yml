@@ -38,3 +38,5 @@ jobs:
 
     - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
       run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
+      env:
+        VALHALLA_MOBILE_DEV: "true"
