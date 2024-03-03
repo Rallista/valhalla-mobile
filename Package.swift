@@ -2,7 +2,7 @@
 import PackageDescription
 
 // Use the local binary if true
-let useLocalBinary = true
+let useLocalBinary: Bool = true
 
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
