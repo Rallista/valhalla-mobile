@@ -93,8 +93,9 @@ jobs:
         files: "valhalla-wrapper.xcframework.zip"
     
     - name: Write the xcframework to Package.swift
-      run: | 
-        ./scripts/write_xcframework_spm.sh ${{ fromJSON(steps.release.outputs.assets)[0].browser_download_url }}
+      # run: ./scripts/write_xcframework_spm.sh ${{ fromJSON(steps.release.outputs.assets)[0].browser_download_url }}
+      run: ./scripts/write_xcframework_spm.sh ${{ steps.release.outputs.url }}
+        
 
     # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
     - uses: stefanzweifel/git-auto-commit-action@v5
@@ -106,3 +107,14 @@ jobs:
     - name: Output version
       run: |
         echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: draft-release
+    steps:
+
+      - uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ needs.draft-release.outputs.version}}
