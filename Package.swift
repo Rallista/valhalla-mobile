@@ -2,7 +2,7 @@
 import PackageDescription
 
 // Use the local binary if true
-let useLocalBinary: Bool = true
+let useLocalBinary: Bool = false
 
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
@@ -11,7 +11,7 @@ var binaryTarget: Target = .binaryTarget(
 )
 
 // CI will replace the nils with the actual values when building a release
-let binaryURL: String = "https://github.com/Rallista/valhalla-mobile/releases/download/untagged-c0c02537758d299a7a0b/valhalla-wrapper.xcframework.zip"
+let binaryURL: String = "https://github.com/Rallista/valhalla-mobile/releases/download/untagged-f0800b54da53ad3fe385/valhalla-wrapper.xcframework.zip"
 let binaryChecksum: String = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 if !useLocalBinary {
