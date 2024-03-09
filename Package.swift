@@ -33,7 +33,7 @@ let package = Package(
     products: [
         .library(
             name: "Valhalla",
-            targets: ["Valhalla"]
+            targets: ["Valhalla", "ValhallaModels"]
         ),
     ],
     dependencies: [
