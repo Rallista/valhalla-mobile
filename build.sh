@@ -7,9 +7,7 @@ set -e
 if [ "$2" == "clean" ]; then
     if [ "$1" == "ios" ]; then
         echo "Cleaning the iOS build directory..."
-        rm -rf build/iphoneos
-        rm -rf build/iphonesimulator
-        rm -rf build/ios
+        rm -rf build/apple
     elif [ "$1" == "android" ]; then
         echo "Cleaning the Android build directory..."
         rm -rf build/android

@@ -10,6 +10,8 @@ elif [ "$1" == "iphonesimulator" ]; then
     export SDK="iphonesimulator"
     export SYSTEM_NAME="iOS"
     export OSX_DEPLOYMENT_TARGET="13.0"
+    # It seems that iPhoneOS17.4 doesn't allow x86_64, only arm64
+    # Xcode 15.3 doesn't allow old build system to fix build failure when using arm64;x86_64: https://gitlab.kitware.com/cmake/cmake/-/issues/21282
     export OSX_ARCHITECTURE="arm64" # TODO: Add x86_64 for older simulators?
 elif [ "$1" == "macos" ]; then
     export SDK="macosx"
