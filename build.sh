@@ -35,6 +35,7 @@ if [ "$1" == "ios" ] || [ "$1" == "all" ]; then
     echo "Building iOS..."
     ./scripts/build_apple.sh iphoneos
     ./scripts/build_apple.sh iphonesimulator
+    ./scripts/build_apple.sh iphonesimulator-legacy
 
     echo "Creating xcframework..."
     ./scripts/create_xcframework.sh
