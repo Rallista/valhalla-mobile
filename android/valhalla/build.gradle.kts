@@ -1,6 +1,8 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.ktfmt)
+    `maven-publish`
 }
 
 android {
@@ -30,13 +32,50 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation(libs.core.ktx)
+
+    implementation(libs.moshi.kotlin)
+    implementation(libs.moshi.adapters)
+
+
+    implementation(libs.valhalla.config)
+    implementation(libs.valhalla.api)
+    implementation(libs.osrm.api)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Rallista/valhalla-mobile")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("gpr") {
+            afterEvaluate {
+                from(components["release"])
+            }
+
+            groupId = "com.valhalla"
+            artifactId = "valhalla"
+            version = "0.0.1"
+        }
+    }
 }

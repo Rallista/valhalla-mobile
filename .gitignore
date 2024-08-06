@@ -1,12 +1,16 @@
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
+/android/.gradle
+/android/local.properties
+/android/.idea/codeStyles
+/android/.idea/caches
+/android/.idea/libraries
+/android/.idea/modules.xml
+/android/.idea/workspace.xml
+/android/.idea/navEditor.xml
+/android/.idea/assetWizardSettings.xml
+/android/.idea/deploymentTargetSelector.xml
+/android/.idea/androidTestResultsUserPreferences.xml
 .DS_Store
 /build
 /protoc
@@ -31,3 +35,7 @@ libvalhalla-wrapper.so
 
 # Openapi temp
 .openapi-temp
+
+# Gradle other
+/.gradle
+/wrapper/.gradle
