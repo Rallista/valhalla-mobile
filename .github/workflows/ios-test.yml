@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-test:
     runs-on: macos-14
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-test
+      cancel-in-progress: true
     timeout-minutes: 120
     strategy:
       matrix:
