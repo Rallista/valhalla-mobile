@@ -1,4 +1,4 @@
-name: iOS Release
+name: iOS
 
 on:
   push:
