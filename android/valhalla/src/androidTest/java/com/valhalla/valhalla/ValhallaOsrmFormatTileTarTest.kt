@@ -63,10 +63,10 @@ class ValhallaOsrmFormatTileTarTest {
                     RoutingWaypoint(lat = 38.429719, lon = -108.827425),
                     RoutingWaypoint(lat = 38.4604331, lon = -108.8817009)),
             costing = CostingModel.auto,
-          directionsOptions = DirectionsOptions(format = DirectionsOptions.Format.osrm))
+            directionsOptions = DirectionsOptions(format = DirectionsOptions.Format.osrm))
 
     when (val response = valhalla.route(request)) {
-      is ValhallaResponse.Json ->  fail("format was not json (valhalla)")
+      is ValhallaResponse.Json -> fail("format was not json (valhalla)")
       is ValhallaResponse.Osrm -> {
         val it = response.osrmResponse
         assertEquals(it.code, RouteResponse.Code.Ok)
