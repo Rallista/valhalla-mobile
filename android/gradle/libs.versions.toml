@@ -3,24 +3,27 @@ agp = "8.2.2"
 kotlin = "2.0.0"
 ktfmt = "0.19.0"
 core-ktx = "1.13.1"
-
 moshi = "1.15.1"
-osrm-api = "0.0.6"
-valhalla-openapi = "0.0.3"
-
+osrm-api = "0.0.9"
+valhalla-openapi = "0.0.6"
 espresso-core = "3.6.1"
 junit = "4.13.2"
 junit-version = "1.2.1"
+androidx-test = "1.6.1"
 
 [libraries]
-ext-junit = { module = "androidx.test.ext:junit", version.ref = "junit-version" }
-junit = { module = "junit:junit", version.ref = "junit" }
 moshi-kotlin = { group = "com.squareup.moshi", name="moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { group = "com.squareup.moshi", name="moshi-adapters", version.ref = "moshi" }
 osrm-api = { module = "com.osrm:api", version.ref = "osrm-api" }
 valhalla-config = { group = "com.valhalla", name = "api", version.ref = "valhalla-openapi" }
 valhalla-api = { group = "com.valhalla", name = "config", version.ref = "valhalla-openapi" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+# Testing
+junit = { module = "junit:junit", version.ref = "junit" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit",  version.ref = "junit-version" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidx-test" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 
 [plugins]

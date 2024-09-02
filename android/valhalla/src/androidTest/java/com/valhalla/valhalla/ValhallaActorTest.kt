@@ -20,7 +20,7 @@ class ValhallaActorTest {
   fun setUp() {
     appContext = InstrumentationRegistry.getInstrumentation().targetContext
     configPath = TestFileUtils.getConfigPath(appContext)
-    Log.d("ValhallaInstrumentedTest", "Using config path: $configPath")
+    Log.d("ValhallaActorTest", "Using config path: $configPath")
   }
 
   @Test
@@ -60,6 +60,6 @@ class ValhallaActorTest {
     val responseJson = JSONObject(response)
     val expectedResponseJson = JSONObject(expectedResponse)
 
-    assertEquals(responseJson["trip"], expectedResponseJson)
+    assertEquals(expectedResponseJson.toString(), responseJson.toString())
   }
 }

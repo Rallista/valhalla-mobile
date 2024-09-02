@@ -7,7 +7,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.valhalla.api.models.DirectionsOptions
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RouteResponse
-import com.valhalla.valhalla.config.ValhallaConfig
+import com.valhalla.config.models.ValhallaConfig
 import com.valhalla.valhalla.config.ValhallaConfigManager
 
 class Valhalla(
@@ -35,9 +35,13 @@ class Valhalla(
    * @throws [ValhallaException]
    */
   fun route(request: RouteRequest): ValhallaResponse {
-    val rawResponse = valhallaActor.route(request.toString())
+    val encodedRequest = moshi.adapter(RouteRequest::class.java).toJson(request)
+    val rawResponse = valhallaActor.route(encodedRequest)
 
-    if (rawResponse.contains("code")) {
+    // Check for error response in Valhalla format.
+    // OSRM has a code and message like the valhalla error, but it's not the same format.
+    // If the response contains routes, it's a valid OSRM response.
+    if (rawResponse.contains("code") and !rawResponse.contains("routes")) {
       val error = moshi.adapter(ErrorResponse::class.java).fromJson(rawResponse)
       error?.let { throw ValhallaException.Internal(it) }
       throw ValhallaException.InvalidError()

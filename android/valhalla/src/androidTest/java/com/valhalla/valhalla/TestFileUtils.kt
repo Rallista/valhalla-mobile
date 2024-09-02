@@ -14,7 +14,6 @@ class TestFileUtils {
     }
 
     fun getExpectedResponse(context: Context): String {
-      ValhallaFile.copyAssetFileToStorage(context, "valhalla_tiles.tar")
       return ValhallaFile.loadAssetFile(context, "expected.json")
     }
   }

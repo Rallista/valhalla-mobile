@@ -46,13 +46,16 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.moshi.adapters)
 
-
     implementation(libs.valhalla.config)
     implementation(libs.valhalla.api)
     implementation(libs.osrm.api)
 
     testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
 }
 
 publishing {

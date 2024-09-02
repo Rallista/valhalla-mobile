@@ -1,6 +1,6 @@
 package com.valhalla.valhalla
 
-data class ErrorResponse<Route>(val code: String, val message: String, val routes: List<Route>) {
+data class ErrorResponse(val code: Int, val message: String) {
   override fun toString(): String {
     return "ValhallaError(code=$code, $message)"
   }
@@ -17,7 +17,7 @@ sealed class ValhallaException(message: String? = null, cause: Throwable? = null
    * @param response
    * @constructor TODO
    */
-  class Internal(response: ErrorResponse<*>) : ValhallaException(response.toString(), null)
+  class Internal(response: ErrorResponse) : ValhallaException(response.toString(), null)
 
   class InvalidError : ValhallaException("Invalid error response data")
 

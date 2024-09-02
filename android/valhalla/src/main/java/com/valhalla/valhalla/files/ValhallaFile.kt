@@ -11,7 +11,7 @@ class ValhallaFile(
 ) {
 
   companion object {
-    fun UsingAsset(context: Context, fileName: String): ValhallaFile {
+    fun usingAsset(context: Context, fileName: String): ValhallaFile {
       copyAssetFileToStorage(context, fileName)
       return ValhallaFile(context, fileName)
     }

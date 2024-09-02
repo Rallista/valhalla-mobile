@@ -2,15 +2,7 @@
 /.idea
 /android/.gradle
 /android/local.properties
-/android/.idea/codeStyles
-/android/.idea/caches
-/android/.idea/libraries
-/android/.idea/modules.xml
-/android/.idea/workspace.xml
-/android/.idea/navEditor.xml
-/android/.idea/assetWizardSettings.xml
-/android/.idea/deploymentTargetSelector.xml
-/android/.idea/androidTestResultsUserPreferences.xml
+/android/.idea/
 .DS_Store
 /build
 /protoc

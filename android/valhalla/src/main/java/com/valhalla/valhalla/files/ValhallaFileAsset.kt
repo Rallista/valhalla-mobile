@@ -5,13 +5,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-/**
- * TODO
- *
- * @param context
- * @param assetFileName
- * @return
- */
 fun ValhallaFile.Companion.copyAssetFileToStorage(context: Context, assetFileName: String): String {
   val assetManager = context.assets
   val outputFile = File(context.filesDir, assetFileName)
