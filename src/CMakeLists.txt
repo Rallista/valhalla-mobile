@@ -1,6 +1,10 @@
 # Set the minimum version of CMake that can be used
 cmake_minimum_required(VERSION 3.14)
 
+# Configure VCPKG
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+
 # Set the project name
 project(valhalla-mobile)
 
@@ -11,13 +15,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
+# Disable deprecation
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-builtins")
+
 # Configure OSX
 if (APPLE)
     message(STATUS "Configured for APPLE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-deprecated-builtins")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32")
 
     # tvOS and watchOS modifications
-    if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*") 
+    if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
     endif()
 endif()
@@ -28,82 +35,43 @@ add_subdirectory(wrapper)
 target_include_directories(valhalla-wrapper PUBLIC wrapper/include)
 install(DIRECTORY wrapper/include DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
-# PROTOBUF ---------------------------------------------------------
+# DEPENDENCIES ----------------------------------------------------
 
-message(STATUS "Protobuf fetching from github...")
-
-# Fetch Protobuf source code
-# https://cmake.org/cmake/help/latest/module/FetchContent.html#overriding-where-to-find-cmakelists-txt
-include(FetchContent)
-FetchContent_Declare(
-    protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG v3.20.3  # You can specify a particular commit or tag
-    SOURCE_SUBDIR cmake
-    FIND_PACKAGE_ARGS NAMES protobuf
-)
-
-message(STATUS "Protobuf fetching - done")
-message(STATUS "Protobuf building...")
-
-set(WITHPROTOC {$Protobuf_PROTOC_EXECUTABLE} CACHE INTERNAL "")
-set(protobuf_BUILD_STATIC_LIBS ON CACHE INTERNAL "")
-set(protobuf_BUILD_LIBPROTOC ON CACHE INTERNAL "")
-set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE INTERNAL "")
-set(protobuf_BUILD_TESTS OFF CACHE INTERNAL "")
-set(protobuf_BUILD_CONFORMANCE OFF CACHE INTERNAL "")
-set(protobuf_BUILD_EXAMPLES OFF CACHE INTERNAL "")
-
-FetchContent_MakeAvailable(Protobuf)
-
-message(STATUS "Protobuf bulding -done")
-
-set(Protobuf_INCLUDE_DIR ${protobuf_SOURCE_DIR}/src)
-set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
-
-include(FindProtobuf) 
+# Find packages using vcpkg
 find_package(Protobuf CONFIG REQUIRED)
+find_package(Boost REQUIRED)
+find_package(date CONFIG REQUIRED)
+find_package(robin_hood CONFIG REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
 
-if (NOT Protobuf_FOUND)
-    message(FATAL_ERROR "Protobuf not found")
-endif()
+# Start Global
+link_libraries(robin_hood::robin_hood)
+include_directories(${ROBIN_HOOD_INCLUDE_DIRS})
 
-# Link Protobuf
+link_libraries(rapidjson)
+include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
-target_link_libraries(valhalla-wrapper PRIVATE protobuf::libprotobuf)
+link_libraries(Boost::boost)
+include_directories(${Boost_INCLUDE_DIRS})
+# End Global
 
-# VALHALLA ---------------------------------------------------------
+add_subdirectory(valhalla)
+# Valhalla source directory
+set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/valhalla)
+set_property(DIRECTORY valhalla PROPERTY VALHALLA_SOURCE_DIR ${VALHALLA_SOURCE_DIR})
 
-add_subdirectory(valhalla EXCLUDE_FROM_ALL)
-target_link_libraries(valhalla-wrapper PRIVATE valhalla)
-target_include_directories(valhalla-wrapper PRIVATE valhalla/valhalla)
-install(DIRECTORY valhalla/valhalla DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-
-# Valhalla proto files
-# TODO: Filter out subdirectories (they're empty but still there).
-set(VALHALLA_PROTO_HEADERS_DIR ${CMAKE_BINARY_DIR}/valhalla/src/valhalla/proto)
-install(DIRECTORY ${VALHALLA_PROTO_HEADERS_DIR}/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/valhalla/proto
-        FILES_MATCHING PATTERN "*.h")
-
-# BOOST ---------------------------------------------------------
-
-message(STATUS "Boost_INCLUDE_DIR: ${Boost_INCLUDE_DIR}")
-
-# Find all header files in Boost_INCLUDE_DIR/boost
-file(GLOB_RECURSE BOOST_HEADERS ${Boost_INCLUDE_DIR}/boost/*.hpp ${Boost_INCLUDE_DIR}/boost/*.h)
-
-# Process each header file to determine its relative path
-foreach(BOOST_HEADER ${BOOST_HEADERS})
-    # Get the relative path of the header file relative to Boost_INCLUDE_DIR/boost
-    file(RELATIVE_PATH BOOST_HEADER_RELATIVE ${Boost_INCLUDE_DIR}/boost ${BOOST_HEADER})
-    
-    # Extract the directory part of the relative path
-    get_filename_component(BOOST_HEADER_DIR ${BOOST_HEADER_RELATIVE} DIRECTORY)
-    
-    # Install the header file to the destination directory within the installation directory
-    install(FILES ${BOOST_HEADER} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/boost/${BOOST_HEADER_DIR})
-endforeach()
+target_link_libraries(valhalla-wrapper
+    PRIVATE
+    protobuf::libprotobuf
+    Boost::boost
+    date::date
+    valhalla
+)
+target_include_directories(valhalla-wrapper
+    PRIVATE
+    ${Boost_INCLUDE_DIRS}
+    ${VALHALLA_SOURCE_DIR}
+)
 
 # Date (valhalla/third_party) ---------------------------------------------------------
 
@@ -120,7 +88,7 @@ endif()
 
 # Install the valhalla-wrapper library
 
-install(TARGETS 
+install(TARGETS
     valhalla
     valhalla-baldr
     valhalla-loki

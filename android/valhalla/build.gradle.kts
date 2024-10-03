@@ -58,6 +58,34 @@ dependencies {
     androidTestImplementation(libs.androidx.test.rules)
 }
 
+// Define a custom task to run the shell script
+tasks.register<Exec>("buildLibValhalla") {
+
+    // Command to execute your build.sh script
+    commandLine("sh", "./build.sh", "android", "clean")
+
+    // Ensure the submodule is initialized
+    doFirst {
+        exec {
+            commandLine("git", "submodule", "update", "--init", "--recursive")
+        }
+    }
+
+    val archs = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+    outputs.files(archs.map { file("src/main/jniLibs/$it/libvalhalla-wrapper.so") })
+
+    // Conditionally compile the library outputs don't exist.
+    onlyIf {
+        archs.any { arch ->
+            !file("src/main/jniLibs/$arch/libvalhalla-wrapper.so").exists()
+        }
+    }
+}
+
+tasks.build {
+    dependsOn("buildLibValhalla")
+}
+
 publishing {
     repositories {
         maven {

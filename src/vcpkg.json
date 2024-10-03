@@ -1,0 +1,26 @@
+{
+  "name": "valhalla-mobile",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "protobuf",
+    "boost-algorithm",
+    "boost-foreach",
+    "boost-format",
+    "boost-geometry",
+    "boost-heap",
+    "boost-optional",
+    "boost-property-tree",
+    "boost-range",
+    "boost-tokenizer",
+    "date",
+    "robin-hood-hashing",
+    "rapidjson"
+  ],
+  "overrides": [
+    {
+      "name": "valhalla",
+      "version": "0"
+    }
+  ],
+  "builtin-baseline": "f176b58f35a75f9f8f54099cd9df97d2e2793a2e"
+}

@@ -31,3 +31,6 @@ libvalhalla-wrapper.so
 # Gradle other
 /.gradle
 /wrapper/.gradle
+
+# VCPKG
+/vcpkg
