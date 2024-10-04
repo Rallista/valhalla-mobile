@@ -14,7 +14,8 @@
     "boost-tokenizer",
     "date",
     "robin-hood-hashing",
-    "rapidjson"
+    "rapidjson",
+    "lz4"
   ],
   "overrides": [
     {
