@@ -12,6 +12,16 @@ project(valhalla-mobile)
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Valhalla config for mobile.
+set(ENABLE_TOOLS OFF)
+set(ENABLE_DATA_TOOLS OFF)
+set(ENABLE_PYTHON_BINDINGS OFF)
+set(ENABLE_HTTP OFF)
+set(ENABLE_SERVICES OFF)
+set(ENABLE_TESTS OFF)
+# TODO: Remove this once we fix the iOS errors w/ date library.
+set(ENABLE_SINGLE_FILES_WERROR OFF)
+
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
@@ -53,6 +63,9 @@ include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
 link_libraries(Boost::boost)
 include_directories(${Boost_INCLUDE_DIRS})
+
+link_libraries(date::date)
+include_directories(${Date_INCLUDE_DIRS})
 # End Global
 
 add_subdirectory(valhalla)
@@ -83,22 +96,10 @@ if (APPLE)
     add_subdirectory(valhalla/third_party/date date)
     target_link_libraries(valhalla-wrapper PRIVATE date)
     target_include_directories(valhalla-wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif()
 
 # Install the valhalla-wrapper library
 
 install(TARGETS
-    valhalla
-    valhalla-baldr
-    valhalla-loki
-    valhalla-meili
-    valhalla-midgard
-    valhalla-odin
-    valhalla-sif
-    valhalla-skadi
-    valhalla-thor
-    valhalla-tyr
-    valhalla-proto
     valhalla-wrapper
     DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)

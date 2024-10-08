@@ -1,7 +1,4 @@
-#!/bin/zsh
-
-# TODO: Remove
-rm -rf build
+#!/bin/sh
 
 export VCPKG_ROOT=`pwd`/vcpkg
 
@@ -12,10 +9,6 @@ if [ -z ${ANDROID_NDK_HOME+x} ]; then
   echo "Please set ANDROID_NDK_HOME"
   exit 1
 fi
-# if [ -z ${VCPKG_ROOT+x} ]; then
-#   echo "Please set VCPKG_ROOT"
-#   exit 1
-# fi
 
 #
 # 2. Set the path to the toolchains
@@ -23,22 +16,23 @@ fi
 vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 android_toolchain_file=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake
 
-#
-# 3. Select a pair "Android abi" / "vcpkg triplet"
-# Uncomment one of the four possibilities below
-#
-
-# android_abi=armeabi-v7a
-# vcpkg_target_triplet=arm-android
-
-# android_abi=x86
-# vcpkg_target_triplet=x86-android
-
-android_abi=arm64-v8a
-vcpkg_target_triplet=arm64-android
-
-# android_abi=x86_64
-# vcpkg_target_triplet=x64-android
+# Check if the first argument is a valid Apple architecture
+if [ "$1" == "arm64" ]; then
+    android_abi=arm64-v8a
+    vcpkg_target_triplet=arm64-android
+elif [ "$1" == "arm" ]; then
+    android_abi=armeabi-v7a
+    vcpkg_target_triplet=arm-android
+elif [ "$1" == "x64" ]; then
+    android_abi=x86_64
+    vcpkg_target_triplet=x64-android
+elif [ "$1" == "x86" ]; then
+    android_abi=x86
+    vcpkg_target_triplet=x86-android
+else
+    echo "Error, first argument must be an ardroid architecture: arm, arm64, x64, or x86"
+    exit 1
+fi
 
 export BUILD_DIR=`pwd`/build/android/$android_abi/wrapper
 wrapper_dir=`pwd`/src
@@ -51,9 +45,6 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$android_toolchain_file \
     -DVCPKG_TARGET_TRIPLET=$vcpkg_target_triplet \
     -DANDROID_ABI=$android_abi \
-    -DENABLE_TOOLS=OFF -DENABLE_DATA_TOOLS=OFF \
-    -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_HTTP=OFF \
-    -DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF \
     -S $wrapper_dir \
     -B .
 cmake --build . -- -j$(nproc)

@@ -20,16 +20,16 @@ fi
 if [ "$2" == "clean-all" ]; then
     echo "Cleaning all, all builds and protoc directory..."
     rm -rf build
-    rm -rf protoc
+    # rm -rf protoc
 fi
 
-if [ ! -d "protoc" ]; then
-    echo "Building protoc for your local machine into the ./protoc directory..."
-    mkdir protoc
-    ./scripts/build_protoc_local.sh
-else
-    echo "Protoc already exists in the ./protoc directory. If you want to rebuild it, delete the directory and run this script again."
-fi
+# if [ ! -d "protoc" ]; then
+#     echo "Building protoc for your local machine into the ./protoc directory..."
+#     mkdir protoc
+#     ./scripts/build_protoc_local.sh
+# else
+#     echo "Protoc already exists in the ./protoc directory. If you want to rebuild it, delete the directory and run this script again."
+# fi
 
 if [ "$1" == "ios" ] || [ "$1" == "all" ]; then
     echo "Building iOS..."

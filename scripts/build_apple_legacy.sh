@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# DEPRECATED: This script was only tested on Valhalla 3.4.0 and is now deprecated.
+echo "DEPRECATED: This script was only tested on Valhalla 3.4.0 and is now deprecated."
+exit 1
+
 # Check if the first argument is a valid Apple architecture
 if [ "$1" == "iphoneos" ]; then
     export SDK="iphoneos"
