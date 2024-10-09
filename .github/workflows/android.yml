@@ -17,9 +17,14 @@ jobs:
       packages: read
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+
+      - name: Setup VCPKG
+        run: |
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+          ./vcpkg/bootstrap-vcpkg.sh
+          export VCPKG_ROOT=`pwd`/vcpkg
 
       - name: set up JDK 17
         uses: actions/setup-java@v4
