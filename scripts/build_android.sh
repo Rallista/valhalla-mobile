@@ -15,6 +15,7 @@ fi
 #
 vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 android_toolchain_file=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake
+vcpkg_triplet_overlay=`pwd`/triplets
 
 # Check if the first argument is a valid Apple architecture
 if [ "$1" == "arm64" ]; then
@@ -30,7 +31,7 @@ elif [ "$1" == "x86" ]; then
     android_abi=x86
     vcpkg_target_triplet=x86-android
 else
-    echo "Error, first argument must be an ardroid architecture: arm, arm64, x64, or x86"
+    echo "Error, first argument must be an android architecture: arm, arm64, x64, or x86"
     exit 1
 fi
 
@@ -43,6 +44,7 @@ mkdir -p $BUILD_DIR && cd $BUILD_DIR
 # vcpkg will install everything during cmake configuration
 cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$android_toolchain_file \
+    -DVCPKG_OVERLAY_TRIPLETS=$vcpkg_triplet_overlay \
     -DVCPKG_TARGET_TRIPLET=$vcpkg_target_triplet \
     -DANDROID_ABI=$android_abi \
     -S $wrapper_dir \

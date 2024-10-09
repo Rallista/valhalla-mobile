@@ -20,16 +20,7 @@ fi
 if [ "$2" == "clean-all" ]; then
     echo "Cleaning all, all builds and protoc directory..."
     rm -rf build
-    # rm -rf protoc
 fi
-
-# if [ ! -d "protoc" ]; then
-#     echo "Building protoc for your local machine into the ./protoc directory..."
-#     mkdir protoc
-#     ./scripts/build_protoc_local.sh
-# else
-#     echo "Protoc already exists in the ./protoc directory. If you want to rebuild it, delete the directory and run this script again."
-# fi
 
 if [ "$1" == "ios" ] || [ "$1" == "all" ]; then
     echo "Building iOS..."
@@ -43,8 +34,8 @@ fi
 
 if [ "$1" == "android" ] || [ "$1" == "all" ]; then
     echo "Building Android..."
-    ./scripts/build_android.sh arm64-v8a
-    ./scripts/build_android.sh armeabi-v7a
+    ./scripts/build_android.sh arm64
+    ./scripts/build_android.sh arm
     ./scripts/build_android.sh x86_64
     ./scripts/build_android.sh x86
 
