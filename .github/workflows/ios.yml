@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: macos-14
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-test
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-build
       cancel-in-progress: true
     timeout-minutes: 120
     strategy:
@@ -42,7 +42,7 @@ jobs:
   test:
     runs-on: macos-14
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-test
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-test
       cancel-in-progress: true
     timeout-minutes: 120
     strategy:
