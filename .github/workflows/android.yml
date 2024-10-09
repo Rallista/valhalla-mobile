@@ -84,6 +84,7 @@ jobs:
         working-directory: android
 
   test:
+    needs: build
     runs-on: macos-13
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-test
@@ -129,6 +130,7 @@ jobs:
           retention-days: 5
 
   connected-check:
+    needs: build
     runs-on: macos-13
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
