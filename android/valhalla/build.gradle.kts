@@ -1,3 +1,5 @@
+import com.github.javaparser.utils.ProjectRoot
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -60,21 +62,17 @@ dependencies {
 
 // Define a custom task to run the shell script
 tasks.register<Exec>("buildLibValhalla") {
+    // Change the working door to the repository root.
+    workingDir = file("${project.projectDir}/../../")
 
-    // Command to execute your build.sh script
+    // Set the VCPKG_ROOT environment variable.
+    environment("VCPKG_ROOT", "${workingDir.absolutePath}/vcpkg")
+
+    // Command to execute your build.sh script.
     commandLine("sh", "./build.sh", "android", "clean")
 
-    // Ensure the submodule is initialized
-    doFirst {
-        exec {
-            commandLine("git", "submodule", "update", "--init", "--recursive")
-        }
-    }
-
-    val archs = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-    outputs.files(archs.map { file("src/main/jniLibs/$it/libvalhalla-wrapper.so") })
-
     // Conditionally compile the library outputs don't exist.
+    val archs = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
     onlyIf {
         archs.any { arch ->
             !file("src/main/jniLibs/$arch/libvalhalla-wrapper.so").exists()
@@ -82,7 +80,7 @@ tasks.register<Exec>("buildLibValhalla") {
     }
 }
 
-tasks.build {
+tasks.named("preBuild") {
     dependsOn("buildLibValhalla")
 }
 
