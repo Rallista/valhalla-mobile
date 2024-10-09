@@ -15,6 +15,7 @@ Set up VCPKG
 ```sh
 git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
 ./vcpkg/bootstrap-vcpkg.sh
+export VCPKG_ROOT=`pwd`/vcpkg
 ```
 
 ### iOS Swift Package

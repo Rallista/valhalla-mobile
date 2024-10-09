@@ -1,12 +1,15 @@
 #!/bin/sh
 
-export VCPKG_ROOT=`pwd`/vcpkg
-
 #
 # 1. Check the presence of required environment variables
 #
 if [ -z ${ANDROID_NDK_HOME+x} ]; then
   echo "Please set ANDROID_NDK_HOME"
+  exit 1
+fi
+
+if [ -z ${VCPKG_ROOT+x} ]; then
+  echo "Please set VCPKG_ROOT"
   exit 1
 fi
 
@@ -31,7 +34,7 @@ elif [ "$1" == "x86" ]; then
     android_abi=x86
     vcpkg_target_triplet=x86-android
 else
-    echo "Error, first argument must be an android architecture: arm, arm64, x64, or x86"
+    echo "Error, first argument must be an android architecture: arm, arm64, x64, or x86. Found ${1}"
     exit 1
 fi
 

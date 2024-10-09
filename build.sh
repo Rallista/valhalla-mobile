@@ -18,7 +18,7 @@ if [ "$2" == "clean" ]; then
 fi
 
 if [ "$2" == "clean-all" ]; then
-    echo "Cleaning all, all builds and protoc directory..."
+    echo "Cleaning all build directories..."
     rm -rf build
 fi
 

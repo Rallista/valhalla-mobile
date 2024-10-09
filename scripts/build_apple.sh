@@ -8,6 +8,11 @@ if ! command -v xcodebuild &> /dev/null; then
     exit 1
 fi
 
+if [ -z ${VCPKG_ROOT+x} ]; then
+  echo "Please set VCPKG_ROOT"
+  exit 1
+fi
+
 # Set the path to the toolchains
 vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 vcpkg_triplet_overlay=`pwd`/triplets

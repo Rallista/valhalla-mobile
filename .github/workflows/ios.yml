@@ -13,10 +13,6 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-build
       cancel-in-progress: true
     timeout-minutes: 120
-    strategy:
-      matrix:
-        scheme: [ValhallaMobile]
-        destination: ["platform=iOS Simulator,name=iPhone 15,OS=17.2"]
 
     steps:
       - name: Checkout Valhalla
@@ -26,6 +22,7 @@ jobs:
         run: |
           git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
           ./vcpkg/bootstrap-vcpkg.sh
+          export VCPKG_ROOT=`pwd`/vcpkg
 
       - name: Build for iOS & iOS Simulator
         run: |
@@ -44,7 +41,6 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-test
       cancel-in-progress: true
-    timeout-minutes: 120
     strategy:
       matrix:
         scheme: [ValhallaMobile]
