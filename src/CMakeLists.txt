@@ -86,16 +86,20 @@ target_include_directories(valhalla-wrapper
     ${VALHALLA_SOURCE_DIR}
 )
 
-# Date (valhalla/third_party) ---------------------------------------------------------
+# Link installed headers ---------------------------------------------------------
 
 if (APPLE)
     # Configure the date library
     set(BUILD_TZ_LIB ON CACHE INTERNAL "")
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
 
-    add_subdirectory(valhalla/third_party/date date)
-    target_link_libraries(valhalla-wrapper PRIVATE date)
-    target_include_directories(valhalla-wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
+    install(DIRECTORY ${Date_INCLUDE_DIRS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            COMPONENT development)
+
+    install(DIRECTORY ${Boost_INCLUDE_DIRS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            COMPONENT development)
 endif()
 
 # Install the valhalla-wrapper library

@@ -1,20 +1,20 @@
 #/bin/sh
 
 # build/apple/arm64/iphoneos/wrapper/install/lib/libprotobuf-lite.a \
+# build/apple/arm64/iphoneos/install/lib/libtz.a \
 libtool -static -o build/apple/arm64/iphoneos/libvalhalla_all.a \
-    build/apple/arm64/iphoneos/install/lib/libtz.a \
     build/apple/arm64/iphoneos/install/lib/libvalhalla.a \
     build/apple/arm64/iphoneos/install/lib/libvalhalla-wrapper.a
 
 # build/apple/arm64/iphonesimulator/wrapper/install/lib/libprotobuf-lite.a \
+# build/apple/arm64/iphonesimulator/install/lib/libtz.a \
 libtool -static -o build/apple/arm64/iphonesimulator/libvalhalla_all.a \
-    build/apple/arm64/iphonesimulator/install/lib/libtz.a \
     build/apple/arm64/iphonesimulator/install/lib/libvalhalla.a \
     build/apple/arm64/iphonesimulator/install/lib/libvalhalla-wrapper.a
 
 # build/apple/x86_64/iphonesimulator/wrapper/install/lib/libprotobuf-lite.a \
+# build/apple/x86_64/iphonesimulator/install/lib/libtz.a \
 libtool -static -o build/apple/x86_64/iphonesimulator/libvalhalla_all.a \
-    build/apple/x86_64/iphonesimulator/install/lib/libtz.a \
     build/apple/x86_64/iphonesimulator/install/lib/libvalhalla.a \
     build/apple/x86_64/iphonesimulator/install/lib/libvalhalla-wrapper.a
 

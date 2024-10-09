@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Setup VCPKG
         run: |
@@ -25,9 +27,7 @@ jobs:
           export VCPKG_ROOT=`pwd`/vcpkg
 
       - name: Build for iOS & iOS Simulator
-        run: |
-          git submodule update --init --recursive
-          ./build.sh ios clean
+        run: ./build.sh ios clean
 
       - name: Upload xcframework zip output
         uses: actions/upload-artifact@v4
