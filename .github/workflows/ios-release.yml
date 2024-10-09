@@ -2,18 +2,18 @@ name: iOS
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
     inputs:
       bump_version_scheme:
         type: choice
-        description: 'Release'
+        description: "Release"
         required: true
-        default: 'patch'
+        default: "patch"
         options:
-        - 'patch'
-        - 'minor'
-        - 'major'
+          - "patch"
+          - "minor"
+          - "major"
 
 jobs:
   build-release:
@@ -21,35 +21,27 @@ jobs:
     timeout-minutes: 120
 
     steps:
-    - name: Install conan
-      run: |
-        brew install conan
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
 
-    - name: Install boost
-      run: |
-        brew install boost
+      - name: Build for iOS & iOS Simulator
+        run: |
+          git submodule update --init --recursive
+          ./build.sh ios clean
 
-    - name: Checkout Valhalla
-      uses: actions/checkout@v4
+      - name: Zip the xcframework
+        run: |
+          cd build/apple
+          zip -r valhalla-wrapper.xcframework.zip valhalla-wrapper.xcframework
+          mv valhalla-wrapper.xcframework.zip ../../
+          cd ../../
 
-    - name: Build for iOS & iOS Simulator
-      run: |
-        git submodule update --init --recursive
-        ./build.sh ios clean
-
-    - name: Zip the xcframework
-      run: |
-        cd build/apple
-        zip -r valhalla-wrapper.xcframework.zip valhalla-wrapper.xcframework
-        mv valhalla-wrapper.xcframework.zip ../../
-        cd ../../
-
-    - name: Upload xcframework zip output
-      uses: actions/upload-artifact@v4
-      with:
-        name: valhalla-wrapper.xcframework.zip
-        path: |
-          valhalla-wrapper.xcframework.zip
+      - name: Upload xcframework zip output
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-wrapper.xcframework.zip
+          path: |
+            valhalla-wrapper.xcframework.zip
 
   draft-release:
     runs-on: macos-14
@@ -63,58 +55,56 @@ jobs:
       # Give the default GITHUB_TOKEN write permission to commit and push the
       # added or changed files to the repository.
       contents: write
-    
+
     steps:
-    - name: Checkout Valhalla
-      uses: actions/checkout@v4
-      with: 
-        fetch-depth: 0
-        token: ${{ secrets.PAT }}
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
 
-    - name: Configure Git
-      run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
 
-    - name: Download the xcframework artifact from the build-and-test
-      uses: actions/download-artifact@v4
-      with:
-        name: valhalla-wrapper.xcframework.zip
+      - name: Download the xcframework artifact from the build-and-test
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-wrapper.xcframework.zip
 
-    - name: Get version tag
-      id: version
-      run: ./scripts/version_bump.sh ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'patch' || inputs.bump_version_scheme }}
+      - name: Get version tag
+        id: version
+        run: ./scripts/version_bump.sh ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'patch' || inputs.bump_version_scheme }}
 
-    - uses: softprops/action-gh-release@v1
-      id: release
-      with:
-        draft: true
-        generate_release_notes: true
-        tag_name: ${{ steps.version.outputs.version }}
-        files: "valhalla-wrapper.xcframework.zip"
-    
-    - name: Write the xcframework to Package.swift
-      # run: ./scripts/write_xcframework_spm.sh ${{ fromJSON(steps.release.outputs.assets)[0].browser_download_url }}
-      run: ./scripts/write_xcframework_spm.sh ${{ steps.version.outputs.version }}
-        
+      - uses: softprops/action-gh-release@v1
+        id: release
+        with:
+          draft: true
+          generate_release_notes: true
+          tag_name: ${{ steps.version.outputs.version }}
+          files: "valhalla-wrapper.xcframework.zip"
 
-    # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
-    - uses: stefanzweifel/git-auto-commit-action@v5
-      with:
-        commit_message: "Publish Package.swift and bump version to ${{ steps.version.outputs.version }} [skip ci]"
-        tagging_message: "${{ steps.version.outputs.version }}"
-        push_options: --force
+      - name: Write the xcframework to Package.swift
+        # run: ./scripts/write_xcframework_spm.sh ${{ fromJSON(steps.release.outputs.assets)[0].browser_download_url }}
+        run: ./scripts/write_xcframework_spm.sh ${{ steps.version.outputs.version }}
 
-    - name: Output version
-      run: |
-        echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
-        echo "release_id=${{ steps.release.outputs.id }}" >> "$GITHUB_OUTPUT"
+      # https://github.com/marketplace/actions/git-auto-commit#push-to-protected-branches
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Publish Package.swift and bump version to ${{ steps.version.outputs.version }} [skip ci]"
+          tagging_message: "${{ steps.version.outputs.version }}"
+          push_options: --force
+
+      - name: Output version
+        run: |
+          echo "version=${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          echo "release_id=${{ steps.release.outputs.id }}" >> "$GITHUB_OUTPUT"
 
   publish-release:
     runs-on: ubuntu-latest
     needs: draft-release
     steps:
-
       - uses: eregon/publish-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

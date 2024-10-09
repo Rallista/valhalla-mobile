@@ -36,7 +36,7 @@ if [ "$1" == "android" ] || [ "$1" == "all" ]; then
     echo "Building Android..."
     ./scripts/build_android.sh arm64
     ./scripts/build_android.sh arm
-    ./scripts/build_android.sh x86_64
+    ./scripts/build_android.sh x64
     ./scripts/build_android.sh x86
 
     echo "Moving Android .so files to the correct directory..."
