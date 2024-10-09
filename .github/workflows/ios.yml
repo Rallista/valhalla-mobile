@@ -37,6 +37,7 @@ jobs:
             build/apple/valhalla-wrapper.xcframework
 
   test:
+    needs: build
     runs-on: macos-14
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-test
@@ -50,10 +51,11 @@ jobs:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
 
-      - name: Build for iOS & iOS Simulator
-        run: |
-          git submodule update --init --recursive
-          ./build.sh ios clean
+      - name: Download xcframework artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-wrapper.xcframework
+          path: build/apple/valhalla-wrapper.xcframework
 
       - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
         run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
