@@ -23,11 +23,11 @@ jobs:
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
 
       - name: Build for iOS & iOS Simulator
-        run: |
-          git submodule update --init --recursive
-          ./build.sh ios clean
+        run: ./build.sh ios clean
 
       - name: Zip the xcframework
         run: |
