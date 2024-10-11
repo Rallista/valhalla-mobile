@@ -60,28 +60,32 @@ dependencies {
     androidTestImplementation(libs.androidx.test.rules)
 }
 
+val archs = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+
 // Define a custom task to run the shell script
-tasks.register<Exec>("buildLibValhalla") {
-    // Change the working door to the repository root.
-    workingDir = file("${project.projectDir}/../../")
+archs.forEach { arch ->
+    tasks.register<Exec>("buildValhallaFor-${arch}") {
+        description = "Build libValhalla for $arch architecture"
+        group = "build"
 
-    // Set the VCPKG_ROOT environment variable.
-    environment("VCPKG_ROOT", "${workingDir.absolutePath}/vcpkg")
+        // Change the working door to the repository root.
+        workingDir = file("${project.projectDir}/../../")
+        environment("VCPKG_ROOT", "${workingDir.absolutePath}/vcpkg")
 
-    // Command to execute your build.sh script.
-    commandLine("sh", "./build.sh", "android", "clean")
+        commandLine("sh", "./build.sh", "--android", arch)
 
-    // Conditionally compile the library outputs don't exist.
-    val archs = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-    onlyIf {
-        archs.any { arch ->
-            !file("src/main/jniLibs/$arch/libvalhalla-wrapper.so").exists()
+        onlyIf {
+            !file("src/main/jniLibs/${arch}/libvalhalla-wrapper.so").exists()
         }
     }
 }
 
 tasks.named("preBuild") {
-    dependsOn("buildLibValhalla")
+    // Efficiently build any architecture that doesn't exist in jniLibs.
+    dependsOn("buildValhallaFor-arm64-v8a")
+    dependsOn("buildValhallaFor-armeabi-v7a")
+    dependsOn("buildValhallaFor-x86_64")
+    dependsOn("buildValhallaFor-x86")
 }
 
 publishing {

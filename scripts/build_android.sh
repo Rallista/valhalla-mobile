@@ -21,13 +21,13 @@ android_toolchain_file=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake
 vcpkg_triplet_overlay=`pwd`/triplets
 
 # Check if the first argument is a valid Apple architecture
-if [ "$1" == "arm64" ]; then
+if [ "$1" == "arm64-v8a" ]; then
     android_abi=arm64-v8a
     vcpkg_target_triplet=arm64-android
-elif [ "$1" == "arm" ]; then
+elif [ "$1" == "armeabi-v7a" ]; then
     android_abi=armeabi-v7a
     vcpkg_target_triplet=arm-android
-elif [ "$1" == "x64" ]; then
+elif [ "$1" == "x86_64" ]; then
     android_abi=x86_64
     vcpkg_target_triplet=x64-android
 elif [ "$1" == "x86" ]; then

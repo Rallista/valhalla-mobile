@@ -16,6 +16,9 @@ jobs:
     permissions:
       contents: read
       packages: read
+    strategy:
+      matrix:
+        arch: ["arm64", "arm", "x64", "x86"]
 
     steps:
       - name: Checkout Valhalla
@@ -44,7 +47,7 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew build
+        run: ./gradlew buildValhallaFor-${{ matrix.arch }}
         working-directory: android
 
       - name: Upload JNI Libs

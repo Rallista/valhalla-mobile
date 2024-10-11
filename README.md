@@ -20,15 +20,18 @@ export VCPKG_ROOT=`pwd`/vcpkg
 
 ### iOS Swift Package
 
+On iOS, you must pre-build the xcframework using the command:
+
 ```sh
-git submodule update --init --recursive
 ./build.sh ios clean
 ```
 
 ### Android
 
+The project's build.gradle.kts includes a build task that runs the script below.
+It's also possible to run this manually and copy the lib.so files automatically using:
+
 ```sh
-git submodule update --init --recursive
 ./build.sh android clean
 ```
 
