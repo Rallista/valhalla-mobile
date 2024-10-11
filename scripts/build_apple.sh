@@ -1,7 +1,5 @@
 #!/bin/sh
 
-export VCPKG_ROOT=`pwd`/vcpkg
-
 # Check for Xcode command line tools
 if ! command -v xcodebuild &> /dev/null; then
     echo "Xcode command line tools not found. Please install Xcode."
@@ -18,19 +16,19 @@ vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 vcpkg_triplet_overlay=`pwd`/triplets
 
 # Check if the first argument is a valid Apple architecture
-if [ "$1" == "iphoneos" ]; then
+if [ "$1" == "arm64-ios" ]; then
     sdk=iphoneos
     system_name=iOS
     min_deployment_target=13.0
     arch=arm64
     vcpkg_target_triplet=arm64-ios
-elif [ "$1" == "iphonesimulator" ]; then
+elif [ "$1" == "arm64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
     min_deployment_target=13.0
     arch=arm64
     vcpkg_target_triplet=arm64-ios-simulator
-elif [ "$1" == "iphonesimulator-legacy" ]; then
+elif [ "$1" == "x64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
     min_deployment_target=13.0
@@ -66,7 +64,7 @@ else
     exit 1
 fi
 
-build_dir=`pwd`/build/apple/$arch/$sdk
+build_dir=`pwd`/build/apple/$vcpkg_target_triplet
 wrapper_dir=`pwd`/src
 
 # Move to the build directory

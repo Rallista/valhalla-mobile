@@ -3,7 +3,7 @@
 # Fail on any error
 set -e
 
-ios_archs=("iphoneos" "iphonesimulator" "iphonesimulator-legacy")
+ios_archs=("arm64-ios" "arm64-ios-simulator" "x64-ios-simulator")
 android_archs=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
 
 build_ios() {
@@ -46,6 +46,17 @@ move_android_so() {
         ./scripts/move_android_so.sh "$arch"
     fi
 }
+
+if [ -d "$(pwd)/vcpkg" ]; then
+  export VCPKG_ROOT="$(pwd)/vcpkg"
+else
+  # If VCPKG_ROOT is not set and vcpkg directory doesn't exist locally
+  if [ -z "${VCPKG_ROOT+x}" ]; then
+    echo "VCPKG_ROOT is not set and vcpkg directory not found in the current working directory."
+    echo "Review setup in README.md or export a custom $VCPKG_ROOT."
+    exit 1
+  fi
+fi
 
 platform=""
 arch=""

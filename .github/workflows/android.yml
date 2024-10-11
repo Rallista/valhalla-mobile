@@ -65,16 +65,22 @@ jobs:
         with:
           path: jniLibs
 
-      - name: Combine artifacts
+      - name: Organize and zip artifacts
         run: |
-          mkdir -p combined/jniLibs
-          cp -R jniLibs/libvalhalla-*/* combined/jniLibs/
+          mkdir -p android/valhalla/src/main/jniLibs
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            mkdir -p android/valhalla/src/main/jniLibs/$arch
+            if [ -f jniLibs/libvalhalla-$arch/libvalhalla-wrapper.so ]; then
+              cp jniLibs/libvalhalla-$arch/libvalhalla-wrapper.so android/valhalla/src/main/jniLibs/$arch/
+            fi
+          done
+          zip -r valhalla-jniLibs.zip android
 
-      - name: Upload combined JNI Libs
+      - name: Upload zipped JNI Libs
         uses: actions/upload-artifact@v4
         with:
-          name: combined-jni-libs
-          path: combined/jniLibs
+          name: valhalla-jniLibs
+          path: valhalla-jniLibs.zip
           retention-days: 1
 
   check-ktfmt:
@@ -120,11 +126,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download combined JNI Libs
+      - name: Download JNI Libs
         uses: actions/download-artifact@v4
         with:
-          name: combined-jni-libs
-          path: android/valhalla/src/main/jniLibs
+          name: valhalla-jniLibs
+          path: .
+
+      - name: Unzip JNI Libs
+        run: unzip valhalla-jniLibs.zip
 
       - name: set up JDK 17
         uses: actions/setup-java@v4
@@ -166,11 +175,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download combined JNI Libs
+      - name: Download JNI Libs
         uses: actions/download-artifact@v4
         with:
-          name: combined-jni-libs
-          path: android/valhalla/src/main/jniLibs
+          name: valhalla-jniLibs
+          path: .
+
+      - name: Unzip JNI Libs
+        run: unzip valhalla-jniLibs.zip
 
       - name: set up JDK 17
         uses: actions/setup-java@v4
