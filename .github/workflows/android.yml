@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libvalhalla-${{ matrix.arch }}
-          path: android/valhalla/src/main/jniLibs/${{ matrix.arch }}/libvalhalla.so
+          path: android/valhalla/src/main/jniLibs/${{ matrix.arch }}/libvalhalla-wrapper.so
           retention-days: 1
 
   combine:
