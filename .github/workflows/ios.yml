@@ -9,10 +9,12 @@ on:
 jobs:
   build:
     runs-on: macos-14
+    strategy:
+      matrix:
+        arch: ["iphoneos", "iphonesimulator", "iphonesimulator-legacy"]
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-build
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-${{ matrix.arch }}
       cancel-in-progress: true
-    timeout-minutes: 120
 
     steps:
       - name: Checkout Valhalla
@@ -27,17 +29,39 @@ jobs:
           export VCPKG_ROOT=`pwd`/vcpkg
 
       - name: Build for iOS & iOS Simulator
-        run: ./build.sh ios clean
+        run: ./build.sh --ios ${{ matrix.arch }}
 
-      - name: Upload xcframework zip output
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-ios-${{ matrix.arch }}
+          path: |
+            build/apple/${{ matrix.arch }}/iphone*/install
+
+  create-xcframework:
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/apple
+
+      - name: Create XCFramework
+        run: |
+          ./scripts/create_xcframework.sh
+
+      - name: Upload XCFramework
         uses: actions/upload-artifact@v4
         with:
           name: valhalla-wrapper.xcframework
-          path: |
-            build/apple/valhalla-wrapper.xcframework
+          path: build/apple/valhalla-wrapper.xcframework
 
   test:
-    needs: build
+    needs: create-xcframework
     runs-on: macos-14
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-test
