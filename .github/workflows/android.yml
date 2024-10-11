@@ -9,16 +9,15 @@ on:
 jobs:
   build:
     runs-on: macos-13
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-android-build
-      cancel-in-progress: true
-    timeout-minutes: 120
     permissions:
       contents: read
       packages: read
     strategy:
       matrix:
         arch: ["arm64", "arm", "x64", "x86"]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-android-build-${{ matrix.arch }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout Valhalla
@@ -50,11 +49,32 @@ jobs:
         run: ./gradlew buildValhallaFor-${{ matrix.arch }}
         working-directory: android
 
-      - name: Upload JNI Libs
+      - name: Upload JNI Lib
         uses: actions/upload-artifact@v4
         with:
-          name: jni-libs
-          path: android/valhalla/src/main/jniLibs
+          name: libvalhalla-${{ matrix.arch }}
+          path: android/valhalla/src/main/jniLibs/${{ matrix.arch }}/libvalhalla.so
+          retention-days: 1
+
+  combine:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: jniLibs
+
+      - name: Combine artifacts
+        run: |
+          mkdir -p combined/jniLibs
+          cp -R jniLibs/libvalhalla-*/* combined/jniLibs/
+
+      - name: Upload combined JNI Libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-jni-libs
+          path: combined/jniLibs
           retention-days: 1
 
   check-ktfmt:
@@ -88,7 +108,7 @@ jobs:
         working-directory: android
 
   test:
-    needs: build
+    needs: combine
     runs-on: macos-13
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-test
@@ -100,10 +120,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download JNI Libs
+      - name: Download combined JNI Libs
         uses: actions/download-artifact@v4
         with:
-          name: jni-libs
+          name: combined-jni-libs
           path: android/valhalla/src/main/jniLibs
 
       - name: set up JDK 17
@@ -134,7 +154,7 @@ jobs:
           retention-days: 5
 
   connected-check:
-    needs: build
+    needs: combine
     runs-on: macos-13
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
@@ -146,10 +166,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download JNI Libs
+      - name: Download combined JNI Libs
         uses: actions/download-artifact@v4
         with:
-          name: jni-libs
+          name: combined-jni-libs
           path: android/valhalla/src/main/jniLibs
 
       - name: set up JDK 17
