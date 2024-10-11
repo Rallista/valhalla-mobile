@@ -53,7 +53,7 @@ jobs:
       - name: Move artifacts to correct locations
         run: |
           for arch in arm64-ios arm64-ios-simulator x64-ios-simulator; do
-            mkdir -p build/apple/$arch
+            mkdir -p build/apple/$arch/install
             mv build/apple/$arch/* build/apple/$arch/install/ || true
           done
 
