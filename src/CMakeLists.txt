@@ -107,6 +107,13 @@ target_include_directories(valhalla-wrapper
 
 # Link installed headers ---------------------------------------------------------
 
+function(install_vcpkg_libs_wildcard pattern)
+    file(GLOB LIBS_TO_INSTALL
+         "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/${pattern}.a")
+    install(FILES ${LIBS_TO_INSTALL}
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+endfunction()
+
 function(install_vcpkg_libs)
     foreach(lib ${ARGN})
         install(FILES
@@ -125,7 +132,9 @@ if (APPLE)
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install_vcpkg_libs(libabsl_base libdate-tz libprotobuf-lite)
+    install_vcpkg_libs(libabsl_base libdate-tz liblz4 libprotobuf-lite)
+    install_vcpkg_libs_wildcard("libabsl_log*")
+    install_vcpkg_libs_wildcard("libabsl_strings*")
 endif()
 
 # Install the valhalla-wrapper library
