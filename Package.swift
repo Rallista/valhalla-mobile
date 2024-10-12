@@ -64,7 +64,7 @@ let package = Package(
             path: "apple/Sources/ValhallaObjc",
             linkerSettings: [
                 .linkedLibrary("z"),
-                .linkedLibrary("libprotobuf-lite"),
+                .linkedLibrary("protobuf-lite"),
             ]
         ),
         binaryTarget,
