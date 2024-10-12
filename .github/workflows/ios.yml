@@ -101,6 +101,13 @@ jobs:
           path: build/apple/valhalla-wrapper.xcframework
 
       - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
-        run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' | xcbeautify && exit ${PIPESTATUS[0]}
+        run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' -resultBundlePath TestResults.xcresult | xcbeautify && exit ${PIPESTATUS[0]}
         env:
           VALHALLA_MOBILE_DEV: "true"
+
+      - name: Upload xcresult
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xcresult
+          path: TestResults.xcresult
