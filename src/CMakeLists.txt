@@ -134,6 +134,7 @@ if (APPLE)
 
     install_vcpkg_libs(libdate-tz liblz4 libprotobuf-lite)
     install_vcpkg_libs_wildcard("libabsl*")
+    install_vcpkg_libs_wildcard("libutf8*")
 endif()
 
 # Install the valhalla-wrapper library
