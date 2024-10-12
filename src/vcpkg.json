@@ -15,7 +15,8 @@
     "date",
     "robin-hood-hashing",
     "rapidjson",
-    "lz4"
+    "lz4",
+    "abseil"
   ],
   "overrides": [
     {

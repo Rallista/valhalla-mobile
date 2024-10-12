@@ -56,6 +56,7 @@ set(protobuf_BUILD_STATIC_LIBS ON CACHE INTERNAL "")
 set(Protobuf_INCLUDE_DIR ${protobuf_SOURCE_DIR}/src)
 set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
 
+find_package(absl CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 find_package(date CONFIG REQUIRED)
@@ -90,6 +91,10 @@ set_property(DIRECTORY valhalla PROPERTY VALHALLA_SOURCE_DIR ${VALHALLA_SOURCE_D
 target_link_libraries(valhalla-wrapper
     PRIVATE
     ${Protobuf_LIBRARIES}
+    absl::base
+    absl::log
+    absl::strings
+    absl::status
     Boost::boost
     ${DATE_LIBRARY}
     valhalla
@@ -102,20 +107,25 @@ target_include_directories(valhalla-wrapper
 
 # Link installed headers ---------------------------------------------------------
 
+function(install_vcpkg_libs)
+    foreach(lib ${ARGN})
+        install(FILES
+            "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/${lib}.a"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+        )
+    endforeach()
+endfunction()
+
 if (APPLE)
     install(DIRECTORY ${Date_INCLUDE_DIRS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install(FILES ${DATE_TZ_LIBRARY}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-
     install(DIRECTORY ${Boost_INCLUDE_DIRS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install(FILES $<TARGET_FILE:protobuf::libprotobuf-lite>
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    install_vcpkg_libs(libabsl_base libdate-tz libprotobuf-lite)
 endif()
 
 # Install the valhalla-wrapper library
