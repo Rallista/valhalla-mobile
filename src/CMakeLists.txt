@@ -132,9 +132,8 @@ if (APPLE)
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install_vcpkg_libs(libabsl_base libdate-tz liblz4 libprotobuf-lite)
-    install_vcpkg_libs_wildcard("libabsl_log*")
-    install_vcpkg_libs_wildcard("libabsl_strings*")
+    install_vcpkg_libs(libdate-tz liblz4 libprotobuf-lite)
+    install_vcpkg_libs_wildcard("libabsl*")
 endif()
 
 # Install the valhalla-wrapper library
