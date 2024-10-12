@@ -37,6 +37,10 @@ if (APPLE)
     if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
     endif()
+
+    # Configure the date library
+    set(BUILD_TZ_LIB ON CACHE INTERNAL "")
+    set(MANUAL_TZ_DB ON CACHE INTERNAL "")
 endif()
 
 # WRAPPER ---------------------------------------------------------
@@ -47,7 +51,11 @@ install(DIRECTORY wrapper/include DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 # DEPENDENCIES ----------------------------------------------------
 
-# Find packages using vcpkg
+set(protobuf_BUILD_STATIC_LIBS ON CACHE INTERNAL "")
+
+set(Protobuf_INCLUDE_DIR ${protobuf_SOURCE_DIR}/src)
+set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
+
 find_package(Protobuf CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 find_package(date CONFIG REQUIRED)
@@ -66,18 +74,24 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 link_libraries(date::date)
 include_directories(${Date_INCLUDE_DIRS})
-# End Global
+
+find_library(DATE_TZ_LIBRARY
+    NAMES date-tz libdate-tz.a
+    PATHS ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
+    NO_DEFAULT_PATH
+)
 
 add_subdirectory(valhalla)
+
 # Valhalla source directory
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/valhalla)
 set_property(DIRECTORY valhalla PROPERTY VALHALLA_SOURCE_DIR ${VALHALLA_SOURCE_DIR})
 
 target_link_libraries(valhalla-wrapper
     PRIVATE
-    protobuf::libprotobuf
+    ${Protobuf_LIBRARIES}
     Boost::boost
-    date::date
+    ${DATE_LIBRARY}
     valhalla
 )
 target_include_directories(valhalla-wrapper
@@ -89,21 +103,23 @@ target_include_directories(valhalla-wrapper
 # Link installed headers ---------------------------------------------------------
 
 if (APPLE)
-    # Configure the date library
-    set(BUILD_TZ_LIB ON CACHE INTERNAL "")
-    set(MANUAL_TZ_DB ON CACHE INTERNAL "")
-
     install(DIRECTORY ${Date_INCLUDE_DIRS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
+    install(FILES ${DATE_TZ_LIBRARY}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
     install(DIRECTORY ${Boost_INCLUDE_DIRS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
+
+    install(FILES $<TARGET_FILE:protobuf::libprotobuf-lite>
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 
 # Install the valhalla-wrapper library
 
 install(TARGETS
-    valhalla-wrapper
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+        valhalla-wrapper
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
