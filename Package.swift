@@ -11,7 +11,8 @@ var binaryTarget: Target = .binaryTarget(
 )
 
 // CI will replace the nils with the actual values when building a release
-let binaryURL: String = "https://github.com/Rallista/valhalla-mobile/releases/download/v0.0.23/valhalla-wrapper.xcframework.zip"
+let binaryURL: String =
+    "https://github.com/Rallista/valhalla-mobile/releases/download/v0.0.23/valhalla-wrapper.xcframework.zip"
 let binaryChecksum: String = "0a0b223b4094027a595fba70d94a92f59b2105dac8c9b2b06b8be3263f64968e"
 
 if !useLocalBinary {
@@ -25,7 +26,7 @@ if !useLocalBinary {
 let package = Package(
     name: "ValhallaMobile",
     platforms: [
-        .iOS(.v13),
+        .iOS(.v13)
         // .tvOS(.v13),
         // .watchOS(.v6),
         // .macOS(.v10_13)
@@ -34,7 +35,7 @@ let package = Package(
         .library(
             name: "Valhalla",
             targets: ["Valhalla", "ValhallaModels"]
-        ),
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.1")),
@@ -61,7 +62,10 @@ let package = Package(
             name: "ValhallaObjc",
             dependencies: ["ValhallaWrapper"],
             path: "apple/Sources/ValhallaObjc",
-            linkerSettings: [.linkedLibrary("z")]
+            linkerSettings: [
+                .linkedLibrary("z"),
+                .linkedLibrary("libprotobuf-lite"),
+            ]
         ),
         binaryTarget,
         .testTarget(

@@ -1,20 +1,20 @@
 #/bin/sh
 
+# build/apple/arm64-ios/install/lib/libprotobuf-lite.a \
 libtool -static -o build/apple/arm64-ios/libvalhalla_all.a \
     build/apple/arm64-ios/install/lib/libdate-tz.a \
-    build/apple/arm64-ios/install/lib/libprotobuf-lite.a \
     build/apple/arm64-ios/install/lib/libvalhalla.a \
     build/apple/arm64-ios/install/lib/libvalhalla-wrapper.a
 
+# build/apple/arm64-ios-simulator/install/lib/libprotobuf-lite.a \
 libtool -static -o build/apple/arm64-ios-simulator/libvalhalla_all.a \
     build/apple/arm64-ios-simulator/install/lib/libdate-tz.a \
-    build/apple/arm64-ios-simulator/install/lib/libprotobuf-lite.a \
     build/apple/arm64-ios-simulator/install/lib/libvalhalla.a \
     build/apple/arm64-ios-simulator/install/lib/libvalhalla-wrapper.a
 
+# build/apple/x64-ios-simulator/install/lib/libprotobuf-lite.a \
 libtool -static -o build/apple/x64-ios-simulator/libvalhalla_all.a \
     build/apple/x64-ios-simulator/install/lib/libdate-tz.a \
-    build/apple/x64-ios-simulator/install/lib/libprotobuf-lite.a \
     build/apple/x64-ios-simulator/install/lib/libvalhalla.a \
     build/apple/x64-ios-simulator/install/lib/libvalhalla-wrapper.a
 
