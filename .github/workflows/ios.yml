@@ -105,9 +105,23 @@ jobs:
         env:
           VALHALLA_MOBILE_DEV: "true"
 
+      - name: Extract crash logs
+        run: |
+          xcrun xcresulttool get --path TestResults.xcresult --format json > test_result.json
+          jq '.issues.testFailureSummaries[].documentLocationInCreatingWorkspace.url' test_result.json | xargs -I {} sh -c 'xcrun xcresulttool export --path TestResults.xcresult --id {} --output-path crash_log.txt'
+
+      - name: Output crash log
+        run: cat crash_log.txt
+
+      - name: Upload crash logs
+        uses: actions/upload-artifact@v2
+        with:
+          name: crash-logs
+          path: crash_log.txt
+
       - name: Upload xcresult
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: xcresult
+          name: TestResults.xcresult
           path: TestResults.xcresult
