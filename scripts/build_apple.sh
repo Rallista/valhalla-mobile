@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Check for Xcode command line tools
 if ! command -v xcodebuild &> /dev/null; then

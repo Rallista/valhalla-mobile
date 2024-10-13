@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # 1. Check the presence of required environment variables

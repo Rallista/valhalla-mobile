@@ -111,7 +111,7 @@ jobs:
           echo "Searching for crash logs..."
 
           echo "DerivedData folder:"
-          find ~/Library/Developer/Xcode/DerivedData -name "*.crash" -o -name "*.ips"
+          find ./DerivedData -name "*.crash" -o -name "*.ips"
 
           echo "CoreSimulator logs:"
           find ~/Library/Logs/CoreSimulator -name "*.crash" -o -name "*.ips"
