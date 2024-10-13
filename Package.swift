@@ -53,7 +53,7 @@ let package = Package(
             ],
             path: "apple/Sources/Valhalla",
             resources: [
-                .copy("SupportData")
+                .process("SupportData")
             ]
         ),
         .target(

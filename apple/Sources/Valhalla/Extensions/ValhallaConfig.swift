@@ -22,8 +22,8 @@ extension ValhallaConfig {
     ///
     /// This can be used to manipulate select values as a var.
     init() {
-        guard let configJsonURL = Bundle.module.url(forResource: "SupportData/default", withExtension: "json") else {
-            fatalError("ValhallaConfig SupportData/default.json config resource not found in module bundle.")
+        guard let configJsonURL = Bundle.module.url(forResource: "default", withExtension: "json") else {
+            fatalError("ValhallaConfig default.json config resource not found in module bundle.")
         }
         
         do {
@@ -68,8 +68,8 @@ extension ValhallaConfig {
     }
     
     static func loadDefault() -> ValhallaConfig {
-        guard let configJsonURL = Bundle.module.url(forResource: "SupportData/default", withExtension: "json") else {
-            fatalError("ValhallaConfig SupportData/default.json config resource not found in module bundle.")
+        guard let configJsonURL = Bundle.module.url(forResource: "default", withExtension: "json") else {
+            fatalError("ValhallaConfig default.json config resource not found in module bundle.")
         }
         
         do {
