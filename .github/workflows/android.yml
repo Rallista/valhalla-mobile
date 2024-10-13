@@ -201,8 +201,6 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          arch: x86_64
-          profile: Nexus 6
           script: ./gradlew connectedCheck
           working-directory: android
 
