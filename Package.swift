@@ -57,7 +57,8 @@ let package = Package(
             ],
             path: "apple/Sources/Valhalla",
             resources: [
-                .process("SupportData")
+                .copy("SupportData/default.json"),
+                .copy("SupportData/tzdata.tar"),
             ]
         ),
         .target(
