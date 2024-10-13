@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    runs-on: $RUNNER
+    runs-on: ${{ env.RUNNER }}
     strategy:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
@@ -32,7 +32,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: $XCODE_VERSION
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup VCPKG
         run: |
@@ -52,14 +52,14 @@ jobs:
 
   create-xcframework:
     needs: build
-    runs-on: $RUNNER
+    runs-on: ${{ env.RUNNER }}
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: $XCODE_VERSION
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -85,7 +85,7 @@ jobs:
 
   test:
     needs: create-xcframework
-    runs-on: $RUNNER
+    runs-on: ${{ env.RUNNER }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-test
       cancel-in-progress: true
@@ -100,7 +100,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: $XCODE_VERSION
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Download xcframework artifact
         uses: actions/download-artifact@v4
