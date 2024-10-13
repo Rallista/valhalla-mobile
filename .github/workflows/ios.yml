@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  RUNNER: "macos-14"
+  XCODE_VERSION: "14.3.1"
+  SIMULATOR_DESTINATIONS: >-
+    [
+      "platform=iOS Simulator,name=iPhone 14,OS=16.4"
+    ]
+
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: ${{ env.RUNNER }}
     strategy:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
@@ -24,7 +32,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "14.3.1"
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Setup VCPKG
         run: |
@@ -44,14 +52,14 @@ jobs:
 
   create-xcframework:
     needs: build
-    runs-on: macos-14
+    runs-on: ${{ env.RUNNER }}
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "14.3.1"
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -77,14 +85,14 @@ jobs:
 
   test:
     needs: create-xcframework
-    runs-on: macos-14
+    runs-on: ${{ env.RUNNER }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-ios-test
       cancel-in-progress: true
     strategy:
       matrix:
         scheme: [ValhallaMobile]
-        destination: ["platform=iOS Simulator,name=iPhone 14,OS=16.4"]
+        destination: ${{ fromJson(env.SIMULATOR_DESTINATIONS) }}
 
     steps:
       - name: Checkout Valhalla
@@ -92,7 +100,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "14.3.1"
+          xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Download xcframework artifact
         uses: actions/download-artifact@v4
@@ -104,24 +112,6 @@ jobs:
         run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult | xcbeautify && exit ${PIPESTATUS[0]}
         env:
           VALHALLA_MOBILE_DEV: "true"
-
-      # TODO: Remove eventually.
-      - name: Find crash logs
-        if: always()
-        run: |
-          echo "Searching for crash logs..."
-
-          echo "DerivedData folder:"
-          find ./DerivedData -name "*.crash" -o -name "*.ips"
-
-          echo "CoreSimulator logs:"
-          find ~/Library/Logs/CoreSimulator -name "*.crash" -o -name "*.ips"
-
-          echo "DiagnosticReports folder:"
-          find ~/Library/Logs/DiagnosticReports -name "*.crash" -o -name "*.ips"
-
-          echo "temp folder:"
-          find /tmp -name "*.crash" -o -name "*.ips"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4

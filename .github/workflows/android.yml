@@ -6,9 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  RUNNER: "ubuntu-latest"
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.RUNNER }}
     permissions:
       contents: read
       packages: read
@@ -58,7 +61,7 @@ jobs:
 
   combine:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.RUNNER }}
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -84,7 +87,7 @@ jobs:
           retention-days: 1
 
   check-ktfmt:
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.RUNNER }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-ktfmt
       cancel-in-progress: true
@@ -115,7 +118,7 @@ jobs:
 
   test:
     needs: combine
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.RUNNER }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-test
       cancel-in-progress: true
@@ -163,7 +166,7 @@ jobs:
 
   connected-check:
     needs: combine
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.RUNNER }}
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
       cancel-in-progress: true
@@ -201,11 +204,12 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
-          avd-name: macOS-13-x86-aosp-atd-30
-          arch: x86
-          target: aosp_atd
           script: ./gradlew connectedCheck
           working-directory: android
+          # TODO: Delete if not needed (these were from ferrostar)
+          # avd-name: macOS-13-x86-aosp-atd-30
+          # arch: x86
+          # target: aosp_atd
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
