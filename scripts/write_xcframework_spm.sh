@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Get the zip file of the xcframework from ci
 release_tag=$1

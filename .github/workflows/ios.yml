@@ -105,6 +105,7 @@ jobs:
         env:
           VALHALLA_MOBILE_DEV: "true"
 
+      # TODO: Remove eventually.
       - name: Find crash logs
         if: always()
         run: |
@@ -129,4 +130,5 @@ jobs:
           name: test-artifacts
           path: |
             TestResults.xcresult
-            DerivedData/**/*.log.
+            ~/Library/Logs/DiagnosticReports/*.crash
+            ~/Library/Logs/DiagnosticReports/*.ips

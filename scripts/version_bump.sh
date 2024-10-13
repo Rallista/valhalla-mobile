@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Get the last git tag/release that matches the release pattern (vX.Y.Z)
 last_tag=$(git describe --tags --match "v[0-9]*.[0-9]*.[0-9]*" --abbrev=0)

@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 libtool -static -o build/apple/arm64-ios/libvalhalla_all.a \
     build/apple/arm64-ios/install/lib/*.a

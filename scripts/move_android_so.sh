@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 move_arch() {
     local arch=$1
