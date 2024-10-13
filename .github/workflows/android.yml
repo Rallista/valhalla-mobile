@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ env.RUNNER }}
+    runs-on: $RUNNER
     permissions:
       contents: read
       packages: read
@@ -61,7 +61,7 @@ jobs:
 
   combine:
     needs: build
-    runs-on: ${{ env.RUNNER }}
+    runs-on: $RUNNER
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -87,7 +87,7 @@ jobs:
           retention-days: 1
 
   check-ktfmt:
-    runs-on: ${{ env.RUNNER }}
+    runs-on: $RUNNER
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-ktfmt
       cancel-in-progress: true
@@ -118,7 +118,7 @@ jobs:
 
   test:
     needs: combine
-    runs-on: ${{ env.RUNNER }}
+    runs-on: $RUNNER
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-test
       cancel-in-progress: true
@@ -166,7 +166,7 @@ jobs:
 
   connected-check:
     needs: combine
-    runs-on: ${{ env.RUNNER }}
+    runs-on: $RUNNER
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
       cancel-in-progress: true
