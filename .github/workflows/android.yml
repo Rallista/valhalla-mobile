@@ -201,12 +201,10 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 30
+          arch: x86_64
+          profile: Nexus 6
           script: ./gradlew connectedCheck
           working-directory: android
-          # TODO: Delete (these were from ferrostar)
-          # avd-name: macOS-13-x86-aosp-atd-30
-          # arch: x86
-          # target: aosp_atd
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
