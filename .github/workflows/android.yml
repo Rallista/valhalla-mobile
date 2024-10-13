@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -84,7 +84,7 @@ jobs:
           retention-days: 1
 
   check-ktfmt:
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-ktfmt
       cancel-in-progress: true
@@ -115,7 +115,7 @@ jobs:
 
   test:
     needs: combine
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-test
       cancel-in-progress: true
@@ -164,7 +164,7 @@ jobs:
 
   connected-check:
     needs: combine
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
       cancel-in-progress: true

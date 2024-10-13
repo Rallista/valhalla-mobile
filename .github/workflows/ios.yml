@@ -101,17 +101,26 @@ jobs:
           path: build/apple/valhalla-wrapper.xcframework
 
       - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
-        run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' -resultBundlePath TestResults.xcresult | xcbeautify && exit ${PIPESTATUS[0]}
+        run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' -derivedDataPath DerivedData -resultBundlePath TestResults.xcresult | xcbeautify && exit ${PIPESTATUS[0]}
         env:
           VALHALLA_MOBILE_DEV: "true"
 
-      - name: Extract crash logs
+      - name: Find crash logs
+        if: always()
         run: |
-          xcrun xcresulttool get --path TestResults.xcresult --format json > test_result.json
-          jq '.issues.testFailureSummaries[].documentLocationInCreatingWorkspace.url' test_result.json | xargs -I {} sh -c 'xcrun xcresulttool export --path TestResults.xcresult --id {} --output-path crash_log.txt'
+          echo "Searching for crash logs..."
 
-      - name: Output crash log
-        run: cat crash_log.txt
+          echo "DerivedData folder:"
+          find ~/Library/Developer/Xcode/DerivedData -name "*.crash" -o -name "*.ips"
+
+          echo "CoreSimulator logs:"
+          find ~/Library/Logs/CoreSimulator -name "*.crash" -o -name "*.ips"
+
+          echo "DiagnosticReports folder:"
+          find ~/Library/Logs/DiagnosticReports -name "*.crash" -o -name "*.ips"
+
+          echo "temp folder:"
+          find /tmp -name "*.crash" -o -name "*.ips"
 
       - name: Upload crash logs
         uses: actions/upload-artifact@v4
@@ -120,4 +129,4 @@ jobs:
           name: test-artifacts
           path: |
             TestResults.xcresult
-            crash_log.txt
+            DerivedData/**/*.log.
