@@ -72,7 +72,7 @@ archs.forEach { arch ->
         workingDir = file("${project.projectDir}/../../")
         environment("VCPKG_ROOT", "${workingDir.absolutePath}/vcpkg")
 
-        commandLine("sh", "./build.sh", "--android", arch)
+        commandLine("bash", "./build.sh", "--android", arch)
 
         onlyIf {
             !file("src/main/jniLibs/${arch}/libvalhalla-wrapper.so").exists()

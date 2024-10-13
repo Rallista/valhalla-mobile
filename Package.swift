@@ -56,7 +56,9 @@ let package = Package(
                 .product(name: "Light-Swift-Untar", package: "Light-Swift-Untar"),
             ],
             path: "apple/Sources/Valhalla",
-            resources: [.copy("SupportData")]
+            resources: [
+                .process("SupportData")
+            ]
         ),
         .target(
             name: "ValhallaObjc",

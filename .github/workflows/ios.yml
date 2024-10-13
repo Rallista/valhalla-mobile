@@ -123,7 +123,7 @@ jobs:
           echo "temp folder:"
           find /tmp -name "*.crash" -o -name "*.ips"
 
-      - name: Upload crash logs
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
