@@ -34,31 +34,26 @@ let package = Package(
     products: [
         .library(
             name: "Valhalla",
-            targets: ["Valhalla", "ValhallaModels"]
+            targets: ["Valhalla"]
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.1")),
+        .package(url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", exact: "0.0.3"),
         .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
     ],
     targets: [
-        .target(
-            name: "ValhallaModels",
-            dependencies: ["AnyCodable"],
-            path: "apple/Sources/Generated"
-        ),
         .target(
             name: "Valhalla",
             dependencies: [
                 "ValhallaObjc",
                 "ValhallaWrapper",
-                "ValhallaModels",
+                .product(name: "ValhallaConfigModels", package: "valhalla-openapi-models-swift"),
+                .product(name: "ValhallaModels", package: "valhalla-openapi-models-swift"),
                 .product(name: "Light-Swift-Untar", package: "Light-Swift-Untar"),
             ],
             path: "apple/Sources/Valhalla",
             resources: [
-                .copy("SupportData/default.json"),
-                .copy("SupportData/tzdata.tar"),
+                .copy("SupportData")
             ]
         ),
         .target(

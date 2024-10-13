@@ -1,5 +1,6 @@
 import ValhallaObjc
 import ValhallaModels
+import ValhallaConfigModels
 
 public protocol ValhallaProviding {
     
@@ -24,7 +25,7 @@ public final class Valhalla: ValhallaProviding {
             try ValhallaFileManager.injectTzdataIntoLibrary()
         } catch {
             // If you're circumventing this libraries injection, download tzdata.tar and put in your bundle. https://www.iana.org/time-zones
-            assertionFailure("tzdata was not inject into Bundle.main. This can be avoided by including tzdata.tar in your main bundle.")
+            fatalError("tzdata was not inject into Bundle.main. This can be avoided by including tzdata.tar in your main bundle.")
         }
 
         self.configPath = configPath

@@ -1,5 +1,5 @@
 import Foundation
-import ValhallaModels
+import ValhallaConfigModels
 import Light_Swift_Untar
 
 enum ValhallaFileManagerError: Error {

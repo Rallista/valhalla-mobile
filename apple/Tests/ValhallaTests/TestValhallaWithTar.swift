@@ -1,5 +1,6 @@
 import XCTest
 import ValhallaModels
+import ValhallaConfigModels
 @testable import Valhalla
 
 final class TestValhallaWithTar: XCTestCase {
