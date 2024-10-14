@@ -40,7 +40,7 @@ enum ValhallaFileManager {
         }
 
         let tzdataFileData = try Data(contentsOf: tzdataFileURL)
-        let libraryURL = libraryDir.appendingPathComponent("tzdata")
+        let libraryURL = libraryDir.appendingPathComponent("tzdat")
 
         // Write the tar to Library/tzdata
         // TODO: We can create our own tar extract here if we want to avoid the dependency

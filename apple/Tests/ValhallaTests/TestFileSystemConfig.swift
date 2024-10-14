@@ -18,5 +18,4 @@ final class TestFileSystemConfig: XCTestCase {
         let tzDataURL = libraryDir!.appendingPathComponent("tzdata")
         XCTAssertTrue(FileManager.default.fileExists(atPath: tzDataURL.path))
     }
-
 }
