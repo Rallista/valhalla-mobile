@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  RUNNER: "macos-14"
-  XCODE_VERSION: "14.3.1"
-  SIMULATOR_DESTINATIONS: >-
-    [
-
-    ]
-
 jobs:
   build:
     runs-on: macos-14
