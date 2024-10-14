@@ -59,11 +59,9 @@ set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
 find_package(absl CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(Boost REQUIRED)
-find_package(date CONFIG REQUIRED)
 find_package(robin_hood CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 
-# Start Global
 link_libraries(robin_hood::robin_hood)
 include_directories(${ROBIN_HOOD_INCLUDE_DIRS})
 
@@ -73,14 +71,10 @@ include_directories(${RAPIDJSON_INCLUDE_DIRS})
 link_libraries(Boost::boost)
 include_directories(${Boost_INCLUDE_DIRS})
 
-link_libraries(date::date)
-include_directories(${Date_INCLUDE_DIRS})
+add_subdirectory(valhalla/third_party/date date)
 
-find_library(DATE_TZ_LIBRARY
-    NAMES date-tz libdate-tz.a
-    PATHS ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
-    NO_DEFAULT_PATH
-)
+link_libraries(date)
+include_directories(${Date_INCLUDE_DIRS})
 
 add_subdirectory(valhalla)
 
@@ -124,15 +118,14 @@ function(install_vcpkg_libs)
 endfunction()
 
 if (APPLE)
-    install(DIRECTORY ${Date_INCLUDE_DIRS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}
-            COMPONENT development)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include
+            DESTINATION ${CMAKE_INSTALL_PREFIX})
 
     install(DIRECTORY ${Boost_INCLUDE_DIRS}
             DESTINATION ${CMAKE_INSTALL_PREFIX}
             COMPONENT development)
 
-    install_vcpkg_libs(libdate-tz liblz4 libprotobuf-lite)
+    install_vcpkg_libs(liblz4 libprotobuf-lite)
     install_vcpkg_libs_wildcard("libabsl*")
     install_vcpkg_libs_wildcard("libutf8*")
 endif()

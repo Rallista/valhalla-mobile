@@ -12,7 +12,6 @@
     "boost-property-tree",
     "boost-range",
     "boost-tokenizer",
-    "date",
     "robin-hood-hashing",
     "rapidjson",
     "lz4",
