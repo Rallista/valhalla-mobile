@@ -155,7 +155,7 @@ jobs:
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
-        if: success() || failure()
+        if: always()
         with:
           name: test-reports
           path: |
@@ -206,7 +206,7 @@ jobs:
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
-        if: success() || failure()
+        if: always()
         with:
           name: connected-reports
           path: |
