@@ -41,6 +41,8 @@ if (APPLE)
     # Configure the date library
     set(BUILD_TZ_LIB ON CACHE INTERNAL "")
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
+    set(HAS_REMOTE_API OFF CACHE INTERNAL "")
+    -DHAS_REMOTE_API=0, -DUSE_SHELL_API, -x objective-c++
 endif()
 
 # WRAPPER ---------------------------------------------------------
