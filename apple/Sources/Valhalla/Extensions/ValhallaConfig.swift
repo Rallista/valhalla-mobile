@@ -1,14 +1,29 @@
 import Foundation
-import ValhallaModels
+import ValhallaConfigModels
 
 extension ValhallaConfig {
+    
+    init(data: Data) throws {
+        self = try JSONDecoder().decode(ValhallaConfig.self, from: data)
+    }
+
+    init(_ json: String, using encoding: String.Encoding = .utf8) throws {
+        guard let data = json.data(using: encoding) else {
+            throw NSError(domain: "JSONDecoding", code: 0, userInfo: nil)
+        }
+        try self.init(data: data)
+    }
+
+    init(fromURL url: URL) throws {
+        try self.init(data: try Data(contentsOf: url))
+    }
     
     /// Generate a ValhallaConfig using the defaults provided by the valhalla build scripts.
     ///
     /// This can be used to manipulate select values as a var.
     init() {
-        guard let configJsonURL = Bundle.module.url(forResource: "SupportData/default", withExtension: "json") else {
-            fatalError("ValhallaConfig SupportData/default.json config resource not found in module bundle.")
+        guard let configJsonURL = Bundle.module.url(forResource: "default", withExtension: "json") else {
+            fatalError("ValhallaConfig default.json config resource not found in module bundle.")
         }
         
         do {
@@ -21,31 +36,8 @@ extension ValhallaConfig {
     init(tileExtractTar: URL) throws {
         let defaultConfig = ValhallaConfig.loadDefault()
         
-        let mjolnir = Mjolnir(admin: defaultConfig.mjolnir.admin,
-                              dataProcessing: defaultConfig.mjolnir.dataProcessing,
-                              globalSynchronizedCache: defaultConfig.mjolnir.globalSynchronizedCache,
-                              hierarchy: defaultConfig.mjolnir.hierarchy,
-                              idTableSize: defaultConfig.mjolnir.idTableSize,
-                              importBikeShareStations: defaultConfig.mjolnir.importBikeShareStations,
-                              includeBicycle: defaultConfig.mjolnir.includeBicycle,
-                              includeConstruction: defaultConfig.mjolnir.includeConstruction,
-                              includeDriveways: defaultConfig.mjolnir.includeDriveways,
-                              includeDriving: defaultConfig.mjolnir.includeDriving,
-                              includePedestrian: defaultConfig.mjolnir.includePedestrian,
-                              logging: defaultConfig.mjolnir.logging,
-                              lruMemCacheHardControl: defaultConfig.mjolnir.lruMemCacheHardControl,
-                              maxCacheSize: defaultConfig.mjolnir.maxCacheSize,
-                              maxConcurrentReaderUsers: defaultConfig.mjolnir.maxConcurrentReaderUsers,
-                              reclassifyLinks: defaultConfig.mjolnir.reclassifyLinks,
-                              shortcuts: defaultConfig.mjolnir.shortcuts,
-                              tileDir: defaultConfig.mjolnir.tileDir,
-                              tileExtract: tileExtractTar.relativePath,
-                              timezone: defaultConfig.mjolnir.timezone,
-                              trafficExtract: defaultConfig.mjolnir.trafficExtract,
-                              transitDir: defaultConfig.mjolnir.transitDir,
-                              transitFeedsDir: defaultConfig.mjolnir.transitFeedsDir,
-                              useLRUMemCache: defaultConfig.mjolnir.useLRUMemCache,
-                              useSimpleMemCache: defaultConfig.mjolnir.useSimpleMemCache)
+        var mjolnir = defaultConfig.mjolnir
+        mjolnir?.tileExtract = tileExtractTar.relativePath
         
         self.init(additionalData: defaultConfig.additionalData,
                   httpd: defaultConfig.httpd,
@@ -61,31 +53,8 @@ extension ValhallaConfig {
     init(tilesDir: URL) throws {
         let defaultConfig = ValhallaConfig.loadDefault()
         
-        let mjolnir = Mjolnir(admin: defaultConfig.mjolnir.admin,
-                              dataProcessing: defaultConfig.mjolnir.dataProcessing,
-                              globalSynchronizedCache: defaultConfig.mjolnir.globalSynchronizedCache,
-                              hierarchy: defaultConfig.mjolnir.hierarchy,
-                              idTableSize: defaultConfig.mjolnir.idTableSize,
-                              importBikeShareStations: defaultConfig.mjolnir.importBikeShareStations,
-                              includeBicycle: defaultConfig.mjolnir.includeBicycle,
-                              includeConstruction: defaultConfig.mjolnir.includeConstruction,
-                              includeDriveways: defaultConfig.mjolnir.includeDriveways,
-                              includeDriving: defaultConfig.mjolnir.includeDriving,
-                              includePedestrian: defaultConfig.mjolnir.includePedestrian,
-                              logging: defaultConfig.mjolnir.logging,
-                              lruMemCacheHardControl: defaultConfig.mjolnir.lruMemCacheHardControl,
-                              maxCacheSize: defaultConfig.mjolnir.maxCacheSize,
-                              maxConcurrentReaderUsers: defaultConfig.mjolnir.maxConcurrentReaderUsers,
-                              reclassifyLinks: defaultConfig.mjolnir.reclassifyLinks,
-                              shortcuts: defaultConfig.mjolnir.shortcuts,
-                              tileDir: tilesDir.relativePath,
-                              tileExtract: defaultConfig.mjolnir.tileExtract,
-                              timezone: defaultConfig.mjolnir.timezone,
-                              trafficExtract: defaultConfig.mjolnir.trafficExtract,
-                              transitDir: defaultConfig.mjolnir.transitDir,
-                              transitFeedsDir: defaultConfig.mjolnir.transitFeedsDir,
-                              useLRUMemCache: defaultConfig.mjolnir.useLRUMemCache,
-                              useSimpleMemCache: defaultConfig.mjolnir.useSimpleMemCache)
+        var mjolnir = defaultConfig.mjolnir
+        mjolnir?.tileDir = tilesDir.relativePath
         
         self.init(additionalData: defaultConfig.additionalData,
                   httpd: defaultConfig.httpd,
@@ -99,8 +68,8 @@ extension ValhallaConfig {
     }
     
     static func loadDefault() -> ValhallaConfig {
-        guard let configJsonURL = Bundle.module.url(forResource: "SupportData/default", withExtension: "json") else {
-            fatalError("ValhallaConfig SupportData/default.json config resource not found in module bundle.")
+        guard let configJsonURL = Bundle.module.url(forResource: "default", withExtension: "json") else {
+            fatalError("ValhallaConfig default.json config resource not found in module bundle.")
         }
         
         do {

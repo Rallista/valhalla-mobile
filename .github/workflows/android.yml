@@ -1,0 +1,222 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      matrix:
+        arch: ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-android-build-${{ matrix.arch }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup VCPKG
+        run: |
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+          ./vcpkg/bootstrap-vcpkg.sh
+          export VCPKG_ROOT=`pwd`/vcpkg
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: android
+
+      - name: Build with Gradle
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew buildValhallaFor-${{ matrix.arch }}
+        working-directory: android
+
+      - name: Upload JNI Lib
+        uses: actions/upload-artifact@v4
+        with:
+          name: libvalhalla-${{ matrix.arch }}
+          path: android/valhalla/src/main/jniLibs/${{ matrix.arch }}/libvalhalla-wrapper.so
+          retention-days: 1
+
+  combine:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: jniLibs
+
+      - name: Organize and zip artifacts
+        run: |
+          mkdir -p android/valhalla/src/main/jniLibs
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            mkdir -p android/valhalla/src/main/jniLibs/$arch
+            if [ -f jniLibs/libvalhalla-$arch/libvalhalla-wrapper.so ]; then
+              cp jniLibs/libvalhalla-$arch/libvalhalla-wrapper.so android/valhalla/src/main/jniLibs/$arch/
+            fi
+          done
+          zip -r valhalla-jniLibs.zip android
+
+      - name: Upload zipped JNI Libs
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-jniLibs
+          path: valhalla-jniLibs.zip
+          retention-days: 1
+
+  check-ktfmt:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-android-ktfmt
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: android
+
+      - name: Verify Kotlin formatting
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew ktfmtCheck
+        working-directory: android
+
+  test:
+    needs: combine
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-android-test
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download JNI Libs
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-jniLibs
+          path: .
+
+      - name: Unzip JNI Libs
+        run: unzip valhalla-jniLibs.zip
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: android
+
+      - name: Unit test
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew test
+        working-directory: android
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: |
+            android/**/build/reports
+
+  connected-check:
+    needs: combine
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-android-connected-check
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download JNI Libs
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-jniLibs
+          path: .
+
+      - name: Unzip JNI Libs
+        run: unzip valhalla-jniLibs.zip
+
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: android
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Connected Checks
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          api-level: 30
+          avd-name: ubuntu-latest-x86_64-aosp-atd-30
+          arch: x86_64
+          target: aosp_atd
+          script: ./gradlew connectedCheck
+          working-directory: android
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: connected-reports
+          path: |
+            android/**/build/reports

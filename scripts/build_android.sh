@@ -1,36 +1,55 @@
-# Android SDK and NDK
-export ANDROID_SDK=~/Library/Android/sdk
-export NDK_DIR=$ANDROID_SDK/ndk/25.0.8775105  # <-- Update with the correct NDK path
-# Android toolchain
-export TOOLCHAIN_FILE=$NDK_DIR/build/cmake/android.toolchain.cmake
+#!/bin/bash
 
-# TODO: Handle the abi and target as based on arguments
-android_abis=("arm64-v8a" "armeabi-v7a" "x86" "x86_64")
-android_targets=("aarch64-linux-android" "armv7a-linux-androideabi" "i686-linux-android" "x86_64-linux-android")
+#
+# 1. Check the presence of required environment variables
+#
+if [ -z ${ANDROID_NDK_HOME+x} ]; then
+  echo "Please set ANDROID_NDK_HOME"
+  exit 1
+fi
 
-export ABI=$1
-export TARGET=aarch64-linux-android
-export ANDROID_PLATFORM=android-28
+if [ -z ${VCPKG_ROOT+x} ]; then
+  echo "Please set VCPKG_ROOT"
+  exit 1
+fi
 
-export PROTOBUF_LOCAL_DIR=`pwd`/protoc
+#
+# 2. Set the path to the toolchains
+#
+vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+android_toolchain_file=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake
+vcpkg_triplet_overlay=`pwd`/triplets
 
-export BUILD_DIR=`pwd`/build/android/$ABI/wrapper
-export WRAPPER_DIR=`pwd`/src
+# Check if the first argument is a valid Apple architecture
+if [ "$1" == "arm64-v8a" ]; then
+    android_abi=arm64-v8a
+    vcpkg_target_triplet=arm64-android
+elif [ "$1" == "armeabi-v7a" ]; then
+    android_abi=armeabi-v7a
+    vcpkg_target_triplet=arm-android
+elif [ "$1" == "x86_64" ]; then
+    android_abi=x86_64
+    vcpkg_target_triplet=x64-android
+elif [ "$1" == "x86" ]; then
+    android_abi=x86
+    vcpkg_target_triplet=x86-android
+else
+    echo "Error, first argument must be an android architecture: arm, arm64, x64, or x86. Found ${1}"
+    exit 1
+fi
 
+export BUILD_DIR=`pwd`/build/android/$android_abi/wrapper
+wrapper_dir=`pwd`/src
+
+# Move to the build directory
 mkdir -p $BUILD_DIR && cd $BUILD_DIR
 
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_TOOLS=OFF -DENABLE_DATA_TOOLS=OFF \
-    -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF \
-    -DENABLE_TESTS=OFF -DENABLE_BENCHMARKS=OFF \
-    -DENABLE_STATIC_LIBRARY_MODULES=ON \
-    -DProtobuf_PROTOC_EXECUTABLE=$PROTOBUF_LOCAL_DIR/bin/protoc \
-    -DANDROID_ABI=$ABI \
-    -DANDROID_PLATFORM=$ANDROID_PLATFORM \
-    -DANDROID_NDK=$NDK_DIR \
-    -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE \
-    -S $WRAPPER_DIR \
+# vcpkg will install everything during cmake configuration
+cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
+    -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$android_toolchain_file \
+    -DVCPKG_OVERLAY_TRIPLETS=$vcpkg_triplet_overlay \
+    -DVCPKG_TARGET_TRIPLET=$vcpkg_target_triplet \
+    -DANDROID_ABI=$android_abi \
+    -S $wrapper_dir \
     -B .
-
-make -j$(nproc)
+cmake --build . -- -j$(nproc)

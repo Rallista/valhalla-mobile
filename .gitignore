@@ -1,12 +1,8 @@
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea
+/android/.gradle
+/android/local.properties
+/android/.idea/
 .DS_Store
 /build
 /protoc
@@ -31,3 +27,10 @@ libvalhalla-wrapper.so
 
 # Openapi temp
 .openapi-temp
+
+# Gradle other
+/.gradle
+/wrapper/.gradle
+
+# VCPKG
+/vcpkg

@@ -1,5 +1,5 @@
 import Foundation
-import ValhallaModels
+import ValhallaConfigModels
 import Light_Swift_Untar
 
 enum ValhallaFileManagerError: Error {
@@ -31,7 +31,7 @@ enum ValhallaFileManager {
     /// Learn more see <https://github.com/HowardHinnant/date>
     /// and <https://howardhinnant.github.io/date/tz.html#Installation>
     static func injectTzdataIntoLibrary() throws {
-        guard let tzdataFileURL = Bundle.module.url(forResource: "SupportData/tzdata", withExtension: "tar") else {
+        guard let tzdataFileURL = Bundle.module.url(forResource: "tzdata", withExtension: "tar") else {
             throw ValhallaFileManagerError.tzdataNotFound
         }
 

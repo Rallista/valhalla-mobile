@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:5.8
 import PackageDescription
 
 // Use the local binary if true
@@ -11,7 +11,8 @@ var binaryTarget: Target = .binaryTarget(
 )
 
 // CI will replace the nils with the actual values when building a release
-let binaryURL: String = "https://github.com/Rallista/valhalla-mobile/releases/download/v0.0.23/valhalla-wrapper.xcframework.zip"
+let binaryURL: String =
+    "https://github.com/Rallista/valhalla-mobile/releases/download/v0.0.23/valhalla-wrapper.xcframework.zip"
 let binaryChecksum: String = "0a0b223b4094027a595fba70d94a92f59b2105dac8c9b2b06b8be3263f64968e"
 
 if !useLocalBinary {
@@ -25,7 +26,7 @@ if !useLocalBinary {
 let package = Package(
     name: "ValhallaMobile",
     platforms: [
-        .iOS(.v13),
+        .iOS("16.4")
         // .tvOS(.v13),
         // .watchOS(.v6),
         // .macOS(.v10_13)
@@ -33,29 +34,27 @@ let package = Package(
     products: [
         .library(
             name: "Valhalla",
-            targets: ["Valhalla", "ValhallaModels"]
-        ),
+            targets: ["Valhalla"]
+        )
     ],
     dependencies: [
-        .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.1")),
+        .package(url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", exact: "0.0.4"),
         .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
     ],
     targets: [
-        .target(
-            name: "ValhallaModels",
-            dependencies: ["AnyCodable"],
-            path: "apple/Sources/Generated"
-        ),
         .target(
             name: "Valhalla",
             dependencies: [
                 "ValhallaObjc",
                 "ValhallaWrapper",
-                "ValhallaModels",
+                .product(name: "ValhallaConfigModels", package: "valhalla-openapi-models-swift"),
+                .product(name: "ValhallaModels", package: "valhalla-openapi-models-swift"),
                 .product(name: "Light-Swift-Untar", package: "Light-Swift-Untar"),
             ],
             path: "apple/Sources/Valhalla",
-            resources: [.copy("SupportData")]
+            resources: [
+                .process("SupportData")
+            ]
         ),
         .target(
             name: "ValhallaObjc",

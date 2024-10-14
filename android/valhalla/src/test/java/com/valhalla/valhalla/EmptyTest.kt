@@ -1,13 +1,12 @@
 package com.valhalla.valhalla
 
-import org.junit.Test
-
 import org.junit.Assert.*
+import org.junit.Test
 
 class EmptyTest {
 
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
+  @Test
+  fun addition_isCorrect() {
+    assertEquals(4, 2 + 2)
+  }
 }

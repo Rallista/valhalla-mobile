@@ -1,5 +1,6 @@
+#!/bin/bash
 
-# Get the zip file of the xcframework from ci   
+# Get the zip file of the xcframework from ci
 release_tag=$1
 release_url="https://github.com/Rallista/valhalla-mobile/releases/download/${release_tag}"
 xcframework_zip="valhalla-wrapper.xcframework.zip"

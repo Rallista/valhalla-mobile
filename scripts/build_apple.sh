@@ -1,40 +1,61 @@
 #!/bin/bash
 
+# Check for Xcode command line tools
+if ! command -v xcodebuild &> /dev/null; then
+    echo "Xcode command line tools not found. Please install Xcode."
+    exit 1
+fi
+
+if [ -z ${VCPKG_ROOT+x} ]; then
+  echo "Please set VCPKG_ROOT"
+  exit 1
+fi
+
+# Set the path to the toolchains
+vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+vcpkg_triplet_overlay=`pwd`/triplets
+
 # Check if the first argument is a valid Apple architecture
-if [ "$1" == "iphoneos" ]; then
-    export SDK="iphoneos"
-    export SYSTEM_NAME="iOS"
-    export OSX_DEPLOYMENT_TARGET="13.0"
-    export OSX_ARCHITECTURE="arm64"
-elif [ "$1" == "iphonesimulator" ]; then
-    export SDK="iphonesimulator"
-    export SYSTEM_NAME="iOS"
-    export OSX_DEPLOYMENT_TARGET="13.0"
-    export OSX_ARCHITECTURE="arm64"
-elif [ "$1" == "iphonesimulator-legacy" ]; then
-    export SDK="iphonesimulator"
-    export SYSTEM_NAME="iOS"
-    export OSX_DEPLOYMENT_TARGET="13.0"
-    export OSX_ARCHITECTURE="x86_64"
+if [ "$1" == "arm64-ios" ]; then
+    sdk=iphoneos
+    system_name=iOS
+    min_deployment_target=13.0
+    arch=arm64
+    vcpkg_target_triplet=arm64-ios
+elif [ "$1" == "arm64-ios-simulator" ]; then
+    sdk=iphonesimulator
+    system_name=iOS
+    min_deployment_target=13.0
+    arch=arm64
+    vcpkg_target_triplet=arm64-ios-simulator
+elif [ "$1" == "x64-ios-simulator" ]; then
+    sdk=iphonesimulator
+    system_name=iOS
+    min_deployment_target=13.0
+    arch=x86_64
+    vcpkg_target_triplet=x64-ios-simulator
 elif [ "$1" == "macos" ]; then
-    export SDK="macosx"
-    export SYSTEM_NAME="Darwin"
-    export OSX_DEPLOYMENT_TARGET="10.14"
-    export OSX_ARCHITECTURE="arm64" # TODO: Add x86_64 for older macs?
+    sdk=macosx
+    system_name=Darwin
+    min_deployment_target=10.14
+    arch=arm64 # TODO: Add x86_64 for older macs?
+    vcpkg_target_triplet=arm64-osx # TODO: Try the normal one that's not in the community releases.
 elif [ "$1" == "tvos" ]; then
     echo "Error tvos not supported yet." # error: 'fork' is unavailable: not available on watchOS, tvOS (& 'execvp')
     exit 1
-    export SDK="appletvos"
-    export SYSTEM_NAME="tvOS"
-    export OSX_DEPLOYMENT_TARGET="13.0"
-    export OSX_ARCHITECTURE="arm64"
+    sdk=appletvos
+    system_name=tvOS
+    min_deployment_target=13.0
+    arch=arm64
+    vcpkg_target_triplet="" # TODO: Make a custom triplet?
 elif [ "$1" == "watchos" ]; then
     echo "Error watchos not supported yet." # error: 'fork' is unavailable: not available on watchOS, tvOS (& 'execvp')
     exit 1
-    export SDK="watchos"
-    export SYSTEM_NAME="watchOS"
-    export OSX_DEPLOYMENT_TARGET="6.0"
-    export OSX_ARCHITECTURE="arm64"
+    sdk=watchos
+    system_name=watchOS
+    min_deployment_target=6.0
+    arch=arm64
+    vcpkg_target_triplet="" # TODO: Make a custom triplet?
 elif [ "$1" == "visionos" ]; then
     echo "Error visionos not supported yet."
     exit 1
@@ -43,35 +64,21 @@ else
     exit 1
 fi
 
-# Protobuf built locally. This is simply to build headers with a matching protoc version on the local machine.
-export PROTOBUF_LOCAL_DIR=`pwd`/protoc
+build_dir=`pwd`/build/apple/$vcpkg_target_triplet
+wrapper_dir=`pwd`/src
 
-# Check if protoc is available in the local directory
-if [ ! -f $PROTOBUF_LOCAL_DIR/bin/protoc ]; then
-    echo "Error: protoc not found in the local directory. Please run build_protoc_local.sh first."
-    exit 1
-fi
+# Move to the build directory
+mkdir -p $build_dir && cd $build_dir
 
-export BUILD_DIR=`pwd`/build/apple/$OSX_ARCHITECTURE/$SDK/wrapper
-export WRAPPER_DIR=`pwd`/src
-
-mkdir -p $BUILD_DIR && cd $BUILD_DIR
-
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_WERROR=OFF -DENABLE_TOOLS=OFF -DENABLE_DATA_TOOLS=OFF \
-    -DENABLE_SERVICES=OFF -DENABLE_PYTHON_BINDINGS=OFF -DENABLE_NODE_BINDINGS=OFF -DENABLE_HTTP=OFF \
-    -DENABLE_TESTS=OFF -DENABLE_BENCHMARKS=OFF \
-    -DENABLE_STATIC_LIBRARY_MODULES=ON \
-    -DProtobuf_PROTOC_EXECUTABLE=$PROTOBUF_LOCAL_DIR/bin/protoc \
-    -DBoost_INCLUDE_DIR=/opt/homebrew/include \
-    -DCMAKE_SYSTEM_NAME=$SYSTEM_NAME \
-    -DCMAKE_OSX_SYSROOT=$SDK \
-    -DCMAKE_OSX_ARCHITECTURES=$OSX_ARCHITECTURE \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET=$OSX_DEPLOYMENT_TARGET \
+cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
+    -DVCPKG_TARGET_TRIPLET=$vcpkg_target_triplet \
+    -DVCPKG_OVERLAY_TRIPLETS=$vcpkg_triplet_overlay \
+    -DCMAKE_SYSTEM_NAME=$system_name \
+    -DCMAKE_OSX_SYSROOT=$sdk \
+    -DCMAKE_OSX_ARCHITECTURES=$arch \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=$min_deployment_target \
     -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO \
-    -S $WRAPPER_DIR \
+    -S $wrapper_dir \
     -B . \
     -G Xcode
-
-cmake --build $BUILD_DIR --config Release --target install -- -sdk $SDK
+cmake --build . --config Release --target install -- -jobs $(sysctl -n hw.ncpu)

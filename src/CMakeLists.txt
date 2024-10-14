@@ -1,6 +1,10 @@
 # Set the minimum version of CMake that can be used
 cmake_minimum_required(VERSION 3.14)
 
+# Configure VCPKG
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
+
 # Set the project name
 project(valhalla-mobile)
 
@@ -8,18 +12,35 @@ project(valhalla-mobile)
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Valhalla config for mobile.
+set(ENABLE_TOOLS OFF)
+set(ENABLE_DATA_TOOLS OFF)
+set(ENABLE_PYTHON_BINDINGS OFF)
+set(ENABLE_HTTP OFF)
+set(ENABLE_SERVICES OFF)
+set(ENABLE_TESTS OFF)
+# TODO: Remove this once we fix the iOS errors w/ date library.
+set(ENABLE_SINGLE_FILES_WERROR OFF)
+
 # Set the output folder where your program will be created
 set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+
+# Disable deprecation
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-builtins")
 
 # Configure OSX
 if (APPLE)
     message(STATUS "Configured for APPLE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-deprecated-builtins")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -lpthread -Wno-shorten-64-to-32 -Wno-sign-compare")
 
     # tvOS and watchOS modifications
-    if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*") 
+    if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
     endif()
+
+    # Configure the date library
+    set(BUILD_TZ_LIB ON CACHE INTERNAL "")
+    set(MANUAL_TZ_DB ON CACHE INTERNAL "")
 endif()
 
 # WRAPPER ---------------------------------------------------------
@@ -28,109 +49,89 @@ add_subdirectory(wrapper)
 target_include_directories(valhalla-wrapper PUBLIC wrapper/include)
 install(DIRECTORY wrapper/include DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
-# PROTOBUF ---------------------------------------------------------
+# DEPENDENCIES ----------------------------------------------------
 
-message(STATUS "Protobuf fetching from github...")
-
-# Fetch Protobuf source code
-# https://cmake.org/cmake/help/latest/module/FetchContent.html#overriding-where-to-find-cmakelists-txt
-include(FetchContent)
-FetchContent_Declare(
-    protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG v3.20.3  # You can specify a particular commit or tag
-    SOURCE_SUBDIR cmake
-    FIND_PACKAGE_ARGS NAMES protobuf
-)
-
-message(STATUS "Protobuf fetching - done")
-message(STATUS "Protobuf building...")
-
-set(WITHPROTOC {$Protobuf_PROTOC_EXECUTABLE} CACHE INTERNAL "")
 set(protobuf_BUILD_STATIC_LIBS ON CACHE INTERNAL "")
-set(protobuf_BUILD_LIBPROTOC ON CACHE INTERNAL "")
-set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE INTERNAL "")
-set(protobuf_BUILD_TESTS OFF CACHE INTERNAL "")
-set(protobuf_BUILD_CONFORMANCE OFF CACHE INTERNAL "")
-set(protobuf_BUILD_EXAMPLES OFF CACHE INTERNAL "")
-
-FetchContent_MakeAvailable(Protobuf)
-
-message(STATUS "Protobuf bulding -done")
 
 set(Protobuf_INCLUDE_DIR ${protobuf_SOURCE_DIR}/src)
 set(Protobuf_LIBRARIES protobuf::libprotobuf-lite)
 
-include(FindProtobuf) 
+find_package(absl CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
+find_package(Boost REQUIRED)
+find_package(robin_hood CONFIG REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
 
-if (NOT Protobuf_FOUND)
-    message(FATAL_ERROR "Protobuf not found")
-endif()
+link_libraries(robin_hood::robin_hood)
+include_directories(${ROBIN_HOOD_INCLUDE_DIRS})
 
-# Link Protobuf
+link_libraries(rapidjson)
+include_directories(${RAPIDJSON_INCLUDE_DIRS})
 
-target_link_libraries(valhalla-wrapper PRIVATE protobuf::libprotobuf)
+link_libraries(Boost::boost)
+include_directories(${Boost_INCLUDE_DIRS})
 
-# VALHALLA ---------------------------------------------------------
+add_subdirectory(valhalla/third_party/date date)
 
-add_subdirectory(valhalla EXCLUDE_FROM_ALL)
-target_link_libraries(valhalla-wrapper PRIVATE valhalla)
-target_include_directories(valhalla-wrapper PRIVATE valhalla/valhalla)
-install(DIRECTORY valhalla/valhalla DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+link_libraries(date)
+include_directories(${Date_INCLUDE_DIRS})
 
-# Valhalla proto files
-# TODO: Filter out subdirectories (they're empty but still there).
-set(VALHALLA_PROTO_HEADERS_DIR ${CMAKE_BINARY_DIR}/valhalla/src/valhalla/proto)
-install(DIRECTORY ${VALHALLA_PROTO_HEADERS_DIR}/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/valhalla/proto
-        FILES_MATCHING PATTERN "*.h")
+add_subdirectory(valhalla)
 
-# BOOST ---------------------------------------------------------
+# Valhalla source directory
+set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/valhalla)
+set_property(DIRECTORY valhalla PROPERTY VALHALLA_SOURCE_DIR ${VALHALLA_SOURCE_DIR})
 
-message(STATUS "Boost_INCLUDE_DIR: ${Boost_INCLUDE_DIR}")
+target_link_libraries(valhalla-wrapper
+    PRIVATE
+    ${Protobuf_LIBRARIES}
+    absl::base
+    absl::log
+    absl::strings
+    absl::status
+    Boost::boost
+    ${DATE_LIBRARY}
+    valhalla
+)
+target_include_directories(valhalla-wrapper
+    PRIVATE
+    ${Boost_INCLUDE_DIRS}
+    ${VALHALLA_SOURCE_DIR}
+)
 
-# Find all header files in Boost_INCLUDE_DIR/boost
-file(GLOB_RECURSE BOOST_HEADERS ${Boost_INCLUDE_DIR}/boost/*.hpp ${Boost_INCLUDE_DIR}/boost/*.h)
+# Link installed headers ---------------------------------------------------------
 
-# Process each header file to determine its relative path
-foreach(BOOST_HEADER ${BOOST_HEADERS})
-    # Get the relative path of the header file relative to Boost_INCLUDE_DIR/boost
-    file(RELATIVE_PATH BOOST_HEADER_RELATIVE ${Boost_INCLUDE_DIR}/boost ${BOOST_HEADER})
-    
-    # Extract the directory part of the relative path
-    get_filename_component(BOOST_HEADER_DIR ${BOOST_HEADER_RELATIVE} DIRECTORY)
-    
-    # Install the header file to the destination directory within the installation directory
-    install(FILES ${BOOST_HEADER} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/boost/${BOOST_HEADER_DIR})
-endforeach()
+function(install_vcpkg_libs_wildcard pattern)
+    file(GLOB LIBS_TO_INSTALL
+         "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/${pattern}.a")
+    install(FILES ${LIBS_TO_INSTALL}
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+endfunction()
 
-# Date (valhalla/third_party) ---------------------------------------------------------
+function(install_vcpkg_libs)
+    foreach(lib ${ARGN})
+        install(FILES
+            "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib/${lib}.a"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/lib"
+        )
+    endforeach()
+endfunction()
 
 if (APPLE)
-    # Configure the date library
-    set(BUILD_TZ_LIB ON CACHE INTERNAL "")
-    set(MANUAL_TZ_DB ON CACHE INTERNAL "")
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include
+            DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-    add_subdirectory(valhalla/third_party/date date)
-    target_link_libraries(valhalla-wrapper PRIVATE date)
-    target_include_directories(valhalla-wrapper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/date/include)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(DIRECTORY ${Boost_INCLUDE_DIRS}
+            DESTINATION ${CMAKE_INSTALL_PREFIX}
+            COMPONENT development)
+
+    install_vcpkg_libs(liblz4 libprotobuf-lite)
+    install_vcpkg_libs_wildcard("libabsl*")
+    install_vcpkg_libs_wildcard("libutf8*")
 endif()
 
 # Install the valhalla-wrapper library
 
-install(TARGETS 
-    valhalla
-    valhalla-baldr
-    valhalla-loki
-    valhalla-meili
-    valhalla-midgard
-    valhalla-odin
-    valhalla-sif
-    valhalla-skadi
-    valhalla-thor
-    valhalla-tyr
-    valhalla-proto
-    valhalla-wrapper
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS
+        valhalla-wrapper
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
