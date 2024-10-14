@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-builtins")
 # Configure OSX
 if (APPLE)
     message(STATUS "Configured for APPLE")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-shorten-64-to-32 -Wno-sign-compare")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -lpthread -Wno-shorten-64-to-32 -Wno-sign-compare")
 
     # tvOS and watchOS modifications
     if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
@@ -41,9 +41,6 @@ if (APPLE)
     # Configure the date library
     set(BUILD_TZ_LIB ON CACHE INTERNAL "")
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
-    set(HAS_REMOTE_API OFF CACHE INTERNAL "")
-    set(USE_SHELL_API ON CACHE INTERNAL "")
-    # -x objective-c++
 endif()
 
 # WRAPPER ---------------------------------------------------------
