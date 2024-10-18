@@ -52,4 +52,4 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DANDROID_ABI=$android_abi \
     -S $wrapper_dir \
     -B .
-cmake --build . -- -j$(nproc)
+cmake --build . --config Release -- -j$(nproc)
