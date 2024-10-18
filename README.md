@@ -4,9 +4,53 @@ This project builds [valhalla](https://github.com/valhalla/valhalla) as a static
 
 > This library is in early POC. Feel free to write up issues if you're insterested in contributing.
 
-## Usage
+## Setup
 
-TBA
+### Android
+
+Using a `libs.versions.toml` with a `build.gradle.kts`
+
+```toml
+[verisons]
+valhallaMobile = "0.1.0"
+[libraries]
+valhalla-mobile = { group = "io.github.rallista", name = "valhalla-mobile", version.ref = "valhallaMobile" }
+```
+
+```kts
+implementation(libs.valhalla.mobile)
+```
+
+Using a standard `build.gradle.kts`
+
+```kts
+implementation("io.github.rallista:valhalla-mobile:0.1.0")
+```
+
+Using a standard `build.gradle`
+
+```
+implementation 'io.github.rallista:valhalla-mobile:0.1.0'
+```
+
+### iOS
+
+In a swift package:
+
+```swift
+let package = Package(
+    dependencies: [
+        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.1.0"),
+    ],
+    targets: [
+        .target(
+            dependencies: [
+                .product(name: "Valhalla", package: "valhalla-mobile")
+            ]
+        ),
+    ]
+)
+```
 
 ## Manually Building Valhalla C++
 

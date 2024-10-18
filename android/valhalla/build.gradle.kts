@@ -1,10 +1,11 @@
-import com.github.javaparser.utils.ProjectRoot
+import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ktfmt)
-    `maven-publish`
+    alias(libs.plugins.mavenPublish)
 }
 
 android {
@@ -34,12 +35,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
 }
 
 dependencies {
@@ -48,8 +43,8 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.moshi.adapters)
 
-    implementation(libs.valhalla.config)
-    implementation(libs.valhalla.api)
+    implementation(libs.valhalla.models.api)
+    implementation(libs.valhalla.models.config)
     implementation(libs.osrm.api)
 
     testImplementation(libs.junit)
@@ -88,27 +83,42 @@ tasks.named("preBuild") {
     dependsOn("buildValhallaFor-x86")
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/Rallista/valhalla-mobile")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+
+    coordinates("io.github.rallista", "valhalla-mobile", project.version.toString())
+
+    configure(AndroidSingleVariantLibrary(sourcesJar = true, publishJavadocJar = true))
+
+    pom {
+        name.set("Valhalla Mobile")
+        url.set("https://github.com/Rallista/valhalla-mobile")
+        description.set("A mobile app focused wrapper library for the valhalla routing engine")
+        inceptionYear.set("2024")
+        licenses {
+            license {
+                name.set("MIT")
+                url.set("https://github.com/Rallista/valhalla-mobile?tab=MIT-1-ov-file#MIT-1-ov-file")
             }
         }
-    }
-
-    publications {
-        create<MavenPublication>("gpr") {
-            afterEvaluate {
-                from(components["release"])
+        developers {
+            developer {
+                name.set("Jacob Fielding")
+                organization.set("Rallista")
+                organizationUrl.set("https://rallista.app")
             }
-
-            groupId = "com.valhalla"
-            artifactId = "valhalla"
-            version = "0.0.1"
+        }
+        contributors {
+            contributor {
+                name.set("Valhalla")
+                organizationUrl.set("https://github.com/valhalla/valhalla")
+            }
+        }
+        scm {
+            connection.set("scm:git:https://github.com/Rallista/valhalla-mobile.git")
+            developerConnection.set("scm:git:ssh://github.com/Rallista/valhalla-mobile.git")
+            url.set("https://github.com/Rallista/valhalla-mobile")
         }
     }
 }

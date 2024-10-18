@@ -3,6 +3,8 @@
 /android/.gradle
 /android/local.properties
 /android/.idea/
+/android/build/
+/android/.kotlin
 .DS_Store
 /build
 /protoc
