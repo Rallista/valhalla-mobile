@@ -87,6 +87,10 @@ mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
 
+    if (project.version.toString() === "unspecified") {
+        throw IllegalArgumentException("Version must be specified")
+    }
+
     coordinates("io.github.rallista", "valhalla-mobile", project.version.toString())
 
     configure(AndroidSingleVariantLibrary(sourcesJar = true, publishJavadocJar = true))
