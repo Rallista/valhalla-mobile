@@ -236,6 +236,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # TODO: Remove this once successful.
+      - name: Verify version
+        run: cat version.txt
 
       - name: Download JNI Libs
         uses: actions/download-artifact@v4
