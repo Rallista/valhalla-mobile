@@ -11,8 +11,9 @@ var binaryTarget: Target = .binaryTarget(
 )
 
 // CI will replace the nils with the actual values when building a release
+let version: String = "0.1.3"
 let binaryURL: String =
-    "https://github.com/Rallista/valhalla-mobile/releases/download/v0.0.23/valhalla-wrapper.xcframework.zip"
+    "https://github.com/Rallista/valhalla-mobile/releases/download/\(version)/valhalla-wrapper.xcframework.zip"
 let binaryChecksum: String = "9d415562cf371b5df6a4a1536c05ff8c91194da943279387f74a03bf2ff95a65"
 
 if !useLocalBinary {
@@ -38,7 +39,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", exact: "0.0.4"),
+        .package(
+            url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", exact: "0.0.4"),
         .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
     ],
     targets: [
