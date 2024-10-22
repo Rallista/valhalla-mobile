@@ -16,7 +16,7 @@ echo "Release URL: ${artifact_url}"
 # sed -i '' "s|^let useLocalBinary: Bool = .*|let useLocalBinary: Bool = false|" Package.swift
 
 # Replace `let version` line with the new binary url for the release artifact in Package.swift
-sed -i '' "s|^let version: String = .*|let version: String = \"$version\"|" Package.swift
+sed -i '' "s|^let version: String = .*|let version: String = \"$release_tag\"|" Package.swift
 
 # Replace let binaryChecksum: String? = nil with the new binary checksum for the release artifact in Package.swift
 sed -i '' "s|^let binaryChecksum: String = .*|let binaryChecksum: String = \"$xcframework_checksum\"|" Package.swift
