@@ -1,8 +1,12 @@
 # Valhalla Mobile
 
-This project builds [valhalla](https://github.com/valhalla/valhalla) as a static iOS or shared Android library. It currently only exposes the route function for the primary purpose of generating turn by turn navigation routes using a downloaded pre-parsed valhalla tileset.
+This project builds [valhalla](https://github.com/valhalla/valhalla) as a static iOS or shared Android library.
 
-> This library is in early POC. Feel free to write up issues if you're insterested in contributing.
+It currently only exposes the route function for the primary purpose of generating turn by turn navigation routes
+using a downloaded pre-parsed valhalla tileset.
+
+We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
+for more information.
 
 ## Setup
 
@@ -72,39 +76,19 @@ On iOS, you must pre-build the xcframework using the command:
 
 ### Android
 
-The project's build.gradle.kts includes a build task that runs the script below.
-It's also possible to run this manually and copy the lib.so files automatically using:
+The project's build.gradle.kts includes a build task that automatically runs the script below selectively per achitecture.
+It's also possible to run this manually:
 
 ```sh
 ./build.sh android clean
 ```
 
-## Upgrading Valhalla
+## Valhalla Fork
 
-When a new valhalla release comes out at <https://github.com/valhalla/valhalla/releases>.
-
-TODO: Make this a script once it's proven.
-
-```sh
-# Clean up valhalla submodule (important this is not concurrent.)
-git submodule deinit -f --all
-git submodule update --init
-
-# Checkout the latest release branch
-cd src/valhalla
-git checkout {version-tag} # E.g. `git checkout 3.5.0`
-
-# Install recursive submodules now that the exact version of valhalla is selected.
-git submodule update --init --recursive
-
-# Return to this repo's root directory
-cd ../../
-```
-
-At this point valhalla's src folder has been updated and prepared. Now it's time to test if the existing `src/CMakeLists.txt` still builds by running
-an iOS and Android build.
+This project uses our fork of valhalla at <https://github.com/Rallista/valhalla> as a submodule. If a feature is missing, please
+open an issue or PR on that repository to upgrade it to valhalla's latest version.
 
 ## References
 
 - Valhalla <https://github.com/valhalla/valhalla>
-- Swift Package Manager C++ <https://www.swift.org/documentation/articles/wrapping-c-cpp-library-in-swift.html>
+- Swift Package Manager C++ (for fun - this repo takes the old approach) <https://www.swift.org/documentation/articles/wrapping-c-cpp-library-in-swift.html>
