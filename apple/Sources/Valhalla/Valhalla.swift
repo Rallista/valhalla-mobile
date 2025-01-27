@@ -12,7 +12,7 @@ public protocol ValhallaProviding {
 }
 
 public final class Valhalla: ValhallaProviding {
-    private let actor = ValhallaWrapper()
+    private let actor: ValhallaWrapper?
     private let configPath: String
 
     public convenience init(_ config: ValhallaConfig) throws {
@@ -29,6 +29,7 @@ public final class Valhalla: ValhallaProviding {
         }
 
         self.configPath = configPath
+        self.actor = ValhallaWrapper(configPath: configPath)
     }
     
     public func route(request: RouteRequest) throws -> RouteResponse {
@@ -50,6 +51,6 @@ public final class Valhalla: ValhallaProviding {
     }
 
     public func route(rawRequest request: String) -> String {
-        actor!.route(request, configPath: configPath)
+        actor!.route(request)
     }
 }
