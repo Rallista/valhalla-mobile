@@ -6,7 +6,7 @@ public protocol ValhallaProviding {
     
     init(_ config: ValhallaConfig) throws
     
-    init(configPath: String)
+    init(configPath: String) throws
 
     func route(request: RouteRequest) throws -> RouteResponse
 }
@@ -17,10 +17,10 @@ public final class Valhalla: ValhallaProviding {
 
     public convenience init(_ config: ValhallaConfig) throws {
         let configURL = try ValhallaFileManager.saveConfigTo(config)
-        self.init(configPath: configURL.relativePath)
+        try self.init(configPath: configURL.relativePath)
     }
 
-    public required init(configPath: String) {
+    public required init(configPath: String) throws {
         do {
             try ValhallaFileManager.injectTzdataIntoLibrary()
         } catch {
@@ -29,7 +29,13 @@ public final class Valhalla: ValhallaProviding {
         }
 
         self.configPath = configPath
-        self.actor = ValhallaWrapper(configPath: configPath)
+        do {
+            self.actor = try ValhallaWrapper(configPath: configPath)
+        } catch let error as NSError {
+            throw ValhallaError.valhallaError(error.code, error.domain)
+        } catch {
+            throw ValhallaError.valhallaError(-1, error.localizedDescription)
+        }
     }
     
     public func route(request: RouteRequest) throws -> RouteResponse {

@@ -4,11 +4,26 @@
 
 @implementation ValhallaWrapper
 
-- (instancetype)initWithConfigPath:(NSString*)config_path
+- (instancetype)initWithConfigPath:(NSString*)config_path error:(__autoreleasing NSError **)error
 {
     self = [super init];
     std::string path = std::string([config_path UTF8String]);
-    _actor = create_valhalla_actor(path.c_str());
+    try {
+        _actor = create_valhalla_actor(path.c_str());
+    } catch (NSException *exception) {
+        *error = [[NSError alloc] initWithDomain:exception.name code:0 userInfo:@{
+            NSUnderlyingErrorKey: exception,
+            NSLocalizedDescriptionKey: exception.reason,
+            @"CallStackSymbols": exception.callStackSymbols
+        }];
+        return nil;
+    } catch (const std::exception &err) {
+        *error = [[NSError alloc] initWithDomain: [NSString stringWithUTF8String:err.what()] code:-1 userInfo: nil];
+        return nil;
+    } catch (...) {
+        *error = [[NSError alloc] initWithDomain: @"unknown exception" code:-1 userInfo: nil];
+        return nil;
+    }
     return self;
 }
 
