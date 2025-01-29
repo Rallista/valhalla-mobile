@@ -13,7 +13,7 @@ enum ValhallaFileManager {
         guard let applicationDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw ValhallaFileManagerError.systemDirNotFound("applicationSupport")
         }
-        
+        try FileManager.default.createDirectory(at: applicationDir, withIntermediateDirectories: true)
         let configURL = applicationDir.appendingPathComponent("valhalla-config.json")
         let data = try JSONEncoder().encode(config)
 
