@@ -21,6 +21,7 @@ Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
 
     std::string result;
     try {
+        // TODO: Android currently creates a new actor every time. Optimize to be like iOS later.
         ValhallaActor valhallaActor(config_path);
         result = valhallaActor.route(request);
     } catch (const valhalla::valhalla_exception_t &err) {
