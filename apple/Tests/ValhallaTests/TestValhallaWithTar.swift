@@ -13,18 +13,18 @@ final class TestValhallaWithTar: XCTestCase {
     
     /// Validate an incorrect configuration (config file not found).
     func testNoConfigFile() throws {
-        let valhalla = Valhalla(configPath: "missing.json")
-
-        let request = RouteRequest(
-            locations: [
-                RoutingWaypoint(lat: 38.429719, lon: -108.827425),
-                RoutingWaypoint(lat: 38.4604331, lon: -108.8817009)
-            ],
-            costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
-        )
-        
         do {
+            let valhalla = try Valhalla(configPath: "missing.json")
+
+            let request = RouteRequest(
+                locations: [
+                    RoutingWaypoint(lat: 38.429719, lon: -108.827425),
+                    RoutingWaypoint(lat: 38.4604331, lon: -108.8817009)
+                ],
+                costing: .auto,
+                directionsOptions: DirectionsOptions(units: .mi)
+            )
+        
             let _ = try valhalla.route(request: request)
             XCTFail("route should throw cannot open file missing.json")
         } catch let error as ValhallaError {

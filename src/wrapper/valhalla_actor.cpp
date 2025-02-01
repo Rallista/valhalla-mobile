@@ -4,17 +4,20 @@
 #include <valhalla/loki/worker.h>
 #include "valhalla_actor.h"
 
-std::string ValhallaActor::route(const std::string& request, const std::string& config_path) {
+ValhallaActor::ValhallaActor(const std::string& config_path): actor([&config_path]() {
     // Get the config path
     std::string config_file(config_path);
     
     // Set up the config object
-    boost::property_tree::ptree(config);
+    boost::property_tree::ptree config;
     rapidjson::read_json(config_file, config);
     
     // Setup the actor
-    valhalla::tyr::actor_t actor = valhalla::tyr::actor_t(config);
-    
+    return valhalla::tyr::actor_t(config);
+}()) // IIFE to prepare actor
+{}
+
+std::string ValhallaActor::route(const std::string& request) {
     // Convert the request to a std::string
     std::string req = std::string(request);
     

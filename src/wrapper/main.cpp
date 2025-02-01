@@ -21,8 +21,9 @@ Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
 
     std::string result;
     try {
-        ValhallaActor valhallaActor;
-        result = valhallaActor.route(request, config_path);
+        // TODO: Android currently creates a new actor every time. Optimize to be like iOS later.
+        ValhallaActor valhallaActor(config_path);
+        result = valhallaActor.route(request);
     } catch (const valhalla::valhalla_exception_t &err) {
         printf("[ValhallaActor] route valhalla_exception: %s\n", err.what());
         std::string code = std::to_string(err.code);
@@ -44,11 +45,18 @@ Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
 }
 
 #elif __APPLE__
-std::string route(const char *request, const char *config_path) {
+void* create_valhalla_actor(const char *config_path) {
+    return new ValhallaActor(config_path);
+}
+
+void delete_valhalla_actor(void* actor) {
+    delete ((ValhallaActor*) actor);
+}
+
+std::string route(const char *request, void* actor) {
     std::string result;
     try {
-        ValhallaActor valhallaActor;
-        result = valhallaActor.route(request, config_path);
+        result = ((ValhallaActor*) actor)->route(request);
     } catch (const valhalla::valhalla_exception_t &err) {
         printf("[ValhallaActor] route valhalla_exception: %s\n", err.what());
         std::string code = std::to_string(err.code);

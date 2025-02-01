@@ -5,11 +5,14 @@
 
 @class ValhallaWrapper;
 
-@interface ValhallaWrapper : NSObject {}
+@interface ValhallaWrapper : NSObject {
+    @private
+    void* _actor;
+}
 
-- (instancetype)init;
+- (instancetype)initWithConfigPath:(NSString*)config_path error:(__autoreleasing NSError **)error;
 
-- (NSString*)route:(NSString*)request configPath:(NSString*)config_path;
+- (NSString*)route:(NSString*)request;
 
 @end
 
