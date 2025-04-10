@@ -7,6 +7,8 @@ using a downloaded pre-parsed valhalla tileset.
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
+If you've got questions, would like to have informal discussions, or just want to ping us about a question, PR. Feel free 
+to reach out on the OpenStreetMap Slack (osmus.slack.com) under the [#valhalla-mobile](`https://osmus.slack.com/archives/C08N6SUNZTJ`) channel.
 
 ## Setup
 
