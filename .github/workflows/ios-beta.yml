@@ -1,0 +1,116 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-26
+    strategy:
+      matrix:
+        arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-${{ matrix.arch }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.0.1"
+
+      - name: Setup VCPKG
+        run: |
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+          ./vcpkg/bootstrap-vcpkg.sh
+          export VCPKG_ROOT=`pwd`/vcpkg
+
+      - name: Build for iOS & iOS Simulator
+        run: ./build.sh --ios ${{ matrix.arch }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.arch }}
+          path: |
+            build/apple/${{ matrix.arch }}/install
+
+  create-xcframework:
+    needs: build
+    runs-on: macos-26
+    steps:
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.0.1"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build/apple
+
+      - name: Move artifacts to correct locations
+        run: |
+          for arch in arm64-ios arm64-ios-simulator x64-ios-simulator; do
+            mkdir -p build/apple/$arch/install
+            mv build/apple/$arch/* build/apple/$arch/install/ || true
+          done
+
+      - name: Create XCFramework
+        run: |
+          ./scripts/create_xcframework.sh
+
+      - name: Upload XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-wrapper.xcframework
+          path: build/apple/valhalla-wrapper.xcframework
+
+  test:
+    needs: create-xcframework
+    runs-on: macos-26
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-ios-test
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        scheme: [ValhallaMobile]
+        destination: ["platform=iOS Simulator,name=iPhone 15,OS=26"]
+
+    steps:
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26.0.1"
+
+      - name: Download xcframework artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-wrapper.xcframework
+          path: build/apple/valhalla-wrapper.xcframework
+
+      - name: Test ${{ matrix.scheme }} on ${{ matrix.destination }}
+        run: xcodebuild -scheme ${{ matrix.scheme }} test -sdk iphonesimulator -destination '${{ matrix.destination }}' -resultBundlePath TestResults.xcresult | xcbeautify && exit ${PIPESTATUS[0]}
+        env:
+          VALHALLA_MOBILE_DEV: "true"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-artifacts
+          path: |
+            TestResults.xcresult
+            ~/Library/Logs/DiagnosticReports/*.crash
+            ~/Library/Logs/DiagnosticReports/*.ips
