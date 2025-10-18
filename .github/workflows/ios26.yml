@@ -1,4 +1,4 @@
-name: iOS
+name: iOS 26
 
 on:
   push:
