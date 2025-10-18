@@ -13,7 +13,7 @@ jobs:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-${{ matrix.arch }}
+      group: ${{ github.workflow }}-${{ github.ref }}-ios26-build-${{ matrix.arch }}
       cancel-in-progress: true
 
     steps:
@@ -79,7 +79,7 @@ jobs:
     needs: create-xcframework
     runs-on: macos-26
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-test
+      group: ${{ github.workflow }}-${{ github.ref }}-ios26-test
       cancel-in-progress: true
     strategy:
       matrix:
