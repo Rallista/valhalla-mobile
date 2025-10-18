@@ -61,12 +61,16 @@ find_package(Protobuf CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 find_package(robin_hood CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
+find_package(unordered_dense CONFIG REQUIRED)
 
 link_libraries(robin_hood::robin_hood)
 include_directories(${ROBIN_HOOD_INCLUDE_DIRS})
 
 link_libraries(rapidjson)
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
+
+link_libraries(unordered_dense::unordered_dense)
+include_directories(${UNORDERED_DENSE_INCLUDE_DIRS})
 
 link_libraries(Boost::boost)
 include_directories(${Boost_INCLUDE_DIRS})

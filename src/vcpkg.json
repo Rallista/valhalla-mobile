@@ -15,7 +15,8 @@
     "robin-hood-hashing",
     "rapidjson",
     "lz4",
-    "abseil"
+    "abseil",
+    "unordered-dense"
   ],
   "overrides": [
     {
