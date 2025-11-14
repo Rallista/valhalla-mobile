@@ -35,7 +35,7 @@ jobs:
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r29b
+          ndk-version: r29
           add-to-path: false
 
       - name: set up JDK 17
@@ -107,7 +107,7 @@ jobs:
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r29b
+          ndk-version: r29
           add-to-path: false
 
       - name: set up JDK 17
@@ -155,7 +155,7 @@ jobs:
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r29b
+          ndk-version: r29
           add-to-path: false
 
       - name: set up JDK 17
@@ -211,7 +211,7 @@ jobs:
         id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r29b
+          ndk-version: r29
           add-to-path: false
 
       - name: set up JDK 17
