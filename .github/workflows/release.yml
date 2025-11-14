@@ -28,7 +28,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.4.0"
+          xcode-version: "16.4.0"
 
       - name: Setup VCPKG
         run: |
@@ -55,7 +55,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.4.0"
+          xcode-version: "16.4.0"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
