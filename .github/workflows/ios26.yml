@@ -28,7 +28,7 @@ jobs:
 
       - name: Setup VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.10.17
           ./vcpkg/bootstrap-vcpkg.sh
           export VCPKG_ROOT=`pwd`/vcpkg
 

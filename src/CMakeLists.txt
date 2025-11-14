@@ -8,8 +8,8 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems
 # Set the project name
 project(valhalla-mobile)
 
-# Valhalla requires at least C++17
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
+# Valhalla requires at least C++20
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ language version to use (default is 20)")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Valhalla config for mobile.
@@ -38,9 +38,10 @@ if (APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
     endif()
 
-    # Configure the date library
+    # Use bundled date library for iOS (system chrono is available but tzdb may not be)
     set(BUILD_TZ_LIB ON CACHE INTERNAL "")
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
+    set(USE_SYSTEM_TZ_DB OFF CACHE INTERNAL "")
 endif()
 
 # WRAPPER ---------------------------------------------------------
@@ -94,9 +95,9 @@ target_link_libraries(valhalla-wrapper
     absl::strings
     absl::status
     Boost::boost
-    ${DATE_LIBRARY}
     valhalla
 )
+
 target_include_directories(valhalla-wrapper
     PRIVATE
     ${Boost_INCLUDE_DIRS}
