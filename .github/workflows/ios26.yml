@@ -51,7 +51,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.0.1"
+          xcode-version: "26.1"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         scheme: [ValhallaMobile]
-        destination: ["platform=iOS Simulator,name=iPhone 15,OS=26"]
+        destination: ["platform=iOS Simulator,name=iPhone 17,OS=26.1"]
 
     steps:
       - name: Checkout Valhalla
@@ -92,7 +92,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.0.1"
+          xcode-version: "26.1"
 
       - name: Download xcframework artifact
         uses: actions/download-artifact@v4
