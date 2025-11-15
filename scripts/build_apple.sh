@@ -19,19 +19,19 @@ vcpkg_triplet_overlay=`pwd`/triplets
 if [ "$1" == "arm64-ios" ]; then
     sdk=iphoneos
     system_name=iOS
-    min_deployment_target=16.3
+    min_deployment_target=16.4
     arch=arm64
     vcpkg_target_triplet=arm64-ios
 elif [ "$1" == "arm64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
-    min_deployment_target=16.3
+    min_deployment_target=16.4
     arch=arm64
     vcpkg_target_triplet=arm64-ios-simulator
 elif [ "$1" == "x64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
-    min_deployment_target=16.3
+    min_deployment_target=16.4
     arch=x86_64
     vcpkg_target_triplet=x64-ios-simulator
 elif [ "$1" == "macos" ]; then

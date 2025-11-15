@@ -33,6 +33,11 @@ if (APPLE)
     message(STATUS "Configured for APPLE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -lpthread -Wno-shorten-64-to-32 -Wno-sign-compare")
 
+    # Ensure C++20 standard library features are available on iOS
+    if(CMAKE_OSX_SYSROOT MATCHES ".*iphone.*")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++")
+    endif()
+
     # tvOS and watchOS modifications
     if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
