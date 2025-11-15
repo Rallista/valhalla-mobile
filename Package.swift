@@ -2,7 +2,8 @@
 import PackageDescription
 
 // Use the local binary if true
-let useLocalBinary = Context.environment["VALHALLA_MOBILE_DEV"].flatMap(Bool.init) ?? false
+// let useLocalBinary = Context.environment["VALHALLA_MOBILE_DEV"].flatMap(Bool.init) ?? false
+let useLocalBinary = true
 
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
@@ -73,5 +74,5 @@ let package = Package(
         ),
     ],
     cLanguageStandard: .gnu17,
-    cxxLanguageStandard: .cxx17
+    cxxLanguageStandard: .cxx20
 )

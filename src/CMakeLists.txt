@@ -33,20 +33,14 @@ if (APPLE)
     message(STATUS "Configured for APPLE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -lpthread -Wno-shorten-64-to-32 -Wno-sign-compare")
 
-    # Ensure C++20 standard library features are available on iOS
-    if(CMAKE_OSX_SYSROOT MATCHES ".*iphone.*")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++")
-    endif()
-
     # tvOS and watchOS modifications
     if(CMAKE_OSX_SYSROOT MATCHES ".*watchos.*" OR CMAKE_OSX_SYSROOT MATCHES ".*appletvos.*")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOCO_NO_FORK_EXEC=1")
     endif()
 
-    # Use bundled date library for iOS (system chrono is available but tzdb may not be)
+    # Configure the date library
     set(BUILD_TZ_LIB ON CACHE INTERNAL "")
     set(MANUAL_TZ_DB ON CACHE INTERNAL "")
-    set(USE_SYSTEM_TZ_DB OFF CACHE INTERNAL "")
 endif()
 
 # WRAPPER ---------------------------------------------------------
