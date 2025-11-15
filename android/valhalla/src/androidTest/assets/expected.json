@@ -25,10 +25,8 @@
                         "verbal_succinct_transition_instruction": "Drive west.",
                         "verbal_pre_transition_instruction": "Drive west on State Highway 1 41, Colorado 1 41.",
                         "verbal_post_transition_instruction": "Continue for 6 miles.",
-                        "street_names": [
-                            "State Highway 141",
-                            "CO 141"
-                        ],
+                        "street_names": ["State Highway 141", "CO 141"],
+                        "bearing_after": 265,
                         "time": 605.234,
                         "length": 6.267,
                         "cost": 534.003,
@@ -42,6 +40,7 @@
                         "instruction": "Your destination is on the left.",
                         "verbal_transition_alert_instruction": "Your destination will be on the left.",
                         "verbal_pre_transition_instruction": "Your destination is on the left.",
+                        "bearing_before": 13,
                         "time": 0.0,
                         "length": 0.0,
                         "cost": 0.0,

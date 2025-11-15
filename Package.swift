@@ -73,5 +73,5 @@ let package = Package(
         ),
     ],
     cLanguageStandard: .gnu17,
-    cxxLanguageStandard: .cxx17
+    cxxLanguageStandard: .cxx20
 )

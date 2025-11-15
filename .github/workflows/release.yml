@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
@@ -28,11 +28,11 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.4.0"
+          xcode-version: "16.4.0"
 
       - name: Setup VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.10.17
           ./vcpkg/bootstrap-vcpkg.sh
           export VCPKG_ROOT=`pwd`/vcpkg
 
@@ -48,14 +48,14 @@ jobs:
 
   create-xcframework-release:
     needs: build-ios
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "15.4.0"
+          xcode-version: "16.4.0"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -161,7 +161,7 @@ jobs:
           retention-days: 1
 
   draft-release:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: create-xcframework-release
     outputs:
       version: ${{ steps.version.outputs.version }}

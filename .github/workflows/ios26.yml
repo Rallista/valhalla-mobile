@@ -1,4 +1,4 @@
-name: iOS
+name: iOS 26
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-build-${{ matrix.arch }}
+      group: ${{ github.workflow }}-${{ github.ref }}-ios26-build-${{ matrix.arch }}
       cancel-in-progress: true
 
     steps:
@@ -24,7 +24,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4.0"
+          xcode-version: "26.0.1"
 
       - name: Setup VCPKG
         run: |
@@ -44,14 +44,14 @@ jobs:
 
   create-xcframework:
     needs: build
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4.0"
+          xcode-version: "26.1"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -77,14 +77,14 @@ jobs:
 
   test:
     needs: create-xcframework
-    runs-on: macos-15
+    runs-on: macos-26
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-ios-test
+      group: ${{ github.workflow }}-${{ github.ref }}-ios26-test
       cancel-in-progress: true
     strategy:
       matrix:
         scheme: [ValhallaMobile]
-        destination: ["platform=iOS Simulator,name=iPhone 16e,OS=18.6"]
+        destination: ["platform=iOS Simulator,name=iPhone 17,OS=26.1"]
 
     steps:
       - name: Checkout Valhalla
@@ -92,7 +92,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4.0"
+          xcode-version: "26.1"
 
       - name: Download xcframework artifact
         uses: actions/download-artifact@v4

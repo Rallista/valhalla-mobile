@@ -63,7 +63,7 @@ let package = Package(
 Set up VCPKG
 
 ```sh
-git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2024.09.23
+git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.10.17
 ./vcpkg/bootstrap-vcpkg.sh
 export VCPKG_ROOT=`pwd`/vcpkg
 ```
@@ -78,7 +78,10 @@ On iOS, you must pre-build the xcframework using the command:
 
 ### Android
 
-The project's build.gradle.kts includes a build task that automatically runs the script below selectively per achitecture.
+**Prerequisites:** Ensure you have completed the Android development setup described above, particularly setting `ANDROID_NDK_HOME`.
+CI is currently using `29.0.14206865`.
+
+The project's build.gradle.kts includes a build task that automatically runs the script below selectively per architecture.
 It's also possible to run this manually:
 
 ```sh

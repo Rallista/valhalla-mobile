@@ -8,8 +8,8 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems
 # Set the project name
 project(valhalla-mobile)
 
-# Valhalla requires at least C++17
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
+# Valhalla requires at least C++20
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ language version to use (default is 20)")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Valhalla config for mobile.
@@ -61,12 +61,16 @@ find_package(Protobuf CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 find_package(robin_hood CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
+find_package(unordered_dense CONFIG REQUIRED)
 
 link_libraries(robin_hood::robin_hood)
 include_directories(${ROBIN_HOOD_INCLUDE_DIRS})
 
 link_libraries(rapidjson)
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
+
+link_libraries(unordered_dense::unordered_dense)
+include_directories(${UNORDERED_DENSE_INCLUDE_DIRS})
 
 link_libraries(Boost::boost)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -90,9 +94,9 @@ target_link_libraries(valhalla-wrapper
     absl::strings
     absl::status
     Boost::boost
-    ${DATE_LIBRARY}
     valhalla
 )
+
 target_include_directories(valhalla-wrapper
     PRIVATE
     ${Boost_INCLUDE_DIRS}

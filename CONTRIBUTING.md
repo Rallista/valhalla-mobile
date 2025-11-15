@@ -75,5 +75,5 @@ crashing the app with an uncaught exception.
 
 ### For Other Platforms
 
-We're open to adding other platforms that can access the iOS or Android `libvalhalla_wrapper.a` or `libvalhalla_wrapper.so` files directly. However,
-it may be easier to just interact with the Swift and Kotlin code directly. If you're interested in adding a new platform, please open an issue.
+We're open to adding other platforms that can access the iOS or Android `libvalhalla_wrapper.a` or `libvalhalla_wrapper.so` files directly. 
+However, it may be easier to just interact with the Swift and Kotlin code directly. If you're interested in adding a new platform, please open an issue.
