@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         arch: ["arm64-ios", "arm64-ios-simulator", "x64-ios-simulator"]
@@ -48,7 +48,7 @@ jobs:
 
   create-xcframework-release:
     needs: build-ios
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout Valhalla
         uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
           retention-days: 1
 
   draft-release:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: create-xcframework-release
     outputs:
       version: ${{ steps.version.outputs.version }}
