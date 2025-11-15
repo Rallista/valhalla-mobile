@@ -108,6 +108,13 @@ jobs:
           ./vcpkg/bootstrap-vcpkg.sh
           export VCPKG_ROOT=`pwd`/vcpkg
 
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r29
+          add-to-path: false
+
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -123,6 +130,7 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: ./gradlew buildValhallaFor-${{ matrix.arch }}
         working-directory: android
 
