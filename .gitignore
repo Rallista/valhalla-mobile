@@ -2,7 +2,7 @@
 /.idea
 /android/.gradle
 /android/local.properties
-/android/.idea/
+/android/.idea
 /android/build/
 /android/.kotlin
 .DS_Store
