@@ -5,7 +5,7 @@ Swift wrapper for the Valhalla routing engine.
 ## Overview
 
 The `valhalla-mobile` library builds libvalhalla c++ for iOS (and Android). It provides a Swift 
-interface to access the ValhallaActor. Currently, it only supports fetching routes through the 
+interface to access the `ValhallaActor`. Currently, it only supports fetching routes through the 
 but with additional swift contributions, more features can be added.
 
 ## Getting Started
@@ -15,7 +15,7 @@ To use `Valhalla` in swift, you'll need:
 ### The Offline Data - A Valhalla Tile Tar (or Folder)
 
 To generate a route on a mobile device, you'll need a valhalla_tiles.tar file 
-(valhalla_tiles directory). You can name these whatever, you can have multiple, etc. 
+or a valhalla_tiles directory. The tile directory makes it easier to manage distinct offline regions. The tarball is more performant. Which one you use is a matter of convenience. (NOTE: you can mix disconnected tile regions together without any issues, but once you have possibly connected regions, you'll need to ensure they came from the same graph build or else the connections won't line up!)
 They just need to be available to your app either through a `Bundle.` file (useful for testing) 
 or through `FileManager` for something synced from a backend.
 
