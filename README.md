@@ -60,10 +60,16 @@ let package = Package(
 
 ## Manually Building Valhalla C++
 
+Fetching submodules
+
+```sh
+git submodule update --init --recursive
+```
+
 Set up VCPKG
 
 ```sh
-git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.10.17
+git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.12.12
 ./vcpkg/bootstrap-vcpkg.sh
 export VCPKG_ROOT=`pwd`/vcpkg
 ```
@@ -78,8 +84,8 @@ On iOS, you must pre-build the xcframework using the command:
 
 ### Android
 
-**Prerequisites:** Ensure you have completed the Android development setup described above, particularly setting `ANDROID_NDK_HOME`.
-CI is currently using `29.0.14206865`.
+**Prerequisites:** See [development.md](docs/development.md), specifically 
+setting up NDK `29.0.14206865` to match CI.
 
 The project's build.gradle.kts includes a build task that automatically runs the script below selectively per architecture.
 It's also possible to run this manually:
