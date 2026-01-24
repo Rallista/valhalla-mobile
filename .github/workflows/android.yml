@@ -238,12 +238,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         with:
-          api-level: 30
-          avd-name: ubuntu-latest-x86_64-aosp-atd-30
-          arch: x86_64
-          target: aosp_atd
+          api-level: 34
+          system-image-api-level: 34-ext9
+          ndk: 21.0.6113669
+          cmake: 3.10.2.4988404
           script: ./gradlew connectedCheck
-          working-directory: android
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
