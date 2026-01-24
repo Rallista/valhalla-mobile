@@ -239,6 +239,8 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         with:
           api-level: 34
+          target: google_apis
+          arch: x86_64
           ndk: 29.0.14206865
           script: ./gradlew connectedCheck
 
