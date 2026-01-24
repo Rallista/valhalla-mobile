@@ -238,10 +238,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         with:
-          api-level: 30
-          avd-name: ubuntu-latest-x86_64-aosp-atd-30
+          api-level: 34
+          target: google_apis
           arch: x86_64
-          target: aosp_atd
+          ndk: 29.0.14206865
           script: ./gradlew connectedCheck
           working-directory: android
 
