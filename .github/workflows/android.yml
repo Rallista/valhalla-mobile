@@ -239,9 +239,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         with:
           api-level: 34
-          system-image-api-level: 34-ext9
-          ndk: 21.0.6113669
-          cmake: 3.10.2.4988404
+          ndk: 29.0.14206865
           script: ./gradlew connectedCheck
 
       - name: Upload Artifacts
