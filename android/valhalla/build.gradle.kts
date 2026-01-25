@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.dokka)
 }
 
 android {
@@ -34,6 +35,22 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+}
+
+tasks.named("dokkaHtml") {
+    moduleName.set("Valhalla Mobile")
+    outputDirectory.set(file("build/dokka/html"))
+
+    dokkaSourceSets {
+        named("main") {
+            includes.from("src/main/docs/Valhalla.md")
+            sourceLink {
+                localDirectory.set(file("src/main/java"))
+                remoteUrl.set(uri("https://github.com/Rallista/valhalla-mobile/tree/main/android/valhalla/src/main/java").toURL())
+                remoteLineSuffix.set("#L")
+            }
+        }
     }
 }
 

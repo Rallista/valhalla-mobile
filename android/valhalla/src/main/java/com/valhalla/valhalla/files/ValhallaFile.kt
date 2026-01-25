@@ -3,7 +3,16 @@ package com.valhalla.valhalla.files
 import android.content.Context
 import java.io.File
 
-/** Used to provide absolute paths and common file operations for use with valhalla. */
+/**
+ * Used to provide absolute paths and common file operations for use with valhalla.
+ *
+ * @param context The Android context used for file system access.
+ * @param fileName The name of the file to manage.
+ * @param filesDir The directory where the file is stored. Defaults to the app's internal files directory.
+ *
+ * @see ValhallaConfigManager
+ * @see ValhallaFileAsset
+ */
 class ValhallaFile(
     private val context: Context,
     private val fileName: String,
@@ -39,7 +48,4 @@ class ValhallaFile(
   fun exists(): Boolean {
     return file.exists()
   }
-
-  // MARK: Asset file operations
-
 }
