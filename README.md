@@ -1,8 +1,8 @@
 # Valhalla Mobile
 
 [![Swift Package Registry](https://img.shields.io/badge/Swift%20Package%20Registry-blue?logo=swift)](https://swiftpackageindex.com/rallista/valhalla-mobile)
-[![Kotlin Dokka](https://img.shields.io/badge/Kotlin%20Dokka-purple?logo=kotlin)](https://rallista.github.io/valhalla-mobile/)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rallista/valhalla-mobile)](https://central.sonatype.com/artifact/io.github.rallista/valhalla-mobile)
+[![Kotlin Docs](https://img.shields.io/badge/Kotlin%20Dokka-purple?logo=kotlin)](https://rallista.github.io/valhalla-mobile/)
 
 This project builds [valhalla](https://github.com/valhalla/valhalla) as a static iOS or shared Android library.
 
