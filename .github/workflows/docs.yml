@@ -18,7 +18,7 @@ jobs:
           java-version: "17"
 
       - name: Build Dokka HTML docs
-        run: ./gradlew :android:valhalla:dokkaGenerateHtml
+        run: ./gradlew dokkaGenerateHtml
         working-directory: android
 
       - name: Deploy to GitHub Pages
