@@ -1,5 +1,6 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.SonatypeHost
+import java.net.URI
 
 plugins {
     alias(libs.plugins.android.library)
@@ -38,18 +39,19 @@ android {
     }
 }
 
-tasks.named("dokkaHtml") {
-    moduleName.set("Valhalla Mobile")
-    outputDirectory.set(file("build/dokka/html"))
+dokka {
+    dokkaPublications.html {
+        moduleName.set("Valhalla Mobile")
+        outputDirectory.set(layout.buildDirectory.dir("docs/html"))
+        includes.from("README.md")
+        includes.from("src/main/docs/Valhalla.md")
+    }
 
-    dokkaSourceSets {
-        named("main") {
-            includes.from("src/main/docs/Valhalla.md")
-            sourceLink {
-                localDirectory.set(file("src/main/java"))
-                remoteUrl.set(uri("https://github.com/Rallista/valhalla-mobile/tree/main/android/valhalla/src/main/java").toURL())
-                remoteLineSuffix.set("#L")
-            }
+    dokkaSourceSets.main {
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl.set(URI("https://github.com/Rallista/valhalla-mobile"))
+            remoteLineSuffix.set("#L")
         }
     }
 }
