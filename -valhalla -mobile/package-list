@@ -1,0 +1,47 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.valhalla.valhalla.config////PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.config/index.html
+$dokka.location:com.valhalla.valhalla.config/ValhallaConfigManager///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.config/-valhalla-config-manager/index.html
+$dokka.location:com.valhalla.valhalla.config/ValhallaConfigManager/ValhallaConfigManager/#android.content.Context#com.valhalla.valhalla.files.ValhallaFile#com.squareup.moshi.Moshi/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.config/-valhalla-config-manager/-valhalla-config-manager.html
+$dokka.location:com.valhalla.valhalla.config/ValhallaConfigManager/getAbsolutePath/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.config/-valhalla-config-manager/get-absolute-path.html
+$dokka.location:com.valhalla.valhalla.config/ValhallaConfigManager/writeConfig/#com.valhalla.config.models.ValhallaConfig/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.config/-valhalla-config-manager/write-config.html
+$dokka.location:com.valhalla.valhalla.files////PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/index.html
+$dokka.location:com.valhalla.valhalla.files//copyAssetFileToStorage/com.valhalla.valhalla.files.ValhallaFile.Companion#android.content.Context#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/copy-asset-file-to-storage.html
+$dokka.location:com.valhalla.valhalla.files//loadAssetFile/com.valhalla.valhalla.files.ValhallaFile.Companion#android.content.Context#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/load-asset-file.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile.Companion///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/-companion/index.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile.Companion/usingAsset/#android.content.Context#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/-companion/using-asset.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/index.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/ValhallaFile/#android.content.Context#kotlin.String#java.io.File/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/-valhalla-file.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/absolutePath/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/absolute-path.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/delete/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/delete.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/exists/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/exists.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/writeBytes/#kotlin.ByteArray/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/write-bytes.html
+$dokka.location:com.valhalla.valhalla.files/ValhallaFile/writeText/#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla.files/-valhalla-file/write-text.html
+$dokka.location:com.valhalla.valhalla////PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/index.html
+$dokka.location:com.valhalla.valhalla/ErrorResponse///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-error-response/index.html
+$dokka.location:com.valhalla.valhalla/ErrorResponse/ErrorResponse/#kotlin.Int#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-error-response/-error-response.html
+$dokka.location:com.valhalla.valhalla/ErrorResponse/code/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-error-response/code.html
+$dokka.location:com.valhalla.valhalla/ErrorResponse/message/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-error-response/message.html
+$dokka.location:com.valhalla.valhalla/ErrorResponse/toString/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-error-response/to-string.html
+$dokka.location:com.valhalla.valhalla/Valhalla///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/index.html
+$dokka.location:com.valhalla.valhalla/Valhalla/Valhalla/#android.content.Context#com.valhalla.config.models.ValhallaConfig#com.valhalla.valhalla.config.ValhallaConfigManager#com.squareup.moshi.Moshi/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/-valhalla.html
+$dokka.location:com.valhalla.valhalla/Valhalla/route/#com.valhalla.api.models.RouteRequest/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/route.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.Internal///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-internal/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.Internal/Internal/#com.valhalla.valhalla.ErrorResponse/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-internal/-internal.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.InvalidError///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-invalid-error/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.InvalidError/InvalidError/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-invalid-error/-invalid-error.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.InvalidResponse///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-invalid-response/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.InvalidResponse/InvalidResponse/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-invalid-response/-invalid-response.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.NotSupported///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-not-supported/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaException.NotSupported/NotSupported/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/-not-supported/-not-supported.html
+$dokka.location:com.valhalla.valhalla/ValhallaException///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-exception/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Json///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-json/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Json/Json/#com.valhalla.api.models.RouteResponse/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-json/-json.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Json/jsonResponse/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-json/json-response.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Osrm///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-osrm/index.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Osrm/Osrm/#com.osrm.api.models.RouteResponse/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-osrm/-osrm.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse.Osrm/osrmResponse/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/-osrm/osrm-response.html
+$dokka.location:com.valhalla.valhalla/ValhallaResponse///PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla-response/index.html
+com.valhalla.valhalla
+com.valhalla.valhalla.config
+com.valhalla.valhalla.files
