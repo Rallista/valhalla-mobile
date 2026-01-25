@@ -3,6 +3,7 @@ agp = "8.2.2"
 kotlin = "2.0.20"
 ktfmt = "0.19.0"
 mavenPublish = "0.29.0"
+dokka = "2.1.0"
 core-ktx = "1.13.1"
 moshi = "1.15.1"
 osrm-api = "0.0.10"
@@ -32,3 +33,4 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

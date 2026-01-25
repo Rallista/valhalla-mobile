@@ -10,6 +10,23 @@ import com.valhalla.api.models.RouteResponse
 import com.valhalla.config.models.ValhallaConfig
 import com.valhalla.valhalla.config.ValhallaConfigManager
 
+/**
+ * Main entry point for the Valhalla routing engine on Android.
+ *
+ * This class provides a Kotlin interface to the native Valhalla C++ routing engine. It handles
+ * configuration management, JSON serialization, and routing requests.
+ *
+ * @param context The Android context used for file system operations and configuration management.
+ * @param config The Valhalla configuration specifying tile locations and routing options.
+ * @param valhallaConfigManager Manages the Valhalla configuration file on the device. Defaults to a
+ *   new instance.
+ * @param moshi JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection
+ *   support.
+ * @see ValhallaConfig
+ * @see ValhallaConfigManager
+ * @see RouteRequest
+ * @see ValhallaResponse
+ */
 class Valhalla(
     context: Context,
     config: ValhallaConfig,
@@ -25,14 +42,21 @@ class Valhalla(
   }
 
   /**
-   * Fetch a route from Valhalla
+   * Fetch a route from Valhalla.
    *
    * This function returns a sealed class with the format you designated. Currently this only
-   * supports [ValhallaResponse.Json] & [ValhallaResponse.Osrm]
+   * supports [ValhallaResponse.Json] and [ValhallaResponse.Osrm] formats.
    *
-   * @param request The valhalla json request.
-   * @return The route response from valhalla.
-   * @throws [ValhallaException]
+   * @param request The Valhalla routing request containing locations, costing model, and options.
+   * @return The route response wrapped in a [ValhallaResponse] sealed class based on the requested
+   *   format.
+   * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   * @throws ValhallaException.InvalidError if an error response cannot be parsed.
+   * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
+   * @throws ValhallaException.NotSupported if an unsupported format (GPX or PBF) is requested.
+   * @see RouteRequest
+   * @see ValhallaResponse
+   * @see DirectionsOptions.Format
    */
   fun route(request: RouteRequest): ValhallaResponse {
     val encodedRequest = moshi.adapter(RouteRequest::class.java).toJson(request)
@@ -55,6 +79,7 @@ class Valhalla(
                 ?: throw ValhallaException.InvalidResponse()
         ValhallaResponse.Osrm(osrmResponse)
       }
+
       DirectionsOptions.Format.pbf -> throw ValhallaException.NotSupported()
       // else includes default valhalla: DirectionsOptions.Format.json
       else -> {

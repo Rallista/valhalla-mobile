@@ -1,11 +1,13 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.SonatypeHost
+import java.net.URI
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.dokka)
 }
 
 android {
@@ -34,6 +36,28 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+}
+
+dokka {
+    dokkaPublications.html {
+        outputDirectory.set(layout.buildDirectory.dir("docs"))
+    }
+
+    dokkaSourceSets.main {
+        moduleName.set("Valhalla Mobile")
+
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl.set(URI("https://github.com/Rallista/valhalla-mobile"))
+            remoteLineSuffix.set("#L")
+        }
+
+        includes.from(
+            fileTree("docs") {
+                include("**/*.md")
+            }
+        )
     }
 }
 

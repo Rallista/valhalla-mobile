@@ -6,17 +6,23 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.valhalla.config.models.ValhallaConfig
 import com.valhalla.valhalla.files.ValhallaFile
 
+/**
+ * Manages the Valhalla configuration file within the Android application's available filesystem.
+ *
+ * @param context The Android context used for file system access.
+ * @param file The file handler for the valhalla.json configuration file. Defaults to
+ *   "valhalla.json" in app storage.
+ * @param moshi JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection
+ *   support.
+ * @see ValhallaConfig
+ * @see ValhallaFile
+ */
 class ValhallaConfigManager(
     private val context: Context,
     private val file: ValhallaFile = ValhallaFile(context, "valhalla.json"),
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
 ) {
 
-  /**
-   * Write a valhalla config file to the device's filesystem.
-   *
-   * @param config The valhalla config to write.
-   */
   fun writeConfig(config: ValhallaConfig) {
     val jsonAdapter = moshi.adapter(ValhallaConfig::class.java)
     val json = jsonAdapter.toJson(config)
@@ -25,12 +31,6 @@ class ValhallaConfigManager(
     file.writeText(json)
   }
 
-  /**
-   * Get the absolute path of a file in the device's filesystem. This is used by the Valhalla class
-   * to read the config file.
-   *
-   * @return The absolute path of the file.
-   */
   fun getAbsolutePath(): String {
     return file.absolutePath()
   }
