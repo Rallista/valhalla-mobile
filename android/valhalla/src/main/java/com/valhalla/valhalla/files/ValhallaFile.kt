@@ -8,8 +8,8 @@ import java.io.File
  *
  * @param context The Android context used for file system access.
  * @param fileName The name of the file to manage.
- * @param filesDir The directory where the file is stored. Defaults to the app's internal files directory.
- *
+ * @param filesDir The directory where the file is stored. Defaults to the app's internal files
+ *   directory.
  * @see ValhallaConfigManager
  * @see ValhallaFileAsset
  */
