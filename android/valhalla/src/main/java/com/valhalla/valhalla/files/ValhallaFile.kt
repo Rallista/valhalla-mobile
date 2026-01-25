@@ -10,8 +10,7 @@ import java.io.File
  * @param fileName The name of the file to manage.
  * @param filesDir The directory where the file is stored. Defaults to the app's internal files
  *   directory.
- * @see ValhallaConfigManager
- * @see ValhallaFileAsset
+ * @see com.valhalla.valhalla.config.ValhallaConfigManager
  */
 class ValhallaFile(
     private val context: Context,

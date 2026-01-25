@@ -1,6 +1,6 @@
 package com.valhalla.valhalla
 
-interface ValhallaActorProviding {
+internal interface ValhallaActorProviding {
   fun route(request: String): String
 }
 
@@ -10,7 +10,7 @@ interface ValhallaActorProviding {
  *
  * @property configPath
  */
-class ValhallaActor(private val configPath: String) : ValhallaActorProviding {
+internal class ValhallaActor(private val configPath: String) : ValhallaActorProviding {
   private val valhallaKotlin = ValhallaKotlin()
 
   /**

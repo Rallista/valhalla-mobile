@@ -41,18 +41,23 @@ android {
 
 dokka {
     dokkaPublications.html {
-        moduleName.set("Valhalla Mobile")
-        outputDirectory.set(layout.buildDirectory.dir("docs/html"))
-        includes.from("README.md")
-        includes.from("src/main/docs/Valhalla.md")
+        outputDirectory.set(layout.buildDirectory.dir("docs"))
     }
 
     dokkaSourceSets.main {
+        moduleName.set("Valhalla Mobile")
+
         sourceLink {
             localDirectory.set(file("src/main/kotlin"))
             remoteUrl.set(URI("https://github.com/Rallista/valhalla-mobile"))
             remoteLineSuffix.set("#L")
         }
+
+        includes.from(
+            fileTree("docs") {
+                include("**/*.md")
+            }
+        )
     }
 }
 
