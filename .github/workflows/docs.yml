@@ -21,7 +21,7 @@ jobs:
         run: ./gradlew dokkaGenerateHtml
         working-directory: android
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages (branch gh-pages)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
