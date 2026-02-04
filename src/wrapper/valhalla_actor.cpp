@@ -13,7 +13,7 @@ ValhallaActor::ValhallaActor(const std::string& config_path): actor([&config_pat
     rapidjson::read_json(config_file, config);
     
     // Setup the actor
-    return valhalla::tyr::actor_t(config);
+    return valhalla::tyr::actor_t(config, true);
 }()) // IIFE to prepare actor
 {}
 
