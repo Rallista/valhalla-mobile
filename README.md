@@ -1,5 +1,6 @@
 # Valhalla Mobile
 
+[![Valhalla](https://img.shields.io/badge/Valhalla-3.6.2-blue)](https://github.com/valhalla/valhalla/releases/tag/3.6.2)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FRallista%2Fvalhalla-mobile%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/Rallista/valhalla-mobile)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FRallista%2Fvalhalla-mobile%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/Rallista/valhalla-mobile)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rallista/valhalla-mobile)](https://central.sonatype.com/artifact/io.github.rallista/valhalla-mobile)
