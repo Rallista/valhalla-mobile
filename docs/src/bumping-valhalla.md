@@ -10,8 +10,8 @@ rm -rf src/valhalla
 rm -rf .git/modules/src/valhalla
 
 # Checkout the latest release branch
-git submodule add git@github.com:valhalla/valhalla.git src/valhalla
-cd src/valhalla && git checkout 3.6.1 # Replace with the latest version tag release
+git submodule add https://github.com/valhalla/valhalla.git src/valhalla
+cd src/valhalla && git checkout 3.6.2 # Replace with the latest version tag release
 
 # Install recursive submodules now that the exact version of valhalla is selected.
 git submodule update --init --recursive

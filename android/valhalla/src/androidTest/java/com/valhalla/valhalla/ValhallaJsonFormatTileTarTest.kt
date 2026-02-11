@@ -59,8 +59,8 @@ class ValhallaJsonFormatTileTarTest {
         RouteRequest(
             locations =
                 listOf(
-                    RoutingWaypoint(lat = 38.429719, lon = -108.827425),
-                    RoutingWaypoint(lat = 38.4604331, lon = -108.8817009)),
+                    RoutingWaypoint(lat = 42.5063, lon = 1.5218),
+                    RoutingWaypoint(lat = 42.5086, lon = 1.5394)),
             costing = CostingModel.auto)
 
     when (val response = valhalla.route(request)) {

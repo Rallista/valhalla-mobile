@@ -2,7 +2,7 @@
 import PackageDescription
 
 // Use the local binary if true
-let useLocalBinary = Context.environment["VALHALLA_MOBILE_DEV"].flatMap(Bool.init) ?? false
+let useLocalBinary = Context.environment["VALHALLA_MOBILE_DEV"].flatMap(Bool.init) ?? true
 
 // Use the local binary
 var binaryTarget: Target = .binaryTarget(
@@ -40,7 +40,7 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", exact: "0.0.4"),
+            url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", branch: "feat/valhalla-3.6.2"),
         .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
     ],
