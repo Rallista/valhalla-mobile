@@ -1,6 +1,0 @@
-{
-  "devDependencies": {
-    "prettier": "^3.8.1",
-    "prettier-plugin-sort-json": "^4.2.0"
-  }
-}
