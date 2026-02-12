@@ -40,9 +40,9 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", branch: "feat/valhalla-3.6.2"),
-        .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", from: "1.0.4"),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
+            url: "https://github.com/Rallista/valhalla-openapi-models-swift.git", .upToNextMinor(from: "0.1.0")),
+        .package(url: "https://github.com/UInt2048/Light-Swift-Untar.git", .upToNextMajor(from: "1.0.4")),
+        .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         .target(

@@ -6,7 +6,7 @@
     "lru_mem_cache_hard_control": false,
     "use_simple_mem_cache": false,
     "tile_dir": "/data/valhalla_tiles",
-    "tile_extract": "/data/valhalla/tiles.tar",
+    "tile_extract": "/data/user/0/com.valhalla.valhalla.test/files/valhalla_tiles.tar",
     "traffic_extract": "/data/valhalla/traffic.tar",
     "admin": "/data/valhalla_tiles/admins.sqlite",
     "landmarks": "/data/valhalla/landmarks.sqlite",

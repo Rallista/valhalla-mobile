@@ -11,7 +11,5 @@ class TestFileUtils {
       ValhallaFile.copyAssetFileToStorage(context, "valhalla_tiles.tar")
       return ValhallaFile.copyAssetFileToStorage(context, "config.json")
     }
-
-
   }
 }

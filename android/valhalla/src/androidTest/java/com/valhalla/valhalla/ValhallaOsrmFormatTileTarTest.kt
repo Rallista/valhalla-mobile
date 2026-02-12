@@ -1,6 +1,5 @@
 package com.valhalla.valhalla
 
-import ValhallaConfigBuilder
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -9,6 +8,7 @@ import com.valhalla.api.models.CostingModel
 import com.valhalla.api.models.DirectionsOptions
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RoutingWaypoint
+import com.valhalla.config.ValhallaConfigBuilder
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
 import org.junit.Assert.assertEquals
