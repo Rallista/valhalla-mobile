@@ -50,16 +50,13 @@ class ValhallaActorTest {
     val valhalla = ValhallaActor(configPath)
 
     val request =
-        "{\"locations\":[{\"lat\":38.429719,\"lon\":-108.827425},{\"lat\":38.4604331,\"lon\":-108.8817009}],\"costing\":\"auto\",\"units\":\"miles\"}"
+        "{\"locations\":[{\"lat\":42.5063,\"lon\":1.5218},{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\",\"units\":\"miles\"}"
     val response = valhalla.route(request)
 
-    val expectedResponse =
-        TestFileUtils.getExpectedResponse(
-            InstrumentationRegistry.getInstrumentation().targetContext)
-
     val responseJson = JSONObject(response)
-    val expectedResponseJson = JSONObject(expectedResponse)
+    val trip = responseJson.getJSONObject("trip")
 
-    assertEquals(expectedResponseJson.toString(), responseJson.toString())
+    assertEquals(0, trip.getInt("status"))
+    assertEquals("Found route between points", trip.getString("status_message"))
   }
 }

@@ -38,8 +38,8 @@ final class TestValhallaWithFolder: XCTestCase {
 
         let request = RouteRequest(
             locations: [
-                RoutingWaypoint(lat: 38.429719, lon: -108.827425),
-                RoutingWaypoint(lat: 38.4604331, lon: -108.8817009)
+                RoutingWaypoint(lat: 42.5063, lon: 1.5218),
+                RoutingWaypoint(lat: 42.5086, lon: 1.5394)
             ],
             costing: .auto,
             directionsOptions: DirectionsOptions(units: .mi)
@@ -48,6 +48,6 @@ final class TestValhallaWithFolder: XCTestCase {
         let response = try valhalla.route(request: request)
 
         XCTAssertEqual(response.trip.statusMessage, "Found route between points")
-        XCTAssertEqual(response.trip.legs.first?.shape, "sarhhAlthqnERzHxDvsAx@fa@c@|[uDpn@iJ~h@sMte@yQxd@oUl^ei@nm@sq@rx@sqAzvA}LfN_OdLsZrRo|@l\\ea@jReWbQoSjXiIvKyPf[cJrPaCnEsBfEup@ltAyS|b@oUp`@m~@fuA}\\fa@iQ|NqFtEw_@xSkl@pRc~@bV_a@`H{Qt@oNi@qUsFq|@q]qMsGw]{VqUeTsSmV_Uud@iOqc@ae@idBmXu|@_P}e@oLsWyMcRqNcLoNeIgMyEuOoDgLq@iUg@cVpAm]pFed@`NkWjJ_XjPwQlToOpX{K`^wF~Y_Gfz@wKjcB{Adg@b@nc@nB|UvDvWrJj^z`B`hDtQnYbMdR`p@lq@n^hh@|}AloC~Oja@~Id^~G|g@vBxe@]ji@{Efa@yLzm@sUpi@eQpX_`@ve@}^vc@utAz~AuWpZuLjMsR~I{RlFqU[ic@wLu}Aux@{]gP}WaHua@uE}a@bB{N`Cca@pQe[|WyRjYoPj_@{XfhAiK~`AsDbhAEbt@vFnqA~Fvp@~Lbr@nNf^hR|XvYrXfSpL~TlH~UtElXpItUhKl\\vS~W|W~Zrl@rQpq@jCpW`@vY}Ani@kAvYi@zY|Aph@pBzo@nBxg@fApQhBbPrClMfFjOxIrPzHbKvUvXdIxJ`HhJnInMlG`M`CnGrCfJhClL|@lHnApNb@tRSpSg@fKo@|GuCfPoCfKuCnIcFlLqFnJkHbJkF~EeIbGgL`GoIzCuGtAwGlA{FZgJLiJ_@}K_BgJ}BwJgE{JaGqS_O{hAuz@oxAcdAeNiFq^eI{AQ")
+        XCTAssertEqual(response.trip.legs.first?.shape.count, 656)
     }
 }

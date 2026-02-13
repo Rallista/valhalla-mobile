@@ -1,6 +1,5 @@
 package com.valhalla.valhalla
 
-import ValhallaConfigBuilder
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -8,6 +7,7 @@ import com.valhalla.api.models.CostingModel
 import com.valhalla.api.models.DirectionsOptions
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RoutingWaypoint
+import com.valhalla.config.ValhallaConfigBuilder
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
 import org.junit.Assert.assertEquals
@@ -59,8 +59,8 @@ class ValhallaJsonFormatTileTarTest {
         RouteRequest(
             locations =
                 listOf(
-                    RoutingWaypoint(lat = 38.429719, lon = -108.827425),
-                    RoutingWaypoint(lat = 38.4604331, lon = -108.8817009)),
+                    RoutingWaypoint(lat = 42.5063, lon = 1.5218),
+                    RoutingWaypoint(lat = 42.5086, lon = 1.5394)),
             costing = CostingModel.auto)
 
     when (val response = valhalla.route(request)) {
