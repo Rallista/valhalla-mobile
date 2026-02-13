@@ -48,6 +48,6 @@ final class TestValhallaWithFolder: XCTestCase {
         let response = try valhalla.route(request: request)
 
         XCTAssertEqual(response.trip.statusMessage, "Found route between points")
-        XCTAssertNotNil(response.trip.legs.first?.shape)
+        XCTAssertEqual(response.trip.legs.first?.shape.count, 656)
     }
 }
