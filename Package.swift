@@ -11,10 +11,10 @@ var binaryTarget: Target = .binaryTarget(
 )
 
 // CI will replace the nils with the actual values when building a release
-let version: String = "0.3.1"
+let version: String = "0.4.0"
 let binaryURL: String =
     "https://github.com/Rallista/valhalla-mobile/releases/download/\(version)/valhalla-wrapper.xcframework.zip"
-let binaryChecksum: String = "531cdd702770b262ca2c3f337060fa93c0e796187951d939b41b00652cac1491"
+let binaryChecksum: String = "bfac195f8151f2a688c75172ca6379ab94841f89d80ef94e7b2e459697013660"
 
 if !useLocalBinary {
     binaryTarget = .binaryTarget(
