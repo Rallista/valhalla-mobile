@@ -1,5 +1,5 @@
 version: 1
 builder:
   configs:
-    - documentation_targets: [Valhalla]
+    - documentation_targets: [ValhallaMobile]
       platform: ios
