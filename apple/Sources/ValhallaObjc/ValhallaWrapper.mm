@@ -24,6 +24,7 @@ public:
             
             NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:nsurl];
             request.HTTPMethod = @"GET";
+            request.timeoutInterval = 10;
             
             // Set range header if needed
             if (range_size > 0) {
@@ -78,6 +79,7 @@ public:
             
             NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:nsurl];
             request.HTTPMethod = @"HEAD";
+            request.timeoutInterval = 10;
             
             NSHTTPURLResponse* httpResponse = nil;
             NSError* error = nil;
