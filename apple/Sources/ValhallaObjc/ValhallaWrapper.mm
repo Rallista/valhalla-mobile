@@ -108,6 +108,8 @@ public:
                         formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
                         NSDate* date = [formatter dateFromString:lastModified];
                         response.last_modified_time_ = (uint64_t)[date timeIntervalSince1970];
+                    } else {
+                        response.last_modified_time_ = 0;
                     }
                 }
             } else {
