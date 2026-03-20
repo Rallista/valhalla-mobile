@@ -45,8 +45,8 @@ Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
 }
 
 #elif __APPLE__
-void* create_valhalla_actor(const char *config_path) {
-    return new ValhallaActor(config_path);
+void* create_valhalla_actor(const char *config_path, ValhallaMobileHttpClient* http_client) {
+    return new ValhallaActor(config_path, http_client);
 }
 
 void delete_valhalla_actor(void* actor) {
