@@ -4,7 +4,6 @@ import android.content.Context
 import com.osrm.api.models.RouteResponse as OsrmRouteResponse
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.valhalla.api.models.DirectionsOptions
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RouteResponse
 import com.valhalla.config.models.ValhallaConfig
@@ -56,7 +55,7 @@ class Valhalla(
    * @throws ValhallaException.NotSupported if an unsupported format (GPX or PBF) is requested.
    * @see RouteRequest
    * @see ValhallaResponse
-   * @see DirectionsOptions.Format
+   * @see RouteRequest.Format
    */
   fun route(request: RouteRequest): ValhallaResponse {
     val encodedRequest = moshi.adapter(RouteRequest::class.java).toJson(request)
@@ -71,17 +70,17 @@ class Valhalla(
       throw ValhallaException.InvalidError()
     }
 
-    return when (request.directionsOptions?.format) {
-      DirectionsOptions.Format.gpx -> throw ValhallaException.NotSupported()
-      DirectionsOptions.Format.osrm -> {
+    return when (request.format) {
+      RouteRequest.Format.gpx -> throw ValhallaException.NotSupported()
+      RouteRequest.Format.osrm -> {
         val osrmResponse =
             moshi.adapter(OsrmRouteResponse::class.java).fromJson(rawResponse)
                 ?: throw ValhallaException.InvalidResponse()
         ValhallaResponse.Osrm(osrmResponse)
       }
 
-      DirectionsOptions.Format.pbf -> throw ValhallaException.NotSupported()
-      // else includes default valhalla: DirectionsOptions.Format.json
+      RouteRequest.Format.pbf -> throw ValhallaException.NotSupported()
+      // else includes default valhalla: RouteRequest.Format.json
       else -> {
         val valhallaResponse =
             moshi.adapter(RouteResponse::class.java).fromJson(rawResponse)

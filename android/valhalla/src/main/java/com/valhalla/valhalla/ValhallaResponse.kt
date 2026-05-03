@@ -7,7 +7,7 @@ import com.valhalla.api.models.RouteResponse as ValhallaRouteResponse
  * Sealed class representing different response formats from the Valhalla routing engine.
  *
  * This class wraps routing responses in different formats based on the
- * [com.valhalla.api.models.DirectionsOptions.Format] specified in the request.
+ * [com.valhalla.api.models.RouteRequest.Format] specified in the request.
  *
  * @see Valhalla.route
  * @see Osrm
