@@ -52,4 +52,5 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DANDROID_ABI=$android_abi \
     -S $wrapper_dir \
     -B .
-cmake --build . --config Release -- -j$(nproc)
+jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+cmake --build . --config Release -- -j"$jobs"

@@ -25,7 +25,7 @@ final class TestValhallaWithTar: XCTestCase {
                     RoutingWaypoint(lat: 42.5086, lon: 1.5394)
                 ],
                 costing: .auto,
-                directionsOptions: DirectionsOptions(units: .mi)
+                units: .mi,
             )
         
             let _ = try valhalla.route(request: request)
@@ -45,7 +45,7 @@ final class TestValhallaWithTar: XCTestCase {
                 RoutingWaypoint(lat: 45.869701, lon: -123.766121)
             ],
             costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
+            units: .mi,
         )
         
         do {
@@ -66,7 +66,7 @@ final class TestValhallaWithTar: XCTestCase {
                 RoutingWaypoint(lat: 42.5086, lon: 1.5394)
             ],
             costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
+            units: .mi,
         )
         
         let response = try valhalla.route(request: request)
