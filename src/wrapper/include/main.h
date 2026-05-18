@@ -11,10 +11,34 @@
 extern "C" {
 #endif
 
-JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
-                                                jobject thiz,
-                                                jstring jRequest,
-                                                jstring jConfigPath);
+// Persistent-actor lifecycle.
+// Creating a ValhallaActor parses the config and opens the GraphReader
+// (mmap'ing the tile_extract if configured), both of which are expensive.
+// The Kotlin layer is expected to create one actor and reuse it across
+// calls — see `ValhallaActor.kt`.
+
+JNIEXPORT jlong JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_nativeCreateActor(JNIEnv *env,
+                                                            jobject thiz,
+                                                            jstring jConfigPath,
+                                                            jobject jHttpClient);
+
+JNIEXPORT void JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_nativeDestroyActor(JNIEnv *env,
+                                                             jobject thiz,
+                                                             jlong actorHandle);
+
+JNIEXPORT jstring JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_nativeRoute(JNIEnv *env,
+                                                     jobject thiz,
+                                                     jlong actorHandle,
+                                                     jstring jRequest);
+
+JNIEXPORT jstring JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_nativeTraceAttributes(JNIEnv *env,
+                                                                jobject thiz,
+                                                                jlong actorHandle,
+                                                                jstring jRequest);
 
 #ifdef __cplusplus
 }
