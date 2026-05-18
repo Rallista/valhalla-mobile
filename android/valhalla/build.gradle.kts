@@ -72,6 +72,10 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.moshi.adapters)
 
+    // Exposed via `OkHttpValhallaHttpClient` in the public API so consumers can
+    // pass their own preconfigured client (auth interceptors, timeouts, etc.).
+    api(libs.okhttp)
+
     implementation(libs.valhalla.models.api)
     implementation(libs.valhalla.models.config)
     implementation(libs.osrm.api)
@@ -82,6 +86,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
+    // Used only by ValhallaHttpTileTest to unpack the bundled valhalla_tiles.tar
+    // into per-tile files that a stub HttpClient can serve.
+    androidTestImplementation(libs.commons.compress)
 }
 
 val archs = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")

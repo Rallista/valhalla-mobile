@@ -52,4 +52,10 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DANDROID_ABI=$android_abi \
     -S $wrapper_dir \
     -B .
-cmake --build . --config Release -- -j$(nproc)
+# Detect CPU count portably (macOS lacks `nproc`).
+if command -v nproc >/dev/null 2>&1; then
+    JOBS=$(nproc)
+else
+    JOBS=$(sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
+fi
+cmake --build . --config Release -- -j$JOBS

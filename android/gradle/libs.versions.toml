@@ -5,7 +5,9 @@ ktfmt = "0.19.0"
 mavenPublish = "0.29.0"
 dokka = "2.1.0"
 core-ktx = "1.13.1"
+commons-compress = "1.26.2"
 moshi = "1.15.1"
+okhttp = "4.12.0"
 osrm-api = "0.0.10"
 valhallaModels = "0.1.1"
 espresso-core = "3.6.1"
@@ -16,6 +18,8 @@ androidx-test = "1.6.1"
 [libraries]
 moshi-kotlin = { group = "com.squareup.moshi", name="moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { group = "com.squareup.moshi", name="moshi-adapters", version.ref = "moshi" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "commons-compress" }
 osrm-api = { group = "com.stadiamaps", name="osrm-openapi", version.ref = "osrm-api" }
 valhalla-models-config = { group = "io.github.rallista", name = "valhalla-models-config", version.ref = "valhallaModels" }
 valhalla-models-api = { group = "io.github.rallista", name = "valhalla-models", version.ref = "valhallaModels" }

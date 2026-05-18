@@ -8,7 +8,7 @@
 class ValhallaMobileHttpClient {
 public:
     virtual ~ValhallaMobileHttpClient() = default;
-    
+
     /**
      * Makes a synchronous GET request to fetch tile data
      * @param url the URL to fetch
@@ -16,16 +16,16 @@ public:
      * @param range_size optional size for range requests
      * @return GET_response_t with the response data and status
      */
-    virtual valhalla::baldr::tile_getter_t::GET_response_t 
+    virtual valhalla::baldr::tile_getter_t::GET_response_t
     get(const std::string& url, uint64_t range_offset = 0, uint64_t range_size = 0) = 0;
-    
+
     /**
      * Makes a synchronous HEAD request to fetch response headers
      * @param url the URL to query
      * @param header_mask mask for which headers to retrieve
      * @return HEAD_response_t with the response headers and status
      */
-    virtual valhalla::baldr::tile_getter_t::HEAD_response_t 
+    virtual valhalla::baldr::tile_getter_t::HEAD_response_t
     head(const std::string& url, valhalla::baldr::tile_getter_t::header_mask_t header_mask) = 0;
 };
 
@@ -35,8 +35,18 @@ private:
     std::unique_ptr<valhalla::baldr::GraphReader> graph_reader;
 public:
     ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client = nullptr);
-    
+
     std::string route(const std::string& request);
+
+    /**
+     * Map-match a GPS trace against the road graph and return rich edge/point attribution.
+     * Uses Valhalla's Meili HMM matcher under the hood.
+     *
+     * @param request  Valhalla `trace_attributes` request JSON. See
+     *                 https://valhalla.github.io/valhalla/api/map-matching/api-reference/
+     * @return         JSON response, or `{"code": <int>, "message": "..."}` on error.
+     */
+    std::string trace_attributes(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H

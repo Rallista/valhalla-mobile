@@ -8,8 +8,15 @@
 
 This project builds [valhalla](https://github.com/valhalla/valhalla) as a static iOS or shared Android library.
 
-It currently only exposes the route function for the primary purpose of generating turn by turn navigation routes
-using a downloaded pre-parsed valhalla tileset.
+It exposes:
+
+- **Routing** (`Valhalla.route`) — generate turn-by-turn navigation routes
+  from a pre-parsed Valhalla tileset.
+- **Map matching** (Android, 0.6.0+) — `Valhalla.traceAttributes` runs
+  Valhalla's Meili HMM matcher on-device against the same tileset. Useful
+  for off-route detection, GPS denoising, and any consumer that needs the
+  matched road-graph edge for a sequence of GPS samples. See
+  [android/valhalla/docs/MapMatching.md](android/valhalla/docs/MapMatching.md).
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
