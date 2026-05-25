@@ -21,7 +21,7 @@ final class TestValhallaWithFolder: XCTestCase {
                 RoutingWaypoint(lat: 45.869701, lon: -123.766121)
             ],
             costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
+            units: .mi,
         )
         
         do {
@@ -42,7 +42,7 @@ final class TestValhallaWithFolder: XCTestCase {
                 RoutingWaypoint(lat: 42.5086, lon: 1.5394)
             ],
             costing: .auto,
-            directionsOptions: DirectionsOptions(units: .mi)
+            units: .mi,
         )
         
         let response = try valhalla.route(request: request)

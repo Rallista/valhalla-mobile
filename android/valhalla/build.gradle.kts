@@ -1,12 +1,9 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.mavenPublish)
     alias(libs.plugins.dokka)
@@ -14,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.valhalla.valhalla"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -33,25 +30,19 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
 dokka {
+    moduleName.set("Valhalla Mobile")
+
     dokkaPublications.html {
         outputDirectory.set(layout.buildDirectory.dir("docs"))
     }
 
-    dokkaSourceSets.main {
-        moduleName.set("Valhalla Mobile")
-
+    dokkaSourceSets.configureEach {
         sourceLink {
             localDirectory.set(file("src/main/kotlin"))
             remoteUrl.set(URI("https://github.com/Rallista/valhalla-mobile"))

@@ -5,7 +5,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.osrm.api.models.RouteResponse
 import com.valhalla.api.models.CostingModel
-import com.valhalla.api.models.DirectionsOptions
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RoutingWaypoint
 import com.valhalla.config.ValhallaConfigBuilder
@@ -45,7 +44,7 @@ class ValhallaOsrmFormatTileTarTest {
                     RoutingWaypoint(lat = 45.843812, lon = -123.768205),
                     RoutingWaypoint(lat = 45.869701, lon = -123.766121)),
             costing = CostingModel.auto,
-            directionsOptions = DirectionsOptions(format = DirectionsOptions.Format.osrm))
+            format = RouteRequest.Format.osrm)
 
     // Expect an exception w/ 171: No suitable edges near location
     val exception = assertThrows(ValhallaException::class.java) { valhalla.route(request) }
@@ -63,7 +62,7 @@ class ValhallaOsrmFormatTileTarTest {
                     RoutingWaypoint(lat = 42.5063, lon = 1.5218),
                     RoutingWaypoint(lat = 42.5086, lon = 1.5394)),
             costing = CostingModel.auto,
-            directionsOptions = DirectionsOptions(format = DirectionsOptions.Format.osrm))
+            format = RouteRequest.Format.osrm)
 
     when (val response = valhalla.route(request)) {
       is ValhallaResponse.Json -> fail("format was not json (valhalla)")
