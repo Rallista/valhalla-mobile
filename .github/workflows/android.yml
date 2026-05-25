@@ -38,10 +38,10 @@ jobs:
           ndk-version: r29
           add-to-path: false
 
-      - name: set up JDK 17
+      - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
           cache: gradle
 
@@ -110,10 +110,10 @@ jobs:
           ndk-version: r29
           add-to-path: false
 
-      - name: set up JDK 17
+      - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
           cache: gradle
 
@@ -158,10 +158,10 @@ jobs:
           ndk-version: r29
           add-to-path: false
 
-      - name: set up JDK 17
+      - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
           cache: gradle
 
@@ -214,10 +214,10 @@ jobs:
           ndk-version: r29
           add-to-path: false
 
-      - name: set up JDK 17
+      - name: set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "21"
           distribution: "temurin"
           cache: gradle
 
