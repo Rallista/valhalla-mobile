@@ -13,6 +13,7 @@
 - (instancetype)initWithConfigPath:(NSString*)config_path error:(__autoreleasing NSError **)error;
 
 - (NSString*)route:(NSString*)request;
+- (NSString*)locate:(NSString*)request;
 
 @end
 

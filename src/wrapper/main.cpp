@@ -73,4 +73,25 @@ std::string route(const char *request, void* actor) {
 
     return result;
 }
+
+std::string locate(const char *request, void* actor) {
+    std::string result;
+    try {
+        result = ((ValhallaActor*) actor)->locate(request);
+    } catch (const valhalla::valhalla_exception_t &err) {
+        printf("[ValhallaActor] locate valhalla_exception: %s\n", err.what());
+        std::string code = std::to_string(err.code);
+        std::string message = err.message.c_str();
+
+        result = "{\"code\":" + code + ",\"message\":\"" + message + "\"}";
+    } catch (const std::exception &err) {
+        printf("[ValhallaActor] locate std::exception: %s\n", err.what());
+        result = "{\"code\":-1,\"message\":\"" + std::string(err.what()) + "\"}";
+    } catch (...) {
+        printf("[ValhallaActor] locate unknown exception");
+        result = "{\"code\":-1,\"message\":\"unknown exception\"}";
+    }
+
+    return result;
+}
 #endif
