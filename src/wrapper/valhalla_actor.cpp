@@ -70,9 +70,19 @@ std::string config_file(config_path);
 std::string ValhallaActor::route(const std::string& request) {
     // Convert the request to a std::string
     std::string req = std::string(request);
-    
+
     // Produce the route result
     std::string result = actor->route(req);
-    
+
+    return result;
+}
+
+std::string ValhallaActor::locate(const std::string& request) {
+    // Mirrors route() exactly. Valhalla's tyr::actor_t::locate accepts
+    // a list of locations and returns a JSON array (one entry per input
+    // location) with the candidate graph edges for each. See
+    // https://github.com/valhalla/valhalla/blob/master/docs/docs/api/locate/api-reference.md
+    std::string req = std::string(request);
+    std::string result = actor->locate(req);
     return result;
 }

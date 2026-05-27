@@ -59,4 +59,18 @@ public final class Valhalla: ValhallaProviding {
     public func route(rawRequest request: String) -> String {
         actor!.route(request)
     }
+
+    /// Pass-through to Valhalla's locate action. Request body is the
+    /// standard locate JSON (see
+    /// https://github.com/valhalla/valhalla/blob/master/docs/docs/api/locate/api-reference.md).
+    /// Returns the locate response JSON as a string — typically a JSON
+    /// array, one entry per input location, each carrying an `edges[]`
+    /// list. Pass `verbose: true` in the request to include
+    /// `edge_info.shape` (the edge's graph-exact polyline at precision 6),
+    /// which is what consumers like GhostRoute need to construct
+    /// `linear_cost_factors` shapes that pass the engine's exact
+    /// edge-walker (Thor RouteMatcher::FormPath).
+    public func locate(rawRequest request: String) -> String {
+        actor!.locate(request)
+    }
 }
