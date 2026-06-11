@@ -66,10 +66,43 @@ class Valhalla(
 
   init {
     valhallaConfigManager.writeConfig(config)
+    stripEmptyMjolnirPaths(valhallaConfigManager.getAbsolutePath())
     if (tileUrl != null) {
       injectTileUrl(valhallaConfigManager.getAbsolutePath(), tileUrl, tileUrlGz)
     }
     valhallaActor = ValhallaActor(valhallaConfigManager.getAbsolutePath(), httpClient)
+  }
+
+  /**
+   * Removes empty-string path entries from the `mjolnir` block of the serialized config.
+   *
+   * The upstream `valhalla-models-config` Mjolnir data class defaults all its path-shaped fields
+   * (`tile_dir`, `tile_extract`, `traffic_extract`, `transit_dir`, `transit_feeds_dir`) to the
+   * empty string `""` rather than null. Moshi serializes empty strings as-is (only nulls are
+   * omitted), so a config produced by `ValhallaConfigBuilder().withTileDir(path).build()` has
+   * `"tile_extract": ""` alongside the intended `"tile_dir": "/your/path"`.
+   *
+   * Valhalla's C++ `GraphReader` treats `pt.get_optional<std::string>("tile_extract")` as truthy
+   * whenever the key is present — including the empty-string value — and attempts to open it as a
+   * tar. That call throws (ENOENT on a zero-length path) and is caught, but the resulting
+   * GraphReader state interacts badly with the downstream `tile_dir` read path on Android,
+   * surfacing as `ValhallaError(code=171, "No suitable edges near location")` on every match call
+   * even when the tile files are present at the expected paths.
+   *
+   * Stripping the empty entries makes `pt.get_optional` return `nullopt` for them and forces the
+   * clean tile_dir-only code path. Same shape as [injectTileUrl] — read-modify-write the JSON after
+   * Moshi has written it, before the actor reads it.
+   */
+  private fun stripEmptyMjolnirPaths(configPath: String) {
+    val configFile = File(configPath)
+    val rendered = JSONObject(configFile.readText())
+    val mjolnir = rendered.optJSONObject("mjolnir") ?: return
+    for (key in MJOLNIR_PATH_KEYS) {
+      if (mjolnir.has(key) && mjolnir.optString(key, null as String?) == "") {
+        mjolnir.remove(key)
+      }
+    }
+    configFile.writeText(rendered.toString())
   }
 
   private fun injectTileUrl(configPath: String, tileUrl: String, tileUrlGz: Boolean) {
@@ -80,6 +113,21 @@ class Valhalla(
     mjolnir.put("tile_url", tileUrl)
     mjolnir.put("tile_url_gz", tileUrlGz)
     configFile.writeText(rendered.toString())
+  }
+
+  private companion object {
+    /**
+     * Mjolnir keys whose Kotlin defaults are the empty string and need stripping when the host
+     * didn't set them. See [stripEmptyMjolnirPaths] for context.
+     */
+    private val MJOLNIR_PATH_KEYS =
+        listOf(
+            "tile_dir",
+            "tile_extract",
+            "traffic_extract",
+            "transit_dir",
+            "transit_feeds_dir",
+        )
   }
 
   /**

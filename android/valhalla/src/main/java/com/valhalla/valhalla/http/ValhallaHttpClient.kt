@@ -1,36 +1,33 @@
 package com.valhalla.valhalla.http
 
 /**
- * Synchronous HTTP client used by Valhalla's `GraphReader` to fetch tile files
- * when the configuration sets `mjolnir.tile_url` and the tile is not already
- * present in the local `tile_dir`.
+ * Synchronous HTTP client used by Valhalla's `GraphReader` to fetch tile files when the
+ * configuration sets `mjolnir.tile_url` and the tile is not already present in the local
+ * `tile_dir`.
  *
- * Implementations MUST be thread-safe. Valhalla calls these methods from
- * background worker threads during graph traversal and multiple calls can be
- * in flight concurrently for different tile URLs.
+ * Implementations MUST be thread-safe. Valhalla calls these methods from background worker threads
+ * during graph traversal and multiple calls can be in flight concurrently for different tile URLs.
  *
- * Errors are signalled via `success = false` on the response — implementations
- * MUST NOT throw. Exceptions raised here propagate through the JNI bridge into
- * Valhalla's worker threads which are not designed to recover from them.
+ * Errors are signalled via `success = false` on the response — implementations MUST NOT throw.
+ * Exceptions raised here propagate through the JNI bridge into Valhalla's worker threads which are
+ * not designed to recover from them.
  *
- * Pass an implementation to [com.valhalla.valhalla.Valhalla]'s constructor.
- * Pass `null` (or omit) to disable HTTP fetching; tiles must then be supplied
- * locally via `mjolnir.tile_extract` or `mjolnir.tile_dir`.
+ * Pass an implementation to [com.valhalla.valhalla.Valhalla]'s constructor. Pass `null` (or omit)
+ * to disable HTTP fetching; tiles must then be supplied locally via `mjolnir.tile_extract` or
+ * `mjolnir.tile_dir`.
  */
 interface ValhallaHttpClient {
   /**
-   * Synchronous GET. When [rangeSize] is `0` the implementation should request
-   * the full body (no `Range` header). When [rangeSize] is non-zero Valhalla
-   * is reading an indexed entry from a single-file tar archive and expects
-   * `bytes=<rangeOffset>-<rangeOffset+rangeSize-1>`.
+   * Synchronous GET. When [rangeSize] is `0` the implementation should request the full body (no
+   * `Range` header). When [rangeSize] is non-zero Valhalla is reading an indexed entry from a
+   * single-file tar archive and expects `bytes=<rangeOffset>-<rangeOffset+rangeSize-1>`.
    */
   fun get(url: String, rangeOffset: Long, rangeSize: Long): GetResponse
 
   /**
-   * Synchronous HEAD. [headerMask] is the bitset Valhalla passes via the
-   * native `tile_getter_t::header_mask_t` enum. Bit 0 (value `1`) means the
-   * caller wants `Last-Modified` reflected back via
-   * [HeadResponse.lastModifiedTime]. Other bits are currently unused.
+   * Synchronous HEAD. [headerMask] is the bitset Valhalla passes via the native
+   * `tile_getter_t::header_mask_t` enum. Bit 0 (value `1`) means the caller wants `Last-Modified`
+   * reflected back via [HeadResponse.lastModifiedTime]. Other bits are currently unused.
    */
   fun head(url: String, headerMask: Int): HeadResponse
 

@@ -97,6 +97,12 @@ target_link_libraries(valhalla-wrapper
     valhalla
 )
 
+# Android logcat for the AndroidLogcatLogger that bridges Valhalla's internal
+# midgard::logging output to `__android_log_print` (see valhalla_actor.cpp).
+if(ANDROID_ABI)
+    target_link_libraries(valhalla-wrapper PRIVATE log)
+endif()
+
 target_include_directories(valhalla-wrapper
     PRIVATE
     ${Boost_INCLUDE_DIRS}

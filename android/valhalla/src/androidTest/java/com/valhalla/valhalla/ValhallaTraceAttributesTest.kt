@@ -27,8 +27,8 @@ import org.junit.runner.RunWith
  * Uses the bundled Andorra (`valhalla_tiles.tar`) fixture.
  *
  * The endpoints (42.5063, 1.5218) and (42.5086, 1.5394) are the same as the routing tests, which
- * proves they sit on the road graph. We use a generous 120s gap so the inferred speed (~12 m/s ≈
- * 44 km/h) is plausible — Meili's `max_route_time_factor` rejects implausibly fast transitions.
+ * proves they sit on the road graph. We use a generous 120s gap so the inferred speed (~12 m/s ≈ 44
+ * km/h) is plausible — Meili's `max_route_time_factor` rejects implausibly fast transitions.
  */
 @RunWith(AndroidJUnit4::class)
 class ValhallaTraceAttributesTest {

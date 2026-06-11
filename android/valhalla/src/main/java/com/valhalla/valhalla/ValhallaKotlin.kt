@@ -22,9 +22,9 @@ internal class ValhallaKotlin {
    * tile extract, etc.). Callers must pass the returned handle to [nativeDestroyActor] exactly
    * once.
    *
-   * When [httpClient] is non-null the native actor will fetch missing tiles over HTTP using the
-   * URL template in `mjolnir.tile_url`. The bridge keeps a JNI global reference to the client for
-   * the actor's lifetime and releases it on [nativeDestroyActor].
+   * When [httpClient] is non-null the native actor will fetch missing tiles over HTTP using the URL
+   * template in `mjolnir.tile_url`. The bridge keeps a JNI global reference to the client for the
+   * actor's lifetime and releases it on [nativeDestroyActor].
    */
   external fun nativeCreateActor(configPath: String, httpClient: ValhallaHttpClient?): Long
 

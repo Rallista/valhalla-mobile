@@ -7,13 +7,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 /**
- * Default OkHttp-backed implementation of [ValhallaHttpClient]. Suitable for
- * production use.
+ * Default OkHttp-backed implementation of [ValhallaHttpClient]. Suitable for production use.
  *
- * Callers can pass a preconfigured [OkHttpClient] (interceptors, auth, custom
- * timeouts). The supplied client must outlive any active
- * [com.valhalla.valhalla.Valhalla] instance that uses this adapter; the
- * adapter does not own the client.
+ * Callers can pass a preconfigured [OkHttpClient] (interceptors, auth, custom timeouts). The
+ * supplied client must outlive any active [com.valhalla.valhalla.Valhalla] instance that uses this
+ * adapter; the adapter does not own the client.
  */
 class OkHttpValhallaHttpClient(
     private val client: OkHttpClient = OkHttpClient(),
@@ -53,8 +51,7 @@ class OkHttpValhallaHttpClient(
         if (!resp.isSuccessful) {
           return ValhallaHttpClient.HeadResponse(success = false, httpCode = resp.code)
         }
-        val wantsLastModified =
-            headerMask and ValhallaHttpClient.HEADER_MASK_LAST_MODIFIED != 0
+        val wantsLastModified = headerMask and ValhallaHttpClient.HEADER_MASK_LAST_MODIFIED != 0
         val lastModified =
             if (wantsLastModified) parseHttpDate(resp.header("Last-Modified")) else 0L
         ValhallaHttpClient.HeadResponse(
