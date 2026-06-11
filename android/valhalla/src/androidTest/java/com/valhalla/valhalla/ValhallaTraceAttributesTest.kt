@@ -3,6 +3,7 @@ package com.valhalla.valhalla
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.valhalla.api.models.CostingModel
 import com.valhalla.config.ValhallaConfigBuilder
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
@@ -62,7 +63,7 @@ class ValhallaTraceAttributesTest {
     val request =
         TraceAttributesRequest(
             shape = shape,
-            costing = "auto",
+            costing = CostingModel.auto,
             shapeMatch = ShapeMatch.MAP_SNAP,
             filters =
                 TraceFilters(
@@ -123,7 +124,7 @@ class ValhallaTraceAttributesTest {
                     TracePoint(lat = 0.0, lon = -150.0, time = 0.0),
                     TracePoint(lat = 0.0, lon = -149.9, time = 60.0),
                 ),
-            costing = "auto",
+            costing = CostingModel.auto,
         )
 
     assertThrows(ValhallaException.Internal::class.java) { valhalla.traceAttributes(request) }

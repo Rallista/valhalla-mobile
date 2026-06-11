@@ -1,6 +1,7 @@
 package com.valhalla.valhalla.mapmatching
 
 import com.squareup.moshi.Json
+import com.valhalla.api.models.CostingModel
 
 /**
  * Request body for Valhalla's `trace_attributes` map-matching action.
@@ -13,7 +14,8 @@ import com.squareup.moshi.Json
  * https://valhalla.github.io/valhalla/api/map-matching/api-reference/
  *
  * @property shape Ordered GPS measurements to match.
- * @property costing Costing model — `"auto"`, `"bicycle"`, `"pedestrian"`, `"motor_scooter"`, etc.
+ * @property costing Costing model — e.g. [CostingModel.auto], [CostingModel.bicycle],
+ *   [CostingModel.pedestrian], [CostingModel.motor_scooter].
  * @property shapeMatch One of `"edge_walk"` (assume the shape is already on the graph),
  *   `"map_snap"` (run the HMM matcher), or `"walk_or_snap"` (try edge_walk first, fall back to
  *   map_snap).
@@ -33,7 +35,7 @@ import com.squareup.moshi.Json
  */
 data class TraceAttributesRequest(
     val shape: List<TracePoint>,
-    val costing: String = "auto",
+    val costing: CostingModel = CostingModel.auto,
     @param:Json(name = "shape_match") val shapeMatch: ShapeMatch = ShapeMatch.MAP_SNAP,
     val filters: TraceFilters? = null,
     @param:Json(name = "trace_options") val traceOptions: TraceOptions? = null,
