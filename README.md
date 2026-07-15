@@ -20,29 +20,50 @@ to reach out on the OpenStreetMap Slack (osmus.slack.com) under the [#valhalla-m
 
 ### Android
 
+> Requires `minSdk` 26.
+
+Add the engine plus the model artifacts. The models are needed to compile against
+the `RouteRequest` / `ValhallaConfigBuilder` types — `valhalla-mobile` only pulls
+them in at runtime, so they are not on the consumer's compile classpath by default.
+
 Using a `libs.versions.toml` with a `build.gradle.kts`
 
 ```toml
-[verisons]
-valhallaMobile = "0.1.0"
+[versions]
+valhallaMobile = "0.5.1"
+valhallaModels = "0.2.0"
+osrm = "0.0.10"
+
 [libraries]
 valhalla-mobile = { group = "io.github.rallista", name = "valhalla-mobile", version.ref = "valhallaMobile" }
+valhalla-models = { group = "io.github.rallista", name = "valhalla-models", version.ref = "valhallaModels" }
+valhalla-models-config = { group = "io.github.rallista", name = "valhalla-models-config", version.ref = "valhallaModels" }
+osrm-openapi = { group = "com.stadiamaps", name = "osrm-openapi", version.ref = "osrm" }
 ```
 
 ```kts
 implementation(libs.valhalla.mobile)
+implementation(libs.valhalla.models)
+implementation(libs.valhalla.models.config)
+implementation(libs.osrm.openapi) // for the OSRM branch of ValhallaResponse
 ```
 
 Using a standard `build.gradle.kts`
 
 ```kts
-implementation("io.github.rallista:valhalla-mobile:0.1.0")
+implementation("io.github.rallista:valhalla-mobile:0.5.1")
+implementation("io.github.rallista:valhalla-models:0.2.0")
+implementation("io.github.rallista:valhalla-models-config:0.2.0")
+implementation("com.stadiamaps:osrm-openapi:0.0.10")
 ```
 
 Using a standard `build.gradle`
 
 ```
-implementation 'io.github.rallista:valhalla-mobile:0.1.0'
+implementation 'io.github.rallista:valhalla-mobile:0.5.1'
+implementation 'io.github.rallista:valhalla-models:0.2.0'
+implementation 'io.github.rallista:valhalla-models-config:0.2.0'
+implementation 'com.stadiamaps:osrm-openapi:0.0.10'
 ```
 
 ### iOS
@@ -52,7 +73,7 @@ In a swift package:
 ```swift
 let package = Package(
     dependencies: [
-        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.1.0"),
+        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.5.1"),
     ],
     targets: [
         .target(
@@ -63,6 +84,46 @@ let package = Package(
     ]
 )
 ```
+
+## Usage
+
+> Currently only `route` is exposed. `route()` blocks on the native engine — run it off the main thread.
+
+### Android
+
+```kotlin
+// 1. Point Valhalla at a tile extract (.tar) — a bundled asset or a file you downloaded.
+val tarFile = ValhallaFile.usingAsset(context, "valhalla_tiles.tar")
+// val tarFile = ValhallaFile(context, "valhalla_tiles.tar") // context.filesDir/<name>
+
+// 2. Build the config and the engine instance.
+val config = ValhallaConfigBuilder()
+    .withTileExtract(tarFile.absolutePath())
+    .build()
+val valhalla = Valhalla(context, config)
+
+// 3. Request a route.
+val request = RouteRequest(
+    locations = listOf(
+        RoutingWaypoint(lat = 42.5063, lon = 1.5218),
+        RoutingWaypoint(lat = 42.5086, lon = 1.5394),
+    ),
+    costing = CostingModel.auto, // format defaults to RouteRequest.Format.json
+)
+
+// 4. Handle the response (sealed by format).
+when (val response = valhalla.route(request)) {
+    is ValhallaResponse.Json -> {
+        val trip = response.jsonResponse.trip
+        // trip.status, trip.summary, trip.legs[i].shape (encoded polyline, precision 1e6)
+    }
+    is ValhallaResponse.Osrm -> { /* only when format = RouteRequest.Format.osrm */ }
+}
+```
+
+`route()` throws `ValhallaException` subclasses on failure — e.g.
+`ValhallaException.Internal` (`ValhallaError(code=171, No suitable edges near location)`),
+`InvalidResponse`, `InvalidError`, and `NotSupported` (`gpx` / `pbf`).
 
 ## Manually Building Valhalla C++
 
