@@ -38,25 +38,89 @@ public final class Valhalla: ValhallaProviding {
         }
     }
     
-    public func route(request: RouteRequest) throws -> RouteResponse {
+    /// Encode a request, hand it to one of the raw actions, and decode what
+    /// comes back.
+    ///
+    /// Every action reports failure as a `ValhallaErrorModel` rather than by a
+    /// separate channel, so the error check has to happen before the success
+    /// decode for all of them alike.
+    private func perform<Request: Encodable, Response: Decodable>(
+        _ request: Request,
+        action: (String) -> String
+    ) throws -> Response {
         let requestData = try JSONEncoder().encode(request)
         guard let requestStr = String(data: requestData, encoding: .utf8) else {
             throw ValhallaError.encodingNotUtf8("requestStr")
         }
-        
-        let resultStr = route(rawRequest: requestStr)
+
+        let resultStr = action(requestStr)
         guard let resultData = resultStr.data(using: .utf8) else {
             throw ValhallaError.encodingNotUtf8("resultData")
         }
-        
+
         if let error = try? JSONDecoder().decode(ValhallaErrorModel.self, from: resultData) {
             throw ValhallaError.valhallaError(error.code, error.message)
         }
-        
-        return try JSONDecoder().decode(RouteResponse.self, from: resultData)
+
+        return try JSONDecoder().decode(Response.self, from: resultData)
+    }
+
+    public func route(request: RouteRequest) throws -> RouteResponse {
+        try perform(request) { self.route(rawRequest: $0) }
+    }
+
+    /// Map-matches a GPS trace against the road graph and returns narrative
+    /// maneuvers for it.
+    public func traceRoute(request: MapMatchRequest) throws -> MapMatchRouteResponse {
+        try perform(request) { self.traceRoute(rawRequest: $0) }
+    }
+
+    /// Map-matches a GPS trace and returns the matched edges and their
+    /// attributes rather than narrative directions.
+    public func traceAttributes(
+        request: TraceAttributesRequest
+    ) throws -> TraceAttributesResponse {
+        try perform(request) { self.traceAttributes(rawRequest: $0) }
+    }
+
+    /// Samples terrain heights under a shape.
+    ///
+    /// Build the config with `ValhallaConfig(tileExtractTar:elevationDir:)`,
+    /// or every point comes back with no data.
+    ///
+    /// Three documented Valhalla responses cannot be represented by the pinned
+    /// `HeightResponse`, and throw `DecodingError` rather than a
+    /// `ValhallaError`: a point outside elevation coverage, which serializes as
+    /// `null`; `heightPrecision` of 1 or 2, which serializes decimals; and
+    /// `range: true`, which has the same two problems in `rangeHeight`. The
+    /// model types both arrays as non-optional integers. Use
+    /// `height(rawRequest:)` if a shape may leave coverage or needs sub-metre
+    /// precision, until the model is fixed upstream.
+    public func height(request: HeightRequest) throws -> HeightResponse {
+        try perform(request) { self.height(rawRequest: $0) }
     }
 
     public func route(rawRequest request: String) -> String {
         actor!.route(request)
+    }
+
+    /// The raw form of `traceRoute(request:)`.
+    ///
+    /// Like `route(rawRequest:)`, the raw actions stay off `ValhallaProviding`;
+    /// that protocol requires only the two initializers and the typed
+    /// `route(request:)`. Use them when a request or
+    /// response needs a field the pinned models cannot represent yet.
+    public func traceRoute(rawRequest request: String) -> String {
+        actor!.traceRoute(request)
+    }
+
+    /// The raw form of `traceAttributes(request:)`.
+    public func traceAttributes(rawRequest request: String) -> String {
+        actor!.traceAttributes(request)
+    }
+
+    /// The raw form of `height(request:)`.
+    public func height(rawRequest request: String) -> String {
+        actor!.height(request)
     }
 }

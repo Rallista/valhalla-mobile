@@ -84,6 +84,37 @@ extension ValhallaConfig {
                   thor: defaultConfig.thor)
     }
     
+    /// Initialize ValhallaConfig for a specific tar file and elevation tiles.
+    ///
+    /// The graph tar carries roads; terrain heights live outside it, in a
+    /// directory of skadi elevation tiles. Without this, the `height` action
+    /// answers every query with null. That is correct given it has no data,
+    /// but a consumer detecting climbs or grades from a route then sees a
+    /// flat world rather than an error.
+    ///
+    /// - Parameters:
+    ///   - tileExtractTar: The local file path URL for the tiles tar file.
+    ///   - elevationDir: The local directory holding skadi elevation tiles.
+    public init(tileExtractTar: URL, elevationDir: URL) throws {
+        let defaultConfig = ValhallaConfig.loadDefault()
+
+        var mjolnir = defaultConfig.mjolnir
+        mjolnir?.tileExtract = tileExtractTar.relativePath
+
+        var additionalData = defaultConfig.additionalData
+        additionalData?.elevation = elevationDir.relativePath
+
+        self.init(additionalData: additionalData,
+                  httpd: defaultConfig.httpd,
+                  loki: defaultConfig.loki,
+                  meili: defaultConfig.meili,
+                  mjolnir: mjolnir,
+                  odin: defaultConfig.odin,
+                  serviceLimits: defaultConfig.serviceLimits,
+                  statsd: defaultConfig.statsd,
+                  thor: defaultConfig.thor)
+    }
+
     /// Initialize ValhallaConfig for a specific tiles directory.
     ///
     /// This injects a tile folder path into the default valhalla config.
