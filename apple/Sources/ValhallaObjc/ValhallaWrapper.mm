@@ -149,23 +149,46 @@ public:
     return self;
 }
 
-- (NSString*)route:(NSString*)request
+// Every action crosses the boundary the same way, and the actor is not
+// thread-safe, so the @synchronized contract lives here once rather than
+// being restated per action.
+- (NSString*)invoke:(NSString*)request
+             action:(std::string (*)(const char*, void*))action
 {
     @synchronized(self) {
-        std::string res = route([request UTF8String], _actor);
+        std::string res = action([request UTF8String], _actor);
 
         // Not stringWithUTF8String:, which returns nil on invalid UTF-8 and
-        // would trap: the header has no nullability annotations, so Swift
-        // imports this as a non-optional String. Road names come straight out
-        // of the graph tiles, so a corrupt tile pack is a real source of bad
-        // bytes. This also skips a strlen over a response that can run to
-        // megabytes.
+        // would trap: Swift imports these as non-optional String. Road names
+        // come straight out of the graph tiles, so a corrupt tile pack is a
+        // real source of bad bytes. This also skips a strlen over a response
+        // that can run to megabytes.
         NSString* response = [[NSString alloc] initWithBytes:res.data()
                                                       length:res.size()
                                                     encoding:NSUTF8StringEncoding];
 
         return response ?: @"{\"code\":-1,\"message\":\"response was not valid UTF-8\"}";
     }
+}
+
+- (NSString*)route:(NSString*)request
+{
+    return [self invoke:request action:route];
+}
+
+- (NSString*)traceRoute:(NSString*)request
+{
+    return [self invoke:request action:trace_route];
+}
+
+- (NSString*)traceAttributes:(NSString*)request
+{
+    return [self invoke:request action:trace_attributes];
+}
+
+- (NSString*)height:(NSString*)request
+{
+    return [self invoke:request action:height];
 }
 
 - (void) dealloc

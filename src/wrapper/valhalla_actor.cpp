@@ -86,3 +86,15 @@ std::string config_file(config_path);
 std::string ValhallaActor::route(const std::string& request) {
     return actor->route(request);
 }
+
+std::string ValhallaActor::trace_route(const std::string& request) {
+    return actor->trace_route(request);
+}
+
+std::string ValhallaActor::trace_attributes(const std::string& request) {
+    return actor->trace_attributes(request);
+}
+
+std::string ValhallaActor::height(const std::string& request) {
+    return actor->height(request);
+}

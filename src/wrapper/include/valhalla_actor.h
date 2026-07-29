@@ -35,8 +35,22 @@ private:
     std::unique_ptr<valhalla::baldr::GraphReader> graph_reader;
 public:
     ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client = nullptr);
-    
+
     std::string route(const std::string& request);
+
+    /// Map-matches a GPS trace against the road graph and returns narrative
+    /// maneuvers for it. The on-device counterpart of Valhalla's
+    /// /trace_route endpoint.
+    std::string trace_route(const std::string& request);
+
+    /// Map-matches a GPS trace and returns the matched edges and their
+    /// attributes, rather than narrative directions. The on-device
+    /// counterpart of /trace_attributes.
+    std::string trace_attributes(const std::string& request);
+
+    /// Samples terrain heights under a shape, from the elevation data the
+    /// config points at. The on-device counterpart of /height.
+    std::string height(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H
