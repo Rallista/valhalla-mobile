@@ -251,4 +251,27 @@ final class TestValhallaActions: XCTestCase {
             "a graph with no elevation directory should answer null, got \(heights)"
         )
     }
+
+    // MARK: - Protocol defaults
+
+    /// The typed actions are `ValhallaProviding` requirements with default
+    /// implementations, so a conformer predating them still compiles and
+    /// reports the action as unsupported rather than doing nothing.
+    func testProtocolDefaultsReportUnsupported() throws {
+        struct RouteOnlyProvider: ValhallaProviding {
+            init(_ config: ValhallaConfig) throws {}
+            init(configPath: String) throws {}
+            func route(request: RouteRequest) throws -> RouteResponse {
+                throw ValhallaError.unsupportedAction("route")
+            }
+        }
+
+        let provider = try RouteOnlyProvider(configPath: "unused")
+
+        XCTAssertThrowsError(
+            try provider.height(request: HeightRequest(shape: []))
+        ) { error in
+            XCTAssertEqual(error as? ValhallaError, .unsupportedAction("height"))
+        }
+    }
 }

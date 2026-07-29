@@ -3,12 +3,43 @@ import ValhallaModels
 import ValhallaConfigModels
 
 public protocol ValhallaProviding {
-    
+
     init(_ config: ValhallaConfig) throws
-    
+
     init(configPath: String) throws
 
     func route(request: RouteRequest) throws -> RouteResponse
+
+    /// Map-matches a GPS trace against the road graph
+    /// and returns narrative maneuvers for it.
+    func traceRoute(request: MapMatchRequest) throws -> MapMatchRouteResponse
+
+    /// Map-matches a GPS trace and returns the matched edges
+    /// and their attributes, rather than narrative directions.
+    func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse
+
+    /// Samples terrain heights under a shape.
+    func height(request: HeightRequest) throws -> HeightResponse
+}
+
+/// Defaults that keep the three newer actions additive.
+///
+/// A conformer written against an earlier version, including a test double
+/// that only ever needed `route`, still compiles untouched and reports the
+/// action as unsupported rather than silently returning nothing.
+public extension ValhallaProviding {
+
+    func traceRoute(request: MapMatchRequest) throws -> MapMatchRouteResponse {
+        throw ValhallaError.unsupportedAction("trace_route")
+    }
+
+    func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse {
+        throw ValhallaError.unsupportedAction("trace_attributes")
+    }
+
+    func height(request: HeightRequest) throws -> HeightResponse {
+        throw ValhallaError.unsupportedAction("height")
+    }
 }
 
 public final class Valhalla: ValhallaProviding {
@@ -106,9 +137,8 @@ public final class Valhalla: ValhallaProviding {
 
     /// The raw form of `traceRoute(request:)`.
     ///
-    /// Like `route(rawRequest:)`, the raw actions stay off `ValhallaProviding`;
-    /// that protocol requires only the two initializers and the typed
-    /// `route(request:)`. Use them when a request or
+    /// Like `route(rawRequest:)`, the raw actions stay off `ValhallaProviding`,
+    /// which declares the typed actions only. Use them when a request or
     /// response needs a field the pinned models cannot represent yet.
     public func traceRoute(rawRequest request: String) -> String {
         actor!.traceRoute(request)
