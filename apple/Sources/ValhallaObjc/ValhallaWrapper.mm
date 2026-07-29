@@ -152,13 +152,19 @@ public:
 - (NSString*)route:(NSString*)request
 {
     @synchronized(self) {
-        // Convert the NSString to std::string
-        std::string req = std::string([request UTF8String]);
-        
-        // Generate the valhalla response
-        std::string res = route(req.c_str(), _actor);
-        
-        return [NSString stringWithUTF8String:res.c_str()];
+        std::string res = route([request UTF8String], _actor);
+
+        // Not stringWithUTF8String:, which returns nil on invalid UTF-8 and
+        // would trap: the header has no nullability annotations, so Swift
+        // imports this as a non-optional String. Road names come straight out
+        // of the graph tiles, so a corrupt tile pack is a real source of bad
+        // bytes. This also skips a strlen over a response that can run to
+        // megabytes.
+        NSString* response = [[NSString alloc] initWithBytes:res.data()
+                                                      length:res.size()
+                                                    encoding:NSUTF8StringEncoding];
+
+        return response ?: @"{\"code\":-1,\"message\":\"response was not valid UTF-8\"}";
     }
 }
 
