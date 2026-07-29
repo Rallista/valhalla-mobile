@@ -8,8 +8,10 @@
 
 This project builds [valhalla](https://github.com/valhalla/valhalla) as a static iOS or shared Android library.
 
-It currently only exposes the route function for the primary purpose of generating turn by turn navigation routes
-using a downloaded pre-parsed valhalla tileset.
+It exposes the route function for the primary purpose of generating turn by turn navigation routes
+using a downloaded pre-parsed valhalla tileset. On Apple platforms it additionally exposes trace_route
+and trace_attributes for map matching, and height for terrain elevation. Height needs a config built
+with `ValhallaConfig(tileExtractTar:elevationDir:)` so skadi has elevation tiles to read.
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
