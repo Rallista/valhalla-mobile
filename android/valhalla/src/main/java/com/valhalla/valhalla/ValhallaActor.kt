@@ -2,6 +2,10 @@ package com.valhalla.valhalla
 
 internal interface ValhallaActorProviding {
   fun route(request: String): String
+
+  fun traceRoute(request: String): String
+
+  fun traceAttributes(request: String): String
 }
 
 /**
@@ -22,5 +26,27 @@ internal class ValhallaActor(private val configPath: String) : ValhallaActorProv
    */
   override fun route(request: String): String {
     return valhallaKotlin.route(request, configPath)
+  }
+
+  /**
+   * Run a `trace_route` request, map-matching a GPS trace onto the road network and returning a
+   * route along the matched path. Same assumptions as [route].
+   *
+   * @param request
+   * @return
+   */
+  override fun traceRoute(request: String): String {
+    return valhallaKotlin.traceRoute(request, configPath)
+  }
+
+  /**
+   * Run a `trace_attributes` request, map-matching a GPS trace onto the road network and returning
+   * the attributes of every edge along the matched path. Same assumptions as [route].
+   *
+   * @param request
+   * @return
+   */
+  override fun traceAttributes(request: String): String {
+    return valhallaKotlin.traceAttributes(request, configPath)
   }
 }

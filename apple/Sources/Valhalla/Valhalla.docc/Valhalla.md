@@ -5,8 +5,8 @@ Swift wrapper for the Valhalla routing engine.
 ## Overview
 
 The `valhalla-mobile` library builds libvalhalla c++ for iOS (and Android). It provides a Swift 
-interface to access the `ValhallaActor`. Currently, it only supports fetching routes through the 
-but with additional swift contributions, more features can be added.
+interface to access the `ValhallaActor`. It currently supports fetching routes and map matching 
+a recorded GPS trace, but with additional swift contributions, more features can be added.
 
 ## Getting Started
 
@@ -99,6 +99,52 @@ do {
     print("Error calculating route: \(error)")
 }
 ``` 
+
+### Map matching a GPS trace
+
+The same instance snaps a recorded GPS trace onto the road network, against the tiles already on
+the device. Supply the trace either as a list of `MapMatchWaypoint`s or as an encoded polyline —
+note that the polyline must use six digits of precision rather than the usual five.
+
+Use ``Valhalla/traceRoute(request:)`` when you want a route along the matched path:
+
+```swift
+let request = MapMatchRequest(
+    shape: [
+        MapMatchWaypoint(lat: 42.5063, lon: 1.5218),
+        MapMatchWaypoint(lat: 42.5074, lon: 1.5301),
+        MapMatchWaypoint(lat: 42.5086, lon: 1.5394)
+    ],
+    costing: .auto
+)
+
+let response = try valhalla.traceRoute(request: request)
+print("Matched \(response.trip.legs.count) leg(s)")
+```
+
+Use ``Valhalla/traceAttributes(request:)`` when you want the road network itself — edge identifiers,
+road classes, speeds, names — rather than turn by turn directions. Narrow the response with
+`filters`; by default valhalla returns every attribute it has, which is a lot of JSON for a long
+trace:
+
+```swift
+let request = TraceAttributesRequest(
+    encodedPolyline: polyline6,
+    costing: .auto,
+    filters: TraceAttributeFilterOptions(
+        attributes: [.edgePeriodSpeed, .edgePeriodNames],
+        action: .include
+    )
+)
+
+let response = try valhalla.traceAttributes(request: request)
+for edge in response.edges ?? [] {
+    print(edge.names ?? [])
+}
+```
+
+Formats other than valhalla's own JSON are reachable through ``Valhalla/traceRoute(rawRequest:)``
+and ``Valhalla/traceAttributes(rawRequest:)``, which return the response body unparsed.
 
 ## Topics
 

@@ -59,4 +59,75 @@ class ValhallaActorTest {
     assertEquals(0, trip.getInt("status"))
     assertEquals("Found route between points", trip.getString("status_message"))
   }
+
+  /**
+   * The shape of a known-good route through the fixture, taken from the engine itself so that the
+   * trace assertions below are about map matching rather than about how well some hand-picked
+   * coordinates happen to sit on an Andorran road.
+   */
+  private fun routeShape(valhalla: ValhallaActor): String {
+    val request =
+        "{\"locations\":[{\"lat\":42.5063,\"lon\":1.5218},{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\",\"units\":\"miles\"}"
+    val trip = JSONObject(valhalla.route(request)).getJSONObject("trip")
+
+    return trip.getJSONArray("legs").getJSONObject(0).getString("shape")
+  }
+
+  @Test
+  fun testSuccessfulTraceRoute() {
+    val valhalla = ValhallaActor(configPath)
+
+    val request =
+        JSONObject()
+            .put("encoded_polyline", routeShape(valhalla))
+            .put("costing", "auto")
+            .toString()
+    val response = valhalla.traceRoute(request)
+
+    val trip = JSONObject(response).getJSONObject("trip")
+
+    assertEquals(0, trip.getInt("status"))
+    assertEquals("Found route between points", trip.getString("status_message"))
+  }
+
+  @Test
+  fun testSuccessfulTraceAttributes() {
+    val valhalla = ValhallaActor(configPath)
+
+    val request =
+        JSONObject()
+            .put("encoded_polyline", routeShape(valhalla))
+            .put("costing", "auto")
+            .toString()
+    val response = valhalla.traceAttributes(request)
+
+    val responseJson = JSONObject(response)
+
+    assertTrue(
+        "expected matched edges in: $response", responseJson.getJSONArray("edges").length() > 0)
+    assertTrue(
+        "expected matched points in: $response",
+        responseJson.getJSONArray("matched_points").length() > 0)
+  }
+
+  /** The trace actions report failures through the same envelope [route] does. */
+  @Test
+  fun testTraceRouteNoConfigPath() {
+    val valhalla = ValhallaActor("invalid.json")
+
+    val request = "{\"encoded_polyline\":\"abc\",\"costing\":\"auto\"}"
+    val response = valhalla.traceRoute(request)
+
+    assertEquals(response, "{\"code\":-1,\"message\":\"Cannot open file invalid.json\"}")
+  }
+
+  @Test
+  fun testTraceAttributesNoConfigPath() {
+    val valhalla = ValhallaActor("invalid.json")
+
+    val request = "{\"encoded_polyline\":\"abc\",\"costing\":\"auto\"}"
+    val response = valhalla.traceAttributes(request)
+
+    assertEquals(response, "{\"code\":-1,\"message\":\"Cannot open file invalid.json\"}")
+  }
 }

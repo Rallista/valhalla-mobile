@@ -122,6 +122,32 @@ public:
 };
 
 
+namespace {
+
+/// One of the actor entry points in `main.h`. They all take a request and an actor,
+/// and they all answer with either a serialized response or the wrapper's error
+/// envelope — they never throw.
+using ActorAction = std::string (*)(const char*, void*);
+
+/// Shared body of every action method: hand the request to the C++ wrapper and
+/// bridge the response back. Callers hold the lock; this does not.
+NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
+    const char* utf8Request = [request UTF8String];
+    if (utf8Request == nullptr) {
+        // Only reachable when a caller passes nil, which no Swift caller can do.
+        // Report it the same way the C++ layer reports its own failures rather
+        // than constructing a std::string from a null pointer.
+        return @"{\"code\":-1,\"message\":\"request was nil\"}";
+    }
+
+    std::string result = action(utf8Request, actor);
+
+    return [NSString stringWithUTF8String:result.c_str()];
+}
+
+} // namespace
+
+
 @implementation ValhallaWrapper
 
 - (instancetype)initWithConfigPath:(NSString*)config_path error:(__autoreleasing NSError **)error
@@ -152,13 +178,21 @@ public:
 - (NSString*)route:(NSString*)request
 {
     @synchronized(self) {
-        // Convert the NSString to std::string
-        std::string req = std::string([request UTF8String]);
-        
-        // Generate the valhalla response
-        std::string res = route(req.c_str(), _actor);
-        
-        return [NSString stringWithUTF8String:res.c_str()];
+        return PerformAction(&route, request, _actor);
+    }
+}
+
+- (NSString*)traceRoute:(NSString*)request
+{
+    @synchronized(self) {
+        return PerformAction(&trace_route, request, _actor);
+    }
+}
+
+- (NSString*)traceAttributes:(NSString*)request
+{
+    @synchronized(self) {
+        return PerformAction(&trace_attributes, request, _actor);
     }
 }
 
