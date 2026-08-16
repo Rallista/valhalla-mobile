@@ -90,6 +90,10 @@ class ValhallaActorTest {
     assertEquals("Found route between points", trip.getString("status_message"))
   }
 
+  /**
+   * The trace is the exact shape of a prior route, so Valhalla walks the edges instead of running
+   * Meili, and there are no matched_points — [testMapSnapTraceAttributes] covers those.
+   */
   @Test
   fun testSuccessfulTraceAttributes() {
     val valhalla = ValhallaActor(configPath)
@@ -105,6 +109,24 @@ class ValhallaActorTest {
 
     assertTrue(
         "expected matched edges in: $response", responseJson.getJSONArray("edges").length() > 0)
+    assertFalse("expected no matched points in: $response", responseJson.has("matched_points"))
+  }
+
+  /** The map-snapping path is the one that reports how each input point matched. */
+  @Test
+  fun testMapSnapTraceAttributes() {
+    val valhalla = ValhallaActor(configPath)
+
+    val request =
+        JSONObject()
+            .put("encoded_polyline", routeShape(valhalla))
+            .put("costing", "auto")
+            .put("shape_match", "map_snap")
+            .toString()
+    val response = valhalla.traceAttributes(request)
+
+    val responseJson = JSONObject(response)
+
     assertTrue(
         "expected matched points in: $response",
         responseJson.getJSONArray("matched_points").length() > 0)

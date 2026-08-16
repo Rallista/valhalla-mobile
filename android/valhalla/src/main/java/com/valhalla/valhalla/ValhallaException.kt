@@ -21,7 +21,17 @@ sealed class ValhallaException(message: String? = null, cause: Throwable? = null
 
   class InvalidError : ValhallaException("Invalid error response data")
 
-  class InvalidResponse : ValhallaException("Invalid response data")
+  /**
+   * The engine answered, but the answer could not be read as the response type that was expected.
+   *
+   * @constructor Carries the underlying parse failure when there was one, so a caller can tell a
+   *   malformed payload from one whose shape has drifted from the models.
+   */
+  class InvalidResponse : ValhallaException {
+    constructor() : super("Invalid response data")
+
+    constructor(cause: Throwable) : super("Invalid response data", cause)
+  }
 
   class NotSupported : ValhallaException("The format is not currently supported")
 }

@@ -113,6 +113,9 @@ final class TestValhallaWithTar: XCTestCase {
     }
 
     /// Validate a valhalla error when the trace is nowhere near the tiles we have.
+    ///
+    /// The code is not pinned: it depends on how far the matcher gets before giving up, since Loki
+    /// can reject the locations outright and Meili can fail to find a path.
     func testTraceRouteNoMatch() throws {
         let valhalla = try Valhalla(defaultConfig)
 
@@ -128,9 +131,6 @@ final class TestValhallaWithTar: XCTestCase {
             let _ = try valhalla.traceRoute(request: request)
             XCTFail("traceRoute should throw for a trace outside the tiles")
         } catch let error as ValhallaError {
-            // Which code comes back depends on how far the matcher gets before giving up — Loki
-            // can reject the locations outright, or Meili can fail to find a path — so assert
-            // that the engine reported a failure rather than pinning a code that isn't ours.
             guard case .valhallaError = error else {
                 return XCTFail("expected a valhalla error, got \(error)")
             }
@@ -138,6 +138,9 @@ final class TestValhallaWithTar: XCTestCase {
     }
 
     /// Validate a successful map match that returns the attributes of the matched edges.
+    ///
+    /// The trace is the exact shape of a prior route, so Valhalla walks the edges instead of
+    /// running Meili, and there are no `matchedPoints` — `testMapSnapTraceAttributes` covers those.
     func testSuccessfulTraceAttributes() throws {
         let valhalla = try Valhalla(defaultConfig)
 
@@ -149,8 +152,24 @@ final class TestValhallaWithTar: XCTestCase {
         let response = try valhalla.traceAttributes(request: request)
 
         XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
-        XCTAssertFalse(try XCTUnwrap(response.matchedPoints).isEmpty)
         XCTAssertNotNil(response.shape)
+        XCTAssertNil(response.matchedPoints)
+    }
+
+    /// Validate the map-snapping path, which is the one that reports how each input point matched.
+    func testMapSnapTraceAttributes() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = TraceAttributesRequest(
+            encodedPolyline: try routeShape(valhalla),
+            costing: .auto,
+            shapeMatch: .mapSnap
+        )
+
+        let response = try valhalla.traceAttributes(request: request)
+
+        XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
+        XCTAssertFalse(try XCTUnwrap(response.matchedPoints).isEmpty)
     }
 
     /// Validate that a filter narrows the response to just the attributes that were asked for.
@@ -169,7 +188,6 @@ final class TestValhallaWithTar: XCTestCase {
         let response = try valhalla.traceAttributes(request: request)
 
         XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
-        // The shape was not among the requested attributes, so it should not come back.
         XCTAssertNil(response.shape)
     }
 }

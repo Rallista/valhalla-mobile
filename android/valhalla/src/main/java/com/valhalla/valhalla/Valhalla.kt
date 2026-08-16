@@ -139,8 +139,7 @@ class Valhalla(
     val encodedRequest = moshi.adapter(MapMatchRequest::class.java).toJson(request)
     val rawResponse = traceRouteRaw(encodedRequest)
 
-    return moshi.adapter(MapMatchRouteResponse::class.java).fromJson(rawResponse)
-        ?: throw ValhallaException.InvalidResponse()
+    return decodeResponse(rawResponse, MapMatchRouteResponse::class.java)
   }
 
   /**
@@ -169,8 +168,7 @@ class Valhalla(
     val encodedRequest = moshi.adapter(TraceAttributesRequest::class.java).toJson(request)
     val rawResponse = traceAttributesRaw(encodedRequest)
 
-    return moshi.adapter(TraceAttributesResponse::class.java).fromJson(rawResponse)
-        ?: throw ValhallaException.InvalidResponse()
+    return decodeResponse(rawResponse, TraceAttributesResponse::class.java)
   }
 
   /**
@@ -201,19 +199,37 @@ class Valhalla(
   }
 
   /**
+   * Decodes [rawResponse] into [type].
+   *
+   * Moshi's own failures are reported as [ValhallaException.InvalidResponse], with the parse error
+   * kept as the cause. Letting a `JsonDataException` escape would break the documented contract of
+   * the trace methods, and would leave a caller unable to tell "the engine said no" apart from "we
+   * could not read what it said".
+   */
+  private fun <T> decodeResponse(rawResponse: String, type: Class<T>): T =
+      try {
+        moshi.adapter(type).fromJson(rawResponse) ?: throw ValhallaException.InvalidResponse()
+      } catch (e: JsonDataException) {
+        throw ValhallaException.InvalidResponse(e)
+      } catch (e: IOException) {
+        throw ValhallaException.InvalidResponse(e)
+      }
+
+  /**
    * Returns [rawResponse] unchanged, unless it is the native wrapper's error envelope — in which
    * case the error it carries is thrown.
+   *
+   * A [JsonDataException] means the response is not the envelope, because it carries other keys or
+   * its `code` is not an int. An [IOException] means malformed JSON, which is left to the caller's
+   * decode so the problem is reported against the shape actually expected.
    */
   private fun checkForError(rawResponse: String): String {
     val error =
         try {
           errorAdapter.fromJson(rawResponse)
         } catch (e: JsonDataException) {
-          // Not the envelope: either it carries other keys, or `code` is not an int.
           null
         } catch (e: IOException) {
-          // Malformed JSON. Leave it to the caller's decode, which reports the problem
-          // against the shape actually expected rather than against the error envelope.
           null
         }
 

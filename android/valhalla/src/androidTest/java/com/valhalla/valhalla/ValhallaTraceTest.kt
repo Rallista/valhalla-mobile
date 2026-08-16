@@ -83,9 +83,14 @@ class ValhallaTraceTest {
     assertTrue("expected at least one matched leg", response.trip.legs.isNotEmpty())
   }
 
+  /**
+   * The same Oregon coordinates the routing tests use to miss the Andorra fixture.
+   *
+   * The code is not pinned: it depends on how far the matcher gets before giving up, since Loki can
+   * reject the locations outright and Meili can fail to find a path.
+   */
   @Test
   fun test_traceRoute_noSuitableEdges() {
-    // The same Oregon coordinates the routing tests use to miss the Andorra fixture.
     val request =
         MapMatchRequest(
             shape =
@@ -94,9 +99,6 @@ class ValhallaTraceTest {
                     MapMatchWaypoint(lat = 45.869701, lon = -123.766121)),
             costing = MapMatchCostingModel.auto)
 
-    // Which code comes back depends on how far the matcher gets before giving up — Loki can
-    // reject the locations outright, or Meili can fail to find a path — so assert that the
-    // engine reported a failure rather than pinning a code that is not ours to guarantee.
     val exception = assertThrows(ValhallaException::class.java) { valhalla.traceRoute(request) }
 
     assertTrue(
@@ -146,6 +148,7 @@ class ValhallaTraceTest {
     assertNotNull("expected the matched shape", response.shape)
   }
 
+  /** Only the requested attributes come back, so the shape is absent from the response. */
   @Test
   fun test_traceAttributes_filtered() {
     val request =
@@ -164,7 +167,6 @@ class ValhallaTraceTest {
     val edges = response.edges
     assertNotNull("expected matched edges", edges)
     assertTrue("expected at least one matched edge", edges!!.isNotEmpty())
-    // Only the requested attributes come back; the shape was not among them.
     assertEquals(null, response.shape)
   }
 

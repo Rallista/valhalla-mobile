@@ -16,6 +16,10 @@ namespace {
  * `Cannot open file ...`, for instance. Concatenating one of those into a JSON
  * literal unescaped produces a payload the Swift and Kotlin decoders cannot
  * parse, turning a legible routing error into a decoding failure.
+ *
+ * Everything below the space is a control character, which JSON only permits in
+ * \u form. Bytes at or above 0x20 — including UTF-8 continuation bytes — pass
+ * through untouched.
  */
 std::string escape_json(const std::string& value) {
     std::string escaped;
@@ -30,9 +34,6 @@ std::string escape_json(const std::string& value) {
             case '\r': escaped += "\\r"; break;
             case '\t': escaped += "\\t"; break;
             default:
-                // Everything else below the space is a control character, which JSON
-                // only permits in \u form. Bytes at or above 0x20 — including UTF-8
-                // continuation bytes — pass through untouched.
                 if (static_cast<unsigned char>(c) < 0x20) {
                     char buffer[7];
                     std::snprintf(buffer, sizeof(buffer), "\\u%04x", c);
@@ -129,6 +130,11 @@ private:
 /**
  * Shared body of every JNI entry point: read the Java strings, build an actor,
  * run one action against it, and hand the response back as a Java string.
+ *
+ * A null from either ScopedUtfChars means a pending OutOfMemoryError, which
+ * would be thrown into Kotlin the moment we return, in place of the String this
+ * method promises. It is cleared and reported through the envelope callers
+ * already know how to handle.
  */
 jstring run_jni_action(JNIEnv *env,
                        jstring jRequest,
@@ -140,9 +146,6 @@ jstring run_jni_action(JNIEnv *env,
 
     std::string result;
     if (request.get() == nullptr || config_path.get() == nullptr) {
-        // A pending OutOfMemoryError would be thrown into Kotlin the moment we
-        // return, in place of the String this method promises. Clear it and
-        // report through the envelope callers already know how to handle.
         env->ExceptionClear();
         result = error_json(-1, std::string("failed to read the ") + action_name +
                                     " request from the JVM");
