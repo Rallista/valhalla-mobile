@@ -157,9 +157,11 @@ class Valhalla(
    * request's directions options is ignored rather than rejected.
    *
    * Exclude `matched.edge_index` through [TraceAttributesRequest.filters] when matching with
-   * `map_snap`. Valhalla never populates that field for this action, so it emits the `size_t`
-   * sentinel — 18446744073709551615 — which does not fit in a `Long`, and the whole response
-   * becomes undecodable rather than just that one field.
+   * `map_snap`. Valhalla leaves that field unpopulated for some matched points while still
+   * reporting a valid edge id, so it emits the `size_t` sentinel — 18446744073709551615 — which
+   * does not fit in a `Long`, and the whole response becomes undecodable rather than just that one
+   * field. Tracked upstream as valhalla/valhalla#3699, with a fix proposed in
+   * valhalla/valhalla#6278.
    *
    * @param request The trace to match, the costing model, and which attributes to return.
    * @return The matched edges, points, and the admins they reference.

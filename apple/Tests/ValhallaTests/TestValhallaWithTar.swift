@@ -158,10 +158,14 @@ final class TestValhallaWithTar: XCTestCase {
 
     /// Validate the map-snapping path, which is the one that reports how each input point matched.
     ///
-    /// `matched.edge_index` has to be excluded. Valhalla never populates it for `trace_attributes`
-    /// — the serializer carries a TODO saying as much — so it emits the `size_t` sentinel,
-    /// 18446744073709551615, which no signed 64-bit type can hold. Requesting it makes the whole
-    /// response undecodable rather than just that one field.
+    /// `matched.edge_index` has to be excluded. Valhalla leaves it unpopulated for some matched
+    /// points in `trace_attributes` while still reporting a valid edge id, so it serializes the
+    /// `size_t` sentinel, 18446744073709551615, which no signed 64-bit type can hold. Requesting
+    /// it makes the whole response undecodable rather than just that one field.
+    ///
+    /// Tracked upstream as valhalla/valhalla#3699, with a fix proposed in valhalla/valhalla#6278.
+    /// Drop the filter once the submodule is bumped past that fix — if this test then passes
+    /// unfiltered, the workaround and the notes on ``Valhalla/traceAttributes(request:)`` can go.
     func testMapSnapTraceAttributes() throws {
         let valhalla = try Valhalla(defaultConfig)
 
