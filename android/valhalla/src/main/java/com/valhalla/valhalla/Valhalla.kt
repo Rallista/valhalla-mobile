@@ -156,6 +156,11 @@ class Valhalla(
    * Unlike [traceRoute], this action always answers with Valhalla's own JSON — a `format` on the
    * request's directions options is ignored rather than rejected.
    *
+   * Exclude `matched.edge_index` through [TraceAttributesRequest.filters] when matching with
+   * `map_snap`. Valhalla never populates that field for this action, so it emits the `size_t`
+   * sentinel — 18446744073709551615 — which does not fit in a `Long`, and the whole response
+   * becomes undecodable rather than just that one field.
+   *
    * @param request The trace to match, the costing model, and which attributes to return.
    * @return The matched edges, points, and the admins they reference.
    * @throws ValhallaException.Internal if the Valhalla engine returns an error response, which

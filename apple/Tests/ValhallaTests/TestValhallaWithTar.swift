@@ -157,13 +157,22 @@ final class TestValhallaWithTar: XCTestCase {
     }
 
     /// Validate the map-snapping path, which is the one that reports how each input point matched.
+    ///
+    /// `matched.edge_index` has to be excluded. Valhalla never populates it for `trace_attributes`
+    /// — the serializer carries a TODO saying as much — so it emits the `size_t` sentinel,
+    /// 18446744073709551615, which no signed 64-bit type can hold. Requesting it makes the whole
+    /// response undecodable rather than just that one field.
     func testMapSnapTraceAttributes() throws {
         let valhalla = try Valhalla(defaultConfig)
 
         let request = TraceAttributesRequest(
             encodedPolyline: try routeShape(valhalla),
             costing: .auto,
-            shapeMatch: .mapSnap
+            shapeMatch: .mapSnap,
+            filters: TraceAttributeFilterOptions(
+                attributes: [.matchedPeriodEdgeIndex],
+                action: .exclude
+            )
         )
 
         let response = try valhalla.traceAttributes(request: request)

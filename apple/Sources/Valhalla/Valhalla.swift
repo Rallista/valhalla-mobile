@@ -73,6 +73,10 @@ public final class Valhalla: ValhallaProviding {
     ///
     /// - Note: This action always answers with Valhalla's own JSON. The `format` option
     ///   does not apply to it.
+    /// - Important: Exclude `matched.edge_index` from the request's `filters` when matching with
+    ///   `shapeMatch: .mapSnap`. Valhalla never populates that field for this action, so it emits
+    ///   the `size_t` sentinel — 18446744073709551615 — which no signed 64-bit type can hold, and
+    ///   the whole response becomes undecodable rather than just that one field.
     /// - Parameter request: the trace to match, the costing model, and which attributes to return.
     /// - Returns: the matched edges, points, and the admins they reference.
     /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the request or
