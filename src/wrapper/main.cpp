@@ -7,11 +7,7 @@
 #include <cstdio>
 #include <string>
 
-// rapidjson_fwd.h first, as valhalla does. It sets the rapidjson macros that
-// the rest of the build uses.
-#include <valhalla/baldr/rapidjson_fwd.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 
 // Build the JSON error payload.
 //
@@ -26,17 +22,14 @@
 // The code parameter is int64_t because valhalla_exception_t::code is
 // unsigned, and the other two cases use -1.
 static std::string error_json(int64_t code, const std::string& message) {
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    rapidjson::writer_wrapper_t writer;
 
-    writer.StartObject();
-    writer.Key("code");
-    writer.Int64(code);
-    writer.Key("message");
-    writer.String(message.data(), static_cast<rapidjson::SizeType>(message.size()));
-    writer.EndObject();
+    writer.start_object();
+    writer("code", code);
+    writer("message", message);
+    writer.end_object();
 
-    return std::string(buffer.GetString(), buffer.GetSize());
+    return writer.get_buffer();
 }
 
 #ifdef __ANDROID__
