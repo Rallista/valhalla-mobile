@@ -5,8 +5,32 @@ Swift wrapper for the Valhalla routing engine.
 ## Overview
 
 The `valhalla-mobile` library builds libvalhalla c++ for iOS (and Android). It provides a Swift 
-interface to access the `ValhallaActor`. Currently, it only supports fetching routes through the 
+interface to access the `ValhallaActor`. Currently, it only supports fetching routes,
 but with additional swift contributions, more features can be added.
+
+## Installation
+
+`Valhalla` requires iOS 16.4 or newer and is distributed with Swift Package Manager.
+
+In `Package.swift`:
+
+```swift
+let package = Package(
+    dependencies: [
+        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.5.1"),
+    ],
+    targets: [
+        .target(
+            dependencies: [
+                .product(name: "Valhalla", package: "valhalla-mobile")
+            ]
+        ),
+    ]
+)
+```
+
+In Xcode, add the same package URL under *File > Add Package Dependencies*,
+then add the `Valhalla` library to your target.
 
 ## Getting Started
 
@@ -59,7 +83,7 @@ let valhalla = try Valhalla(config)
 ```
 
 In this example, we use `ValhallaConfig` to inject the path of the tarball we provided. 
-You can see (and debug) this process in [`TestValhallaWithTar.swift`](apple/Tests/ValhallaTests/TestValhallaWithTar.swift).
+You can see (and debug) this process in [`TestValhallaWithTar.swift`](https://github.com/Rallista/valhalla-mobile/blob/main/apple/Tests/ValhallaTests/TestValhallaWithTar.swift).
 
 If you're using a tile directory. The process is basically same: 
 
@@ -78,6 +102,9 @@ let valhalla = try Valhalla(config)
 ### Getting a route
 
 Now that `let valhalla` is initialized, you can use it to get a route.
+
+> Important: `route(request:)` blocks while the native engine works,
+> so call it off the main thread.
 
 ```swift
 import Valhalla

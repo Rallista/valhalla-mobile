@@ -14,3 +14,7 @@ configured as `ValhallaFile`.
 Alternatively, this class includes `usingAsset` for asset bundled files. This can be used to 
 load smaller tiles sets that are bundled with your APK. Assets are also used for testing 
 in this library.
+
+```kt
+val tarFile = ValhallaFile.usingAsset(appContext, "valhalla_tiles.tar")
+```
