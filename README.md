@@ -11,58 +11,59 @@ This project builds [valhalla](https://github.com/valhalla/valhalla) as a static
 It currently only exposes the route function for the primary purpose of generating turn by turn navigation routes
 using a downloaded pre-parsed valhalla tileset.
 
-We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
-for more information.
+## Supported features
+
+Core valhalla covers considerably more ground than this library exposes.
+The table below is the current surface, per platform:
+
+| Feature | Valhalla action | Android | iOS |
+| --- | --- | :-: | :-: |
+| Routing | `route` | ✅ | ✅ |
+| Map matching | `trace_route`, `trace_attributes` | – | – |
+| Time-distance matrix | `sources_to_targets` | – | – |
+| Optimized route | `optimized_route` | – | – |
+| Isochrones | `isochrone` | – | – |
+| Elevation | `height` | – | – |
+| Nearest edge or node | `locate` | – | – |
+| Graph expansion | `expansion` | – | – |
+
+Routes come back in valhalla's own JSON format on both platforms.
+Android additionally decodes the [OSRM](https://github.com/stadiamaps/osrm-openapi-kotlin) format;
+on iOS, non-default formats are available as raw JSON through `route(rawRequest:)`.
+`gpx` and `pbf` are not supported anywhere yet.
+
+Widening this table is exactly the kind of contribution we're looking for.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.
+
+## Documentation
+
+Installation and usage live alongside the API reference for each platform:
+
+### Android (Kotlin)
+
+[API reference (Dokka)](https://rallista.github.io/valhalla-mobile/)
+
+- [Requirements, installation, and getting started](https://rallista.github.io/valhalla-mobile/)
+- [Managing tile files on the device](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.files/index.html)
+- [Building a valhalla config](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.config/index.html)
+- [Fetching a route, response formats, and errors](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/index.html)
+
+### iOS (Swift)
+
+[API reference (DocC)](https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla)
+
+- Installation, sourcing offline tiles, configuring valhalla, and fetching a route are all covered
+  on that page. The catalog source is [Valhalla.docc](apple/Sources/Valhalla/Valhalla.docc).
+
+### This repository
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to contribute.
+- [docs/development.md](docs/development.md) — local toolchain setup, including the NDK version CI uses.
+- [docs/src/architecture.md](docs/src/architecture.md) — how the C++, JNI, and Obj-C++ layers fit together.
+- [docs/src/bumping-valhalla.md](docs/src/bumping-valhalla.md) — upgrading the valhalla submodule.
+
 If you've got questions, would like to have informal discussions, or just want to ping us about a question, PR. Feel free 
 to reach out on the OpenStreetMap Slack (osmus.slack.com) under the [#valhalla-mobile](`https://osmus.slack.com/archives/C08N6SUNZTJ`) channel.
-
-## Setup
-
-### Android
-
-Using a `libs.versions.toml` with a `build.gradle.kts`
-
-```toml
-[verisons]
-valhallaMobile = "0.1.0"
-[libraries]
-valhalla-mobile = { group = "io.github.rallista", name = "valhalla-mobile", version.ref = "valhallaMobile" }
-```
-
-```kts
-implementation(libs.valhalla.mobile)
-```
-
-Using a standard `build.gradle.kts`
-
-```kts
-implementation("io.github.rallista:valhalla-mobile:0.1.0")
-```
-
-Using a standard `build.gradle`
-
-```
-implementation 'io.github.rallista:valhalla-mobile:0.1.0'
-```
-
-### iOS
-
-In a swift package:
-
-```swift
-let package = Package(
-    dependencies: [
-        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.1.0"),
-    ],
-    targets: [
-        .target(
-            dependencies: [
-                .product(name: "Valhalla", package: "valhalla-mobile")
-            ]
-        ),
-    ]
-)
-```
 
 ## Manually Building Valhalla C++
 
