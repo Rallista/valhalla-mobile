@@ -3,58 +3,36 @@
 #include "main.h"
 #include "valhalla_actor.h"
 
+#include <cstdint>
 #include <cstdio>
 #include <string>
 
+#include <valhalla/baldr/rapidjson_utils.h>
+
+// Build the JSON error payload.
+//
+// The message is not always ours. Valhalla copies caller-supplied text into it
+// verbatim. An unrecognized action name becomes error 144 that carries that
+// name (src/valhalla/src/worker.cc:1192, src/valhalla/src/exceptions.cc:172).
+// A quote or a control character in the message makes a document the platform
+// layer cannot parse, so the real error is lost behind a decode failure. The
+// writer escapes the message, and it also builds the object, so no caller can
+// write malformed JSON by hand.
+//
+// The code parameter is int64_t because valhalla_exception_t::code is
+// unsigned, and the other two cases use -1.
+static std::string error_json(int64_t code, const std::string& message) {
+    rapidjson::writer_wrapper_t writer;
+
+    writer.start_object();
+    writer("code", code);
+    writer("message", message);
+    writer.end_object();
+
+    return writer.get_buffer();
+}
+
 namespace {
-
-/**
- * Escapes a string so it can be embedded in a JSON string literal.
- *
- * Exception messages are not ours: they come from Valhalla and from the C++
- * runtime, and can carry quotes or backslashes — a config path echoed back by
- * `Cannot open file ...`, for instance. Concatenating one of those into a JSON
- * literal unescaped produces a payload the Swift and Kotlin decoders cannot
- * parse, turning a legible routing error into a decoding failure.
- *
- * Everything below the space is a control character, which JSON only permits in
- * \u form. Bytes at or above 0x20 — including UTF-8 continuation bytes — pass
- * through untouched.
- */
-std::string escape_json(const std::string& value) {
-    std::string escaped;
-    escaped.reserve(value.size());
-    for (const char c : value) {
-        switch (c) {
-            case '"': escaped += "\\\""; break;
-            case '\\': escaped += "\\\\"; break;
-            case '\b': escaped += "\\b"; break;
-            case '\f': escaped += "\\f"; break;
-            case '\n': escaped += "\\n"; break;
-            case '\r': escaped += "\\r"; break;
-            case '\t': escaped += "\\t"; break;
-            default:
-                if (static_cast<unsigned char>(c) < 0x20) {
-                    char buffer[7];
-                    std::snprintf(buffer, sizeof(buffer), "\\u%04x", c);
-                    escaped += buffer;
-                } else {
-                    escaped += c;
-                }
-        }
-    }
-    return escaped;
-}
-
-/**
- * Builds the error envelope every platform layer parses: `{"code":<int>,"message":"<string>"}`.
- *
- * @param code     Valhalla's error code, or -1 for failures raised outside Valhalla
- * @param message  human readable description of the failure
- */
-std::string error_json(long long code, const std::string& message) {
-    return "{\"code\":" + std::to_string(code) + ",\"message\":\"" + escape_json(message) + "\"}";
-}
 
 /**
  * Runs one actor action, converting every C++ exception into the error envelope.
@@ -72,7 +50,7 @@ std::string invoke_action(const char* action_name, Action&& action) {
         return action();
     } catch (const valhalla::valhalla_exception_t &err) {
         printf("[ValhallaActor] %s valhalla_exception: %s\n", action_name, err.what());
-        return error_json(static_cast<long long>(err.code), err.message);
+        return error_json(static_cast<int64_t>(err.code), err.message);
     } catch (const std::exception &err) {
         printf("[ValhallaActor] %s std::exception: %s\n", action_name, err.what());
         return error_json(-1, err.what());

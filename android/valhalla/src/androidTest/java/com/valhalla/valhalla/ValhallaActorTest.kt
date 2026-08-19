@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
@@ -151,5 +152,52 @@ class ValhallaActorTest {
     val response = valhalla.traceAttributes(request)
 
     assertEquals(response, "{\"code\":-1,\"message\":\"Cannot open file invalid.json\"}")
+  }
+
+  /**
+   * Validate that caller text in an error message cannot break the payload.
+   *
+   * Valhalla quotes an unknown costing name back to the caller in error 125
+   * (src/valhalla/src/worker.cc:823). The wrapper must escape that message. Without the escape the
+   * payload is not valid JSON, the error parse fails, and the real error is lost.
+   */
+  @Test
+  fun testErrorMessageEscapesCallerText() {
+    val valhalla = ValhallaActor(configPath)
+
+    // A costing name with the three characters that broke the payload.
+    val costingName = "auto\"\\\nevil"
+
+    val locations =
+        JSONArray().apply {
+          put(
+              JSONObject().apply {
+                put("lat", 42.5063)
+                put("lon", 1.5218)
+              })
+          put(
+              JSONObject().apply {
+                put("lat", 42.5086)
+                put("lon", 1.5394)
+              })
+        }
+    val request =
+        JSONObject()
+            .apply {
+              put("locations", locations)
+              put("costing", costingName)
+              put("units", "miles")
+            }
+            .toString()
+
+    val response = valhalla.route(request)
+
+    // The constructor throws if the wrapper did not escape the message.
+    val json = JSONObject(response)
+
+    assertEquals(125, json.getInt("code"))
+    assertTrue(
+        "the message must carry the costing name unchanged, got: ${json.getString("message")}",
+        json.getString("message").contains(costingName))
   }
 }

@@ -203,4 +203,43 @@ final class TestValhallaWithTar: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
         XCTAssertNil(response.shape)
     }
+
+    /// Validate that caller text in an error message cannot break the payload.
+    ///
+    /// Valhalla quotes an unknown costing name back to the caller in error 125
+    /// (src/valhalla/src/worker.cc:823). The wrapper must escape that message.
+    /// Without the escape the payload is not valid JSON, the error decode
+    /// fails, and this library reports a decode failure in place of the real
+    /// error.
+    func testErrorMessageEscapesCallerText() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        // A costing name with the three characters that broke the payload.
+        let costingName = "auto\"\\\nevil"
+
+        let payload: [String: Any] = [
+            "locations": [
+                ["lat": 42.5063, "lon": 1.5218],
+                ["lat": 42.5086, "lon": 1.5394]
+            ],
+            "costing": costingName,
+            "units": "miles"
+        ]
+        let requestData = try JSONSerialization.data(withJSONObject: payload)
+        let rawRequest = String(data: requestData, encoding: .utf8)!
+
+        let rawResponse = valhalla.route(rawRequest: rawRequest)
+
+        // The decode throws if the wrapper did not escape the message.
+        let error = try JSONDecoder().decode(
+            ValhallaErrorModel.self,
+            from: Data(rawResponse.utf8)
+        )
+
+        XCTAssertEqual(error.code, 125)
+        XCTAssertTrue(
+            error.message.contains(costingName),
+            "the message must carry the costing name unchanged, got: \(error.message)"
+        )
+    }
 }

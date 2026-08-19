@@ -1,3 +1,4 @@
+#include <memory>
 #include <boost/property_tree/ptree.hpp>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -7,12 +8,12 @@
 class TileGetterWrapper : public valhalla::baldr::tile_getter_t {
 public:
   /**
-   * @param pool_size  the number of curler instances in the pool
-   * @param user_agent  user agent to use by curlers for HTTP requests
-   * @param gzipped  whether to request for gzip compressed data
-   * @param user_pw  the "user:pwd" for HTTP basic auth
+   * @param http_client  client used to perform HTTP GET/HEAD tile requests;
+   *                      ownership is transferred to the wrapper. May be null,
+   *                      in which case requests report FAILURE.
+   * @param is_gzipped  whether tiles are requested as gzip-compressed data
    */
-  TileGetterWrapper(ValhallaMobileHttpClient* http_client, bool is_gzipped): http_client(http_client), is_gzipped(is_gzipped) {
+  TileGetterWrapper(std::unique_ptr<ValhallaMobileHttpClient> http_client, bool is_gzipped): http_client(std::move(http_client)), is_gzipped(is_gzipped) {
   }
 
   GET_response_t get(const std::string& url,
@@ -41,19 +42,19 @@ public:
     return is_gzipped;
   }
 
-  ~TileGetterWrapper() {
-    delete http_client;
-  };
-
 private:
   bool is_gzipped;
-  ValhallaMobileHttpClient* http_client;
+  std::unique_ptr<ValhallaMobileHttpClient> http_client;
 };
 
 
 ValhallaActor::ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client) {
-std::string config_file(config_path);
-    
+    // Take ownership of the client immediately so it is freed on any early
+    // return or exception below, and regardless of whether a getter is attached.
+    std::unique_ptr<ValhallaMobileHttpClient> http_client_owned(http_client);
+
+    std::string config_file(config_path);
+
     // Set up the config object
     boost::property_tree::ptree config;
     rapidjson::read_json(config_file, config);
@@ -68,13 +69,12 @@ std::string config_file(config_path);
     // (`if (!tile_getter_) return nullptr;`) — matching upstream Valhalla, so the
     // router routes around the gap. This is what offline tile_dir consumers
     // expect (e.g. region packs that don't bundle the full tile hierarchy).
+    // When no tile_url is set, http_client_owned is left to free the client at
+    // scope exit (loose-tile mode needs no getter).
     std::unique_ptr<TileGetterWrapper> tile_getter;
     if (!mjolnir_config.get<std::string>("tile_url", std::string()).empty()) {
       tile_getter = std::make_unique<TileGetterWrapper>(
-          http_client, mjolnir_config.get<bool>("tile_url_gz", false));
-    } else if (http_client) {
-      // Not handed to a getter (which would own it) — release it so it doesn't leak.
-      delete http_client;
+          std::move(http_client_owned), mjolnir_config.get<bool>("tile_url_gz", false));
     }
     graph_reader = std::make_unique<valhalla::baldr::GraphReader>(
       mjolnir_config, std::move(tile_getter)
