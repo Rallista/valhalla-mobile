@@ -131,17 +131,8 @@ using ActorAction = std::string (*)(const char*, void*);
 
 /// Shared body of every action method: hand the request to the C++ wrapper and
 /// bridge the response back. Callers hold the lock; this does not.
-///
-/// A null request is only reachable when a caller passes nil, which no Swift
-/// caller can do. It is reported the same way the C++ layer reports its own
-/// failures, rather than constructing a std::string from a null pointer.
 NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
-    const char* utf8Request = [request UTF8String];
-    if (utf8Request == nullptr) {
-        return @"{\"code\":-1,\"message\":\"request was nil\"}";
-    }
-
-    std::string result = action(utf8Request, actor);
+    std::string result = action([request UTF8String], actor);
 
     return [NSString stringWithUTF8String:result.c_str()];
 }
