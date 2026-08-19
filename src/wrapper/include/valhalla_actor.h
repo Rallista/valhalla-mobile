@@ -36,6 +36,14 @@ private:
 public:
     ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client = nullptr);
 
+    /**
+     * Compute a route between the given locations. This is Valhalla's `route`
+     * action.
+     *
+     * @param request  a `route` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/
+     * @return         the serialized response, in whichever format the request asked for
+     */
     std::string route(const std::string& request);
 
     /**
