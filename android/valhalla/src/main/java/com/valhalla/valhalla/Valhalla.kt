@@ -24,8 +24,9 @@ import java.io.IOException
  * configuration management, JSON serialization, and routing requests.
  *
  * One instance holds one native actor, including the mmapped tile extract, for its whole lifetime.
- * Creating it is expensive, so reuse a single instance across many requests. Call [close] when done
- * — ideally through Kotlin's `use { }` — since nothing else releases the native actor.
+ * Building it is expensive and happens during construction, so reuse a single instance across many
+ * requests. Call [close] when done — ideally through Kotlin's `use { }` — since nothing else
+ * releases the native actor.
  *
  * @param context The Android context used for file system operations and configuration management.
  * @param config The Valhalla configuration specifying tile locations and routing options.

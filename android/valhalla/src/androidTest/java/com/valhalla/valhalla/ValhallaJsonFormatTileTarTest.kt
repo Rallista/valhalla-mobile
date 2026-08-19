@@ -76,4 +76,38 @@ class ValhallaJsonFormatTileTarTest {
       is ValhallaResponse.Osrm -> fail("format should not be osrm")
     }
   }
+
+  /**
+   * An instance must keep routing against the config it was created with.
+   *
+   * The default [ValhallaConfigManager] writes every config to the same `valhalla.json`, so a
+   * second instance overwrites the first one's file. Reading the config when the actor is built —
+   * during construction — is what keeps the first instance correct; deferring that read to the
+   * first request would silently pick up the second instance's config.
+   */
+  @Test
+  fun test_configIsReadAtConstruction() {
+    val tarFile = ValhallaFile.usingAsset(appContext, "valhalla_tiles.tar")
+    val working = ValhallaConfigBuilder().withTileExtract(tarFile.absolutePath()).build()
+    val elsewhere = ValhallaConfigBuilder().withTileDir("/does/not/exist").build()
+
+    val request =
+        RouteRequest(
+            locations =
+                listOf(
+                    RoutingWaypoint(lat = 42.5063, lon = 1.5218),
+                    RoutingWaypoint(lat = 42.5086, lon = 1.5394)),
+            costing = CostingModel.auto,
+            format = RouteRequest.Format.json)
+
+    Valhalla(appContext, working, configManager).use { first ->
+      // Clobbers the valhalla.json that `first` was created from.
+      Valhalla(appContext, elsewhere, configManager).use {
+        when (val response = first.route(request)) {
+          is ValhallaResponse.Json -> assertEquals(0, response.jsonResponse.trip.status)
+          is ValhallaResponse.Osrm -> fail("format should not be osrm")
+        }
+      }
+    }
+  }
 }

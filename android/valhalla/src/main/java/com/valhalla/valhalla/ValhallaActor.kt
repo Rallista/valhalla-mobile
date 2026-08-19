@@ -16,9 +16,10 @@ internal interface ValhallaActorProviding : Closeable {
  *
  * Holds one native actor for the lifetime of this instance, the way iOS holds one per
  * `ValhallaWrapper`. Building it parses the config and opens the tile extract, so reuse one
- * instance across many requests rather than creating one per call. The native actor is built on
- * first use, so a bad config surfaces through the response envelope on every call rather than at
- * construction.
+ * instance across many requests rather than creating one per call. That work happens here in the
+ * constructor, so the config file is read before another instance can overwrite it. A config that
+ * cannot be read is not fatal: the first call retries and reports through the response envelope,
+ * as it always has.
  *
  * Call [close] to release the native actor; nothing else frees it.
  *

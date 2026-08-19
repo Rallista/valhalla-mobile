@@ -41,9 +41,11 @@ Valhalla(appContext, config).use { valhalla ->
 }
 ```
 
-The actor is built on first use, so a config that cannot be read reports through the usual
-`ValhallaException` on each request rather than failing at construction. Requests on one instance
-are serialised, so it is safe to share across threads, though they will not run concurrently.
+The actor is built during construction, so it reads your config before anything else can overwrite
+it — worth knowing because the default `ValhallaConfigManager` writes every config to the same
+`valhalla.json`. A config that cannot be read does not fail construction; it reports through the
+usual `ValhallaException` on each request. Requests on one instance are serialised, so it is safe to
+share across threads, though they will not run concurrently.
 
 ## Map matching
 

@@ -8,8 +8,10 @@ internal class ValhallaKotlin {
   }
 
   /**
-   * Allocate a native actor for [configPath]. Returns 0 if the handle could not be allocated. The
-   * caller owns the result and must pass it to [deleteActor].
+   * Allocate a native actor and build it from [configPath], so the config is read before anything
+   * can overwrite it. A config that cannot be read still yields a handle and is reported when the
+   * first action retries. Returns 0 only if the handle could not be allocated; the caller owns the
+   * result and must pass it to [deleteActor].
    */
   external fun createActor(configPath: String): Long
 

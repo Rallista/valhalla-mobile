@@ -111,10 +111,15 @@ private:
  *
  * Building an actor parses the config and opens the GraphReader, which mmaps the
  * tile extract — far too expensive to repeat per request, which is what this
- * layer used to do. The actor is built on first use rather than in the
- * constructor so that a bad config keeps reporting through the error envelope on
- * every call, exactly as it did before, instead of failing at construction; a
- * failed build leaves the pointer null and the next call tries again.
+ * layer used to do. createActor builds it up front so the config file is read
+ * before anything else can overwrite it; the default ValhallaConfigManager writes
+ * every config to one fixed valhalla.json, so a second instance clobbers the
+ * first's config, and a later read would pick up the wrong one.
+ *
+ * A build that fails leaves the pointer null and the next call tries again, which
+ * keeps a config that cannot be read reporting through the error envelope on every
+ * call rather than failing construction, and lets an instance created before its
+ * tiles finished downloading recover on a later call.
  *
  * Kotlin serialises every call on one instance, so no lock is needed here. See
  * ValhallaActor.kt.
@@ -154,6 +159,7 @@ jstring run_jni_action(JNIEnv *env,
     } else {
         auto* actor_handle = reinterpret_cast<ActorHandle*>(handle);
         result = invoke_action(action_name, [&]() {
+            // Normally already built by createActor; this is the retry path.
             if (!actor_handle->actor) {
                 actor_handle->actor = std::make_unique<ValhallaActor>(actor_handle->config_path);
             }
@@ -179,15 +185,24 @@ Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
         return 0;
     }
 
-    // Allocation is the only thing that can fail here; the actor itself is built
-    // lazily. Returning 0 lets Kotlin raise a typed error instead of taking a
-    // C++ exception across the boundary.
+    // Returning 0 lets Kotlin raise a typed error instead of taking a C++
+    // exception across the boundary.
+    std::unique_ptr<ActorHandle> handle;
     try {
-        return reinterpret_cast<jlong>(new ActorHandle(config_path.get()));
+        handle = std::make_unique<ActorHandle>(config_path.get());
     } catch (...) {
         printf("[ValhallaActor] createActor failed to allocate the handle\n");
         return 0;
     }
+    try {
+        handle->actor = std::make_unique<ValhallaActor>(handle->config_path);
+    } catch (const std::exception &err) {
+        printf("[ValhallaActor] createActor deferred, will retry on first use: %s\n", err.what());
+    } catch (...) {
+        printf("[ValhallaActor] createActor deferred, will retry on first use\n");
+    }
+
+    return reinterpret_cast<jlong>(handle.release());
 }
 
 extern "C"
