@@ -9,6 +9,7 @@ import com.valhalla.api.models.RoutingWaypoint
 import com.valhalla.config.ValhallaConfigBuilder
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.fail
@@ -32,6 +33,11 @@ class ValhallaJsonFormatTileTarTest {
     val config = ValhallaConfigBuilder().withTileExtract(tarFile.absolutePath()).build()
 
     valhalla = Valhalla(appContext, config, configManager)
+  }
+
+  @After
+  fun tearDown() {
+    valhalla.close()
   }
 
   @Test

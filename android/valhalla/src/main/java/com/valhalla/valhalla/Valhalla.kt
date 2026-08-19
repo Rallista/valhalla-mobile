@@ -14,6 +14,7 @@ import com.valhalla.api.models.TraceAttributesRequest
 import com.valhalla.api.models.TraceAttributesResponse
 import com.valhalla.config.models.ValhallaConfig
 import com.valhalla.valhalla.config.ValhallaConfigManager
+import java.io.Closeable
 import java.io.IOException
 
 /**
@@ -21,6 +22,10 @@ import java.io.IOException
  *
  * This class provides a Kotlin interface to the native Valhalla C++ routing engine. It handles
  * configuration management, JSON serialization, and routing requests.
+ *
+ * One instance holds one native actor, including the mmapped tile extract, for its whole lifetime.
+ * Creating it is expensive, so reuse a single instance across many requests. Call [close] when done
+ * — ideally through Kotlin's `use { }` — since nothing else releases the native actor.
  *
  * @param context The Android context used for file system operations and configuration management.
  * @param config The Valhalla configuration specifying tile locations and routing options.
@@ -38,7 +43,7 @@ class Valhalla(
     config: ValhallaConfig,
     valhallaConfigManager: ValhallaConfigManager = ValhallaConfigManager(context),
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-) {
+) : Closeable {
 
   private val valhallaActor: ValhallaActorProviding
 
@@ -242,5 +247,14 @@ class Valhalla(
 
     error?.let { throw ValhallaException.Internal(it) }
     return rawResponse
+  }
+
+  /**
+   * Release the native actor held by this instance. Safe to call more than once.
+   *
+   * Any request attempted after this throws [IllegalStateException].
+   */
+  override fun close() {
+    valhallaActor.close()
   }
 }

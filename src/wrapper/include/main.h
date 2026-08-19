@@ -11,20 +11,32 @@
 extern "C" {
 #endif
 
+// Android holds one native actor per Kotlin ValhallaActor, the way iOS holds one
+// per ValhallaWrapper. createActor hands back an opaque handle that every action
+// takes and deleteActor frees; 0 means the handle could not be allocated.
+
+JNIEXPORT jlong JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
+                                                jobject thiz,
+                                                jstring jConfigPath);
+
+JNIEXPORT void JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_deleteActor(JNIEnv *env,
+                                                jobject thiz,
+                                                jlong handle);
+
 JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
                                                 jobject thiz,
-                                                jstring jRequest,
-                                                jstring jConfigPath);
+                                                jlong handle,
+                                                jstring jRequest);
 
 JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceRoute(JNIEnv *env,
                                                 jobject thiz,
-                                                jstring jRequest,
-                                                jstring jConfigPath);
+                                                jlong handle,
+                                                jstring jRequest);
 
 JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
                                                 jobject thiz,
-                                                jstring jRequest,
-                                                jstring jConfigPath);
+                                                jlong handle,
+                                                jstring jRequest);
 
 #ifdef __cplusplus
 }

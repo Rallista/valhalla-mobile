@@ -7,9 +7,18 @@ internal class ValhallaKotlin {
     }
   }
 
-  external fun route(request: String, configPath: String): String
+  /**
+   * Allocate a native actor for [configPath]. Returns 0 if the handle could not be allocated. The
+   * caller owns the result and must pass it to [deleteActor].
+   */
+  external fun createActor(configPath: String): Long
 
-  external fun traceRoute(request: String, configPath: String): String
+  /** Free a handle from [createActor]. Passing 0 is a no-op. */
+  external fun deleteActor(handle: Long)
 
-  external fun traceAttributes(request: String, configPath: String): String
+  external fun route(handle: Long, request: String): String
+
+  external fun traceRoute(handle: Long, request: String): String
+
+  external fun traceAttributes(handle: Long, request: String): String
 }

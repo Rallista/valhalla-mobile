@@ -26,6 +26,25 @@ val request =
 val response = valhalla.route(request)
 ```
 
+## Lifecycle
+
+A `Valhalla` instance holds one native actor, including the mmapped tile extract, for its whole
+lifetime. Building it parses the config and opens the tile data, so create one and reuse it across
+many requests rather than one per request.
+
+Nothing releases the native actor for you — `Valhalla` is `Closeable`, so close it when you are
+done, ideally through `use { }`:
+
+```kt
+Valhalla(appContext, config).use { valhalla ->
+    val response = valhalla.route(request)
+}
+```
+
+The actor is built on first use, so a config that cannot be read reports through the usual
+`ValhallaException` on each request rather than failing at construction. Requests on one instance
+are serialised, so it is safe to share across threads, though they will not run concurrently.
+
 ## Map matching
 
 The same instance also snaps a recorded GPS trace onto the road network, against the tiles already on

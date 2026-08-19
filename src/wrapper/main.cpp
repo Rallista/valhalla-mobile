@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <string>
 
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -106,32 +107,57 @@ private:
 };
 
 /**
- * Shared body of every JNI entry point: read the Java strings, build an actor,
- * run one action against it, and hand the response back as a Java string.
+ * Owns the actor for the lifetime of one Kotlin ValhallaActor.
  *
- * A null from either ScopedUtfChars means a pending OutOfMemoryError, which
- * would be thrown into Kotlin the moment we return, in place of the String this
- * method promises. It is cleared and reported through the envelope callers
- * already know how to handle.
+ * Building an actor parses the config and opens the GraphReader, which mmaps the
+ * tile extract — far too expensive to repeat per request, which is what this
+ * layer used to do. The actor is built on first use rather than in the
+ * constructor so that a bad config keeps reporting through the error envelope on
+ * every call, exactly as it did before, instead of failing at construction; a
+ * failed build leaves the pointer null and the next call tries again.
+ *
+ * Kotlin serialises every call on one instance, so no lock is needed here. See
+ * ValhallaActor.kt.
+ */
+struct ActorHandle {
+    explicit ActorHandle(std::string config_path) : config_path(std::move(config_path)) {
+    }
+
+    std::string config_path;
+    std::unique_ptr<ValhallaActor> actor;
+};
+
+/**
+ * Shared body of every JNI action: read the request, run one action against the
+ * handle's actor, and hand the response back as a Java string.
+ *
+ * A null from ScopedUtfChars means a pending OutOfMemoryError, which would be
+ * thrown into Kotlin the moment we return, in place of the String this method
+ * promises. It is cleared and reported through the envelope callers already know
+ * how to handle. A zero handle means Kotlin called after close, which its own
+ * guard should have caught.
  */
 jstring run_jni_action(JNIEnv *env,
+                       jlong handle,
                        jstring jRequest,
-                       jstring jConfigPath,
                        ActorAction action,
                        const char* action_name) {
     ScopedUtfChars request(env, jRequest);
-    ScopedUtfChars config_path(env, jConfigPath);
 
     std::string result;
-    if (request.get() == nullptr || config_path.get() == nullptr) {
+    if (handle == 0) {
+        result = error_json(-1, std::string("the actor is closed, cannot run ") + action_name);
+    } else if (request.get() == nullptr) {
         env->ExceptionClear();
         result = error_json(-1, std::string("failed to read the ") + action_name +
                                     " request from the JVM");
     } else {
+        auto* actor_handle = reinterpret_cast<ActorHandle*>(handle);
         result = invoke_action(action_name, [&]() {
-            // TODO: Android currently creates a new actor every time. Optimize to be like iOS later.
-            ValhallaActor valhallaActor(config_path.get());
-            return (valhallaActor.*action)(request.get());
+            if (!actor_handle->actor) {
+                actor_handle->actor = std::make_unique<ValhallaActor>(actor_handle->config_path);
+            }
+            return ((*actor_handle->actor).*action)(request.get());
         });
     }
 
@@ -141,14 +167,49 @@ jstring run_jni_action(JNIEnv *env,
 } // namespace
 
 extern "C"
+JNIEXPORT jlong
+
+JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
+                                                       jobject thiz,
+                                                       jstring jConfigPath) {
+    ScopedUtfChars config_path(env, jConfigPath);
+    if (config_path.get() == nullptr) {
+        env->ExceptionClear();
+        return 0;
+    }
+
+    // Allocation is the only thing that can fail here; the actor itself is built
+    // lazily. Returning 0 lets Kotlin raise a typed error instead of taking a
+    // C++ exception across the boundary.
+    try {
+        return reinterpret_cast<jlong>(new ActorHandle(config_path.get()));
+    } catch (...) {
+        printf("[ValhallaActor] createActor failed to allocate the handle\n");
+        return 0;
+    }
+}
+
+extern "C"
+JNIEXPORT void
+
+JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_deleteActor(JNIEnv *env,
+                                                        jobject thiz,
+                                                        jlong handle) {
+    // Deleting null is well defined, so a double close from Kotlin is harmless.
+    delete reinterpret_cast<ActorHandle*>(handle);
+}
+
+extern "C"
 JNIEXPORT jstring
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
-                                                jobject thiz,
-                                                jstring jRequest,
-                                                jstring jConfigPath) {
-    return run_jni_action(env, jRequest, jConfigPath, &ValhallaActor::route, "route");
+                                                      jobject thiz,
+                                                      jlong handle,
+                                                      jstring jRequest) {
+    return run_jni_action(env, handle, jRequest, &ValhallaActor::route, "route");
 }
 
 extern "C"
@@ -156,10 +217,10 @@ JNIEXPORT jstring
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_traceRoute(JNIEnv *env,
-                                                     jobject thiz,
-                                                     jstring jRequest,
-                                                     jstring jConfigPath) {
-    return run_jni_action(env, jRequest, jConfigPath, &ValhallaActor::trace_route, "trace_route");
+                                                           jobject thiz,
+                                                           jlong handle,
+                                                           jstring jRequest) {
+    return run_jni_action(env, handle, jRequest, &ValhallaActor::trace_route, "trace_route");
 }
 
 extern "C"
@@ -167,10 +228,10 @@ JNIEXPORT jstring
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
-                                                          jobject thiz,
-                                                          jstring jRequest,
-                                                          jstring jConfigPath) {
-    return run_jni_action(env, jRequest, jConfigPath, &ValhallaActor::trace_attributes,
+                                                                jobject thiz,
+                                                                jlong handle,
+                                                                jstring jRequest) {
+    return run_jni_action(env, handle, jRequest, &ValhallaActor::trace_attributes,
                           "trace_attributes");
 }
 
