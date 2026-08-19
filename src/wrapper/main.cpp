@@ -3,6 +3,35 @@
 #include "main.h"
 #include "valhalla_actor.h"
 
+#include <cstdint>
+#include <cstdio>
+#include <string>
+
+#include <valhalla/baldr/rapidjson_utils.h>
+
+// Build the JSON error payload.
+//
+// The message is not always ours. Valhalla copies caller-supplied text into it
+// verbatim. An unrecognized action name becomes error 144 that carries that
+// name (src/valhalla/src/worker.cc:1192, src/valhalla/src/exceptions.cc:172).
+// A quote or a control character in the message makes a document the platform
+// layer cannot parse, so the real error is lost behind a decode failure. The
+// writer escapes the message, and it also builds the object, so no caller can
+// write malformed JSON by hand.
+//
+// The code parameter is int64_t because valhalla_exception_t::code is
+// unsigned, and the other two cases use -1.
+static std::string error_json(int64_t code, const std::string& message) {
+    rapidjson::writer_wrapper_t writer;
+
+    writer.start_object();
+    writer("code", code);
+    writer("message", message);
+    writer.end_object();
+
+    return writer.get_buffer();
+}
+
 #ifdef __ANDROID__
 // The Android JNI interface uses a different function signature.
 #include <jni.h>
@@ -26,16 +55,13 @@ Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
         result = valhallaActor.route(request);
     } catch (const valhalla::valhalla_exception_t &err) {
         printf("[ValhallaActor] route valhalla_exception: %s\n", err.what());
-        std::string code = std::to_string(err.code);
-        std::string message = err.message.c_str();
-
-        result = "{\"code\":" + code + ",\"message\":\"" + message + "\"}";
+        result = error_json(err.code, err.message);
     } catch (const std::exception &err) {
         printf("[ValhallaActor] route std::exception: %s\n", err.what());
-        result = "{\"code\":-1,\"message\":\"" + std::string(err.what()) + "\"}";
+        result = error_json(-1, err.what());
     } catch (...) {
-        printf("[ValhallaActor] route unknown exception");
-        result = "{\"code\":-1,\"message\":\"unknown exception\"}";
+        printf("[ValhallaActor] route unknown exception\n");
+        result = error_json(-1, "unknown exception");
     }
 
     env->ReleaseStringUTFChars(jRequest, request);
@@ -59,16 +85,13 @@ std::string route(const char *request, void* actor) {
         result = ((ValhallaActor*) actor)->route(request);
     } catch (const valhalla::valhalla_exception_t &err) {
         printf("[ValhallaActor] route valhalla_exception: %s\n", err.what());
-        std::string code = std::to_string(err.code);
-        std::string message = err.message.c_str();
-
-        result = "{\"code\":" + code + ",\"message\":\"" + message + "\"}";
+        result = error_json(err.code, err.message);
     } catch (const std::exception &err) {
         printf("[ValhallaActor] route std::exception: %s\n", err.what());
-        result = "{\"code\":-1,\"message\":\"" + std::string(err.what()) + "\"}";
+        result = error_json(-1, err.what());
     } catch (...) {
-        printf("[ValhallaActor] route unknown exception");
-        result = "{\"code\":-1,\"message\":\"unknown exception\"}";
+        printf("[ValhallaActor] route unknown exception\n");
+        result = error_json(-1, "unknown exception");
     }
 
     return result;
