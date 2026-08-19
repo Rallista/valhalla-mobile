@@ -288,3 +288,14 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
         working-directory: android
+
+  # Republish the docs from the tip of main, so the site carries the version
+  # that `draft-release` committed. That commit is pushed with [skip ci] and
+  # cannot trigger the docs workflow on its own.
+  deploy-docs:
+    needs: publish-android
+    permissions:
+      contents: write
+    uses: ./.github/workflows/docs.yml
+    with:
+      ref: main
