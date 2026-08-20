@@ -8,6 +8,8 @@ internal interface ValhallaActorProviding : Closeable {
   fun traceRoute(request: String): String
 
   fun traceAttributes(request: String): String
+
+  fun height(request: String): String
 }
 
 /**
@@ -64,6 +66,9 @@ internal class ValhallaActor(configPath: String) : ValhallaActorProviding {
    */
   override fun traceAttributes(request: String): String =
       perform(request, valhallaKotlin::traceAttributes)
+
+  /** Run a `height` request to sample heights under a shape. Same assumptions as [route]. */
+  override fun height(request: String): String = perform(request, valhallaKotlin::height)
 
   /**
    * Release the native actor. Safe to call more than once; later calls do nothing.
