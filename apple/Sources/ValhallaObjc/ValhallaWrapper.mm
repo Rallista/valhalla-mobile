@@ -134,7 +134,13 @@ using ActorAction = std::string (*)(const char*, void*);
 NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
     std::string result = action([request UTF8String], actor);
 
-    return [NSString stringWithUTF8String:result.c_str()];
+    // Swift imports this return as implicitly unwrapped, so a nil would trap in
+    // the host app. Invalid UTF-8 answers the wrapper's error envelope instead.
+    NSString* response = [[NSString alloc] initWithBytes:result.data()
+                                                  length:result.size()
+                                                encoding:NSUTF8StringEncoding];
+
+    return response ?: @"{\"code\":-1,\"message\":\"response was not valid UTF-8\"}";
 }
 
 } // namespace

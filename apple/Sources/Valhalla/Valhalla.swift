@@ -52,9 +52,10 @@ public final class Valhalla: ValhallaProviding {
     /// (with six digits of precision, not the usual five).
     ///
     /// - Note: Only Valhalla's own JSON response is decodable here.
-    ///   A request whose `directionsOptions.format` asks for `osrm`, `gpx`, or `pbf`
+    ///   A request whose `directionsOptions.format` asks for `osrm` or `gpx`
     ///   produces a payload that ``MapMatchRouteResponse`` cannot represent —
-    ///   use ``traceRoute(rawRequest:)`` for those.
+    ///   use ``traceRoute(rawRequest:)`` for those. `pbf` is binary and cannot
+    ///   cross this bridge at all; it comes back as an error.
     /// - Parameter request: the trace to match, the costing model, and how to match it.
     /// - Returns: the matched trip.
     /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the request or
