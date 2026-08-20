@@ -4,12 +4,30 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "android/valhalla/src/main/**"
+      - "android/valhalla/docs/**"
+      - "android/valhalla/build.gradle.kts"
+      - "android/gradle/libs.versions.toml"
+      - ".github/workflows/docs.yml"
+  workflow_call:
+    inputs:
+      ref:
+        description: "Commit, branch or tag to build the docs from."
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
 
 jobs:
   dokka:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -17,8 +35,15 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
+      # Dokka reads the Kotlin sources only. The native tasks are excluded
+      # because `preBuild` depends on them, and this job has no NDK or vcpkg.
       - name: Build Dokka HTML docs
-        run: ./gradlew dokkaGenerateHtml
+        run: >
+          ./gradlew dokkaGenerateHtml
+          -x buildValhallaFor-arm64-v8a
+          -x buildValhallaFor-armeabi-v7a
+          -x buildValhallaFor-x86_64
+          -x buildValhallaFor-x86
         working-directory: android
 
       - name: Deploy to GitHub Pages (branch gh-pages)
