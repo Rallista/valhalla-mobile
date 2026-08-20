@@ -75,6 +75,135 @@ final class TestValhallaWithTar: XCTestCase {
         XCTAssertEqual(response.trip.legs.first?.shape.count, 656)
     }
 
+    /// The shape of a known-good route through the fixture, as a polyline with six digits of
+    /// precision — which is what the trace actions expect.
+    ///
+    /// Taking the trace off the graph itself, rather than writing coordinates by hand, keeps the
+    /// map matching tests about matching instead of about how faithfully some invented points
+    /// happen to sit on an Andorran road.
+    private func routeShape(_ valhalla: Valhalla) throws -> String {
+        let request = RouteRequest(
+            locations: [
+                RoutingWaypoint(lat: 42.5063, lon: 1.5218),
+                RoutingWaypoint(lat: 42.5086, lon: 1.5394)
+            ],
+            costing: .auto,
+            units: .mi,
+        )
+
+        let response = try valhalla.route(request: request)
+
+        return try XCTUnwrap(response.trip.legs.first?.shape)
+    }
+
+    /// Validate a successful map match that returns a route along the matched path.
+    func testSuccessfulTraceRoute() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = MapMatchRequest(
+            encodedPolyline: try routeShape(valhalla),
+            costing: .auto
+        )
+
+        let response = try valhalla.traceRoute(request: request)
+
+        XCTAssertEqual(response.trip.status, 0)
+        XCTAssertEqual(response.trip.statusMessage, "Found route between points")
+        XCTAssertFalse(response.trip.legs.isEmpty)
+    }
+
+    /// Validate a valhalla error when the trace is nowhere near the tiles we have.
+    ///
+    /// The code is not pinned: it depends on how far the matcher gets before giving up, since Loki
+    /// can reject the locations outright and Meili can fail to find a path.
+    func testTraceRouteNoMatch() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = MapMatchRequest(
+            shape: [
+                MapMatchWaypoint(lat: 45.843812, lon: -123.768205),
+                MapMatchWaypoint(lat: 45.869701, lon: -123.766121)
+            ],
+            costing: .auto
+        )
+
+        do {
+            let _ = try valhalla.traceRoute(request: request)
+            XCTFail("traceRoute should throw for a trace outside the tiles")
+        } catch let error as ValhallaError {
+            guard case .valhallaError = error else {
+                return XCTFail("expected a valhalla error, got \(error)")
+            }
+        }
+    }
+
+    /// Validate a successful map match that returns the attributes of the matched edges.
+    ///
+    /// The trace is the exact shape of a prior route, so Valhalla walks the edges instead of
+    /// running Meili, and there are no `matchedPoints` — `testMapSnapTraceAttributes` covers those.
+    func testSuccessfulTraceAttributes() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = TraceAttributesRequest(
+            encodedPolyline: try routeShape(valhalla),
+            costing: .auto
+        )
+
+        let response = try valhalla.traceAttributes(request: request)
+
+        XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
+        XCTAssertNotNil(response.shape)
+        XCTAssertNil(response.matchedPoints)
+    }
+
+    /// Validate the map-snapping path, which is the one that reports how each input point matched.
+    ///
+    /// `matched.edge_index` has to be excluded. Valhalla leaves it unpopulated for some matched
+    /// points in `trace_attributes` while still reporting a valid edge id, so it serializes the
+    /// `size_t` sentinel, 18446744073709551615, which no signed 64-bit type can hold. Requesting
+    /// it makes the whole response undecodable rather than just that one field.
+    ///
+    /// Tracked upstream as valhalla/valhalla#3699, with a fix proposed in valhalla/valhalla#6278.
+    /// Drop the filter once the submodule is bumped past that fix — if this test then passes
+    /// unfiltered, the workaround and the notes on ``Valhalla/traceAttributes(request:)`` can go.
+    func testMapSnapTraceAttributes() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = TraceAttributesRequest(
+            encodedPolyline: try routeShape(valhalla),
+            costing: .auto,
+            shapeMatch: .mapSnap,
+            filters: TraceAttributeFilterOptions(
+                attributes: [.matchedPeriodEdgeIndex],
+                action: .exclude
+            )
+        )
+
+        let response = try valhalla.traceAttributes(request: request)
+
+        XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
+        XCTAssertFalse(try XCTUnwrap(response.matchedPoints).isEmpty)
+    }
+
+    /// Validate that a filter narrows the response to just the attributes that were asked for.
+    func testFilteredTraceAttributes() throws {
+        let valhalla = try Valhalla(defaultConfig)
+
+        let request = TraceAttributesRequest(
+            encodedPolyline: try routeShape(valhalla),
+            costing: .auto,
+            filters: TraceAttributeFilterOptions(
+                attributes: [.edgePeriodSpeed, .edgePeriodNames],
+                action: .include
+            )
+        )
+
+        let response = try valhalla.traceAttributes(request: request)
+
+        XCTAssertFalse(try XCTUnwrap(response.edges).isEmpty)
+        XCTAssertNil(response.shape)
+    }
+
     /// Validate that caller text in an error message cannot break the payload.
     ///
     /// Valhalla quotes an unknown costing name back to the caller in error 125

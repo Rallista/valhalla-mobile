@@ -35,8 +35,40 @@ private:
     std::unique_ptr<valhalla::baldr::GraphReader> graph_reader;
 public:
     ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client = nullptr);
-    
+
+    /**
+     * Compute a route between the given locations. This is Valhalla's `route`
+     * action.
+     *
+     * @param request  a `route` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/
+     * @return         the serialized response, in whichever format the request asked for
+     */
     std::string route(const std::string& request);
+
+    /**
+     * Map-match a GPS trace onto the road network and return a route along the
+     * matched path. This is Valhalla's `trace_route` action.
+     *
+     * @param request  a `trace_route` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/map-matching/api-reference/
+     * @return         the serialized response, in whichever format the request asked for
+     */
+    std::string trace_route(const std::string& request);
+
+    /**
+     * Map-match a GPS trace onto the road network and return the attributes of
+     * every edge along the matched path. This is Valhalla's `trace_attributes`
+     * action.
+     *
+     * Unlike `trace_route`, this action always answers with Valhalla's own JSON —
+     * the `format` option does not apply to it.
+     *
+     * @param request  a `trace_attributes` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/map-matching/api-reference/
+     * @return         the serialized JSON response
+     */
+    std::string trace_attributes(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H
