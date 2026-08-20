@@ -33,6 +33,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+
+    sourceSets.getByName("androidTest") {
+        // The elevation tile is shared with the Apple tests rather than checked in twice.
+        resources.srcDir("../../apple/Tests/ValhallaTests/TestData/elevation")
+    }
 }
 
 dokka {
