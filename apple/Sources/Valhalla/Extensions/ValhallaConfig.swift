@@ -84,6 +84,18 @@ extension ValhallaConfig {
                   thor: defaultConfig.thor)
     }
     
+    /// Initialize ValhallaConfig for a specific tar file and elevation tiles.
+    ///
+    /// Without elevation tiles the `height` action answers null for every point.
+    ///
+    /// - Parameters:
+    ///   - tileExtractTar: The local file path URL for the tiles tar file.
+    ///   - elevationDir: The local directory holding skadi elevation tiles.
+    public init(tileExtractTar: URL, elevationDir: URL) throws {
+        try self.init(tileExtractTar: tileExtractTar)
+        additionalData?.elevation = elevationDir.relativePath
+    }
+
     /// Initialize ValhallaConfig for a specific tiles directory.
     ///
     /// This injects a tile folder path into the default valhalla config.
