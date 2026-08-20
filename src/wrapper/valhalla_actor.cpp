@@ -100,3 +100,7 @@ std::string ValhallaActor::trace_route(const std::string& request) {
 std::string ValhallaActor::trace_attributes(const std::string& request) {
     return actor->trace_attributes(request);
 }
+
+std::string ValhallaActor::height(const std::string& request) {
+    return actor->height(request);
+}

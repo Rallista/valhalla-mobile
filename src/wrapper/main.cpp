@@ -250,6 +250,17 @@ Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
                           "trace_attributes");
 }
 
+extern "C"
+JNIEXPORT jstring
+
+JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
+                                                       jobject thiz,
+                                                       jlong handle,
+                                                       jstring jRequest) {
+    return run_jni_action(env, handle, jRequest, &ValhallaActor::height, "height");
+}
+
 #elif __APPLE__
 void* create_valhalla_actor(const char *config_path, ValhallaMobileHttpClient* http_client) {
     return new ValhallaActor(config_path, http_client);
@@ -274,6 +285,12 @@ std::string trace_route(const char *request, void* actor) {
 std::string trace_attributes(const char *request, void* actor) {
     return invoke_action("trace_attributes", [&]() {
         return ((ValhallaActor*) actor)->trace_attributes(request);
+    });
+}
+
+std::string height(const char *request, void* actor) {
+    return invoke_action("height", [&]() {
+        return ((ValhallaActor*) actor)->height(request);
     });
 }
 #endif

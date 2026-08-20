@@ -38,6 +38,11 @@ JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceAttribu
                                                 jlong handle,
                                                 jstring jRequest);
 
+JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
+                                                jobject thiz,
+                                                jlong handle,
+                                                jstring jRequest);
+
 #ifdef __cplusplus
 }
 #endif
@@ -47,6 +52,7 @@ JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceAttribu
 std::string route(const char *request, void* actor);
 std::string trace_route(const char *request, void* actor);
 std::string trace_attributes(const char *request, void* actor);
+std::string height(const char *request, void* actor);
 void* create_valhalla_actor(const char *config_path, ValhallaMobileHttpClient* http_client = nullptr);
 void delete_valhalla_actor(void* actor);
 

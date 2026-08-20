@@ -69,6 +69,15 @@ public:
      * @return         the serialized JSON response
      */
     std::string trace_attributes(const std::string& request);
+
+    /**
+     * Sample terrain heights under a shape. This is Valhalla's `height` action.
+     *
+     * @param request  a `height` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/elevation/api-reference/
+     * @return         the serialized JSON response
+     */
+    std::string height(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H
