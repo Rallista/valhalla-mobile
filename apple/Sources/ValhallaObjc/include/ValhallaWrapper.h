@@ -22,6 +22,10 @@
 /// @param request a `trace_attributes` request as JSON.
 - (NSString*)traceAttributes:(NSString*)request;
 
+/// Samples terrain heights under a shape, from the configured elevation tiles.
+/// @param request a `height` request as JSON.
+- (NSString*)height:(NSString*)request;
+
 @end
 
 #endif /* ValhallaWrapperHeader_h */

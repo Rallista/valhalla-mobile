@@ -88,3 +88,24 @@ response.edges?.forEach { println(it.names) }
 Both actions report engine failures — including a trace that cannot be matched — as
 `ValhallaException.Internal`. Formats other than valhalla's own JSON are reachable through
 `traceRouteRaw` and `traceAttributesRaw`, which return the response body unparsed.
+
+## Elevation
+
+The same instance samples terrain heights under a shape, from a directory of skadi
+elevation tiles named in the config. Without one, every height is null:
+
+```kt
+val config =
+    ValhallaConfigBuilder()
+        .withTileExtract(tarPath)
+        .build()
+        .copy(additionalData = AdditionalData(elevation = elevationDirPath))
+
+val response = valhalla.height(HeightRequest(shape = listOf(Coordinate(lat = 42.5063, lon = 1.5218))))
+
+println(response.height)
+```
+
+The elevation directory is scanned when the instance is created, so put the tiles in
+place first. The generated `HeightResponse` cannot represent a null height or decimal
+precision; use `heightRaw` for those, which returns the body unparsed.
