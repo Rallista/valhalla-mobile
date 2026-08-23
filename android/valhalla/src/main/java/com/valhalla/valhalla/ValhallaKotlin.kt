@@ -18,11 +18,12 @@ internal class ValhallaKotlin {
   /** Free a handle from [createActor]. Passing 0 is a no-op. */
   external fun deleteActor(handle: Long)
 
-  external fun route(handle: Long, request: String): String
+  // UTF-8 bytes rather than strings, which JNI reads as Modified UTF-8. See main.cpp.
+  external fun route(handle: Long, request: ByteArray): ByteArray
 
-  external fun traceRoute(handle: Long, request: String): String
+  external fun traceRoute(handle: Long, request: ByteArray): ByteArray
 
-  external fun traceAttributes(handle: Long, request: String): String
+  external fun traceAttributes(handle: Long, request: ByteArray): ByteArray
 
-  external fun height(handle: Long, request: String): String
+  external fun height(handle: Long, request: ByteArray): ByteArray
 }

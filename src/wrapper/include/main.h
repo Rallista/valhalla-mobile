@@ -23,25 +23,25 @@ JNIEXPORT void JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_deleteActor(JNI
                                                 jobject thiz,
                                                 jlong handle);
 
-JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
+JNIEXPORT jbyteArray JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
                                                 jobject thiz,
                                                 jlong handle,
-                                                jstring jRequest);
+                                                jbyteArray jRequest);
 
-JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceRoute(JNIEnv *env,
+JNIEXPORT jbyteArray JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceRoute(JNIEnv *env,
                                                 jobject thiz,
                                                 jlong handle,
-                                                jstring jRequest);
+                                                jbyteArray jRequest);
 
-JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
+JNIEXPORT jbyteArray JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
                                                 jobject thiz,
                                                 jlong handle,
-                                                jstring jRequest);
+                                                jbyteArray jRequest);
 
-JNIEXPORT jstring JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
+JNIEXPORT jbyteArray JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
                                                 jobject thiz,
                                                 jlong handle,
-                                                jstring jRequest);
+                                                jbyteArray jRequest);
 
 #ifdef __cplusplus
 }

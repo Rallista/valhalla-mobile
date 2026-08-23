@@ -1,6 +1,8 @@
 package com.valhalla.valhalla
 
 import java.io.Closeable
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
 
 internal interface ValhallaActorProviding : Closeable {
   fun route(request: String): String
@@ -89,9 +91,20 @@ internal class ValhallaActor(configPath: String) : ValhallaActorProviding {
    * the same guarantee `@synchronized(self)` gives the iOS wrapper. Holding the lock across the
    * native call is also what keeps [close] from freeing the handle mid-request.
    */
-  private fun perform(request: String, action: (Long, String) -> String): String =
+  private fun perform(request: String, action: (Long, ByteArray) -> ByteArray): String =
       synchronized(lock) {
         check(handle != 0L) { "ValhallaActor is closed" }
-        action(handle, request)
+        decode(action(handle, request.toByteArray()))
+      }
+
+  /**
+   * The wrapper answers in UTF-8 bytes. A response that is not UTF-8, such as `format: pbf`,
+   * becomes the error envelope, byte for byte the answer iOS gives in ValhallaWrapper.mm.
+   */
+  private fun decode(response: ByteArray): String =
+      try {
+        Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(response)).toString()
+      } catch (e: CharacterCodingException) {
+        "{\"code\":-1,\"message\":\"response was not valid UTF-8\"}"
       }
 }

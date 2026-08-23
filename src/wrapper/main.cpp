@@ -132,42 +132,50 @@ struct ActorHandle {
     std::unique_ptr<ValhallaActor> actor;
 };
 
+std::string copy_bytes(JNIEnv* env, jbyteArray array) {
+    std::string bytes(static_cast<size_t>(env->GetArrayLength(array)), '\0');
+    env->GetByteArrayRegion(array, 0, static_cast<jsize>(bytes.size()),
+                            reinterpret_cast<jbyte*>(bytes.data()));
+    return bytes;
+}
+
 /**
  * Shared body of every JNI action: read the request, run one action against the
- * handle's actor, and hand the response back as a Java string.
+ * handle's actor, and hand the response back.
  *
- * A null from ScopedUtfChars means a pending OutOfMemoryError, which would be
- * thrown into Kotlin the moment we return, in place of the String this method
- * promises. It is cleared and reported through the envelope callers already know
- * how to handle. A zero handle means Kotlin called after close, which its own
- * guard should have caught.
+ * Requests and responses cross as UTF-8 bytes, not Java strings: JNI strings are
+ * Modified UTF-8, which cannot carry a character outside the BMP or a binary
+ * `format: pbf` response. Kotlin does the decoding. A zero handle means Kotlin
+ * called after close, which its own guard should have caught.
  */
-jstring run_jni_action(JNIEnv *env,
-                       jlong handle,
-                       jstring jRequest,
-                       ActorAction action,
-                       const char* action_name) {
-    ScopedUtfChars request(env, jRequest);
-
+jbyteArray run_jni_action(JNIEnv *env,
+                          jlong handle,
+                          jbyteArray jRequest,
+                          ActorAction action,
+                          const char* action_name) {
     std::string result;
     if (handle == 0) {
         result = error_json(-1, std::string("the actor is closed, cannot run ") + action_name);
-    } else if (request.get() == nullptr) {
-        env->ExceptionClear();
-        result = error_json(-1, std::string("failed to read the ") + action_name +
-                                    " request from the JVM");
     } else {
         auto* actor_handle = reinterpret_cast<ActorHandle*>(handle);
         result = invoke_action(action_name, [&]() {
+            // Copied inside invoke_action so a bad_alloc becomes the envelope.
+            const std::string request = copy_bytes(env, jRequest);
             // Normally already built by createActor; this is the retry path.
             if (!actor_handle->actor) {
                 actor_handle->actor = std::make_unique<ValhallaActor>(actor_handle->config_path);
             }
-            return ((*actor_handle->actor).*action)(request.get());
+            return ((*actor_handle->actor).*action)(request);
         });
     }
 
-    return env->NewStringUTF(result.c_str());
+    // Null only when the JVM could not allocate, with OutOfMemoryError already pending.
+    jbyteArray response = env->NewByteArray(static_cast<jsize>(result.size()));
+    if (response != nullptr) {
+        env->SetByteArrayRegion(response, 0, static_cast<jsize>(result.size()),
+                                reinterpret_cast<const jbyte*>(result.data()));
+    }
+    return response;
 }
 
 } // namespace
@@ -217,47 +225,47 @@ Java_com_valhalla_valhalla_ValhallaKotlin_deleteActor(JNIEnv *env,
 }
 
 extern "C"
-JNIEXPORT jstring
+JNIEXPORT jbyteArray
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_route(JNIEnv *env,
                                                       jobject thiz,
                                                       jlong handle,
-                                                      jstring jRequest) {
+                                                      jbyteArray jRequest) {
     return run_jni_action(env, handle, jRequest, &ValhallaActor::route, "route");
 }
 
 extern "C"
-JNIEXPORT jstring
+JNIEXPORT jbyteArray
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_traceRoute(JNIEnv *env,
                                                            jobject thiz,
                                                            jlong handle,
-                                                           jstring jRequest) {
+                                                           jbyteArray jRequest) {
     return run_jni_action(env, handle, jRequest, &ValhallaActor::trace_route, "trace_route");
 }
 
 extern "C"
-JNIEXPORT jstring
+JNIEXPORT jbyteArray
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_traceAttributes(JNIEnv *env,
                                                                 jobject thiz,
                                                                 jlong handle,
-                                                                jstring jRequest) {
+                                                                jbyteArray jRequest) {
     return run_jni_action(env, handle, jRequest, &ValhallaActor::trace_attributes,
                           "trace_attributes");
 }
 
 extern "C"
-JNIEXPORT jstring
+JNIEXPORT jbyteArray
 
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
                                                        jobject thiz,
                                                        jlong handle,
-                                                       jstring jRequest) {
+                                                       jbyteArray jRequest) {
     return run_jni_action(env, handle, jRequest, &ValhallaActor::height, "height");
 }
 
