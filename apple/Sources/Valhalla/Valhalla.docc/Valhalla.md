@@ -163,8 +163,8 @@ print(response.height ?? [])
 ```
 
 The elevation directory is scanned when the instance is created, so put the tiles in
-place first. `HeightResponse` cannot represent a null height or decimal precision; use
-``Valhalla/height(rawRequest:)`` for those.
+place first. `HeightResponse` cannot represent a null height; use
+``Valhalla/height(rawRequest:)`` when a point may have no data.
 
 ## Topics
 

@@ -107,5 +107,4 @@ println(response.height)
 ```
 
 The elevation directory is scanned when the instance is created, so put the tiles in
-place first. The generated `HeightResponse` cannot represent a null height or decimal
-precision; use `heightRaw` for those, which returns the body unparsed.
+place first. `heightRaw` returns the body unparsed.

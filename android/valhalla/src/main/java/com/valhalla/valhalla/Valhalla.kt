@@ -190,9 +190,6 @@ class Valhalla(
    * Sample terrain heights under a shape, from the elevation tiles in the config's
    * `additionalData.elevation`. Without them every height is null.
    *
-   * `HeightResponse` cannot represent a null height or a `heightPrecision` above 0; use
-   * [heightRaw] for those.
-   *
    * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
    * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
    */

@@ -11,11 +11,9 @@ import com.valhalla.config.models.ValhallaConfig
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
 import java.io.File
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -86,7 +84,7 @@ class ValhallaHeightTest {
 
     val response = valhallaWithElevation.height(request)
 
-    assertEquals(listOf(7200, 7203, 6120, 7347), response.height)
+    assertEquals(listOf(7200.0, 7203.0, 6120.0, 7347.0), response.height)
   }
 
   @Test
@@ -96,16 +94,10 @@ class ValhallaHeightTest {
     }
   }
 
-  /**
-   * Without elevation data every height is null, which the generated `HeightResponse` cannot
-   * represent, so this goes through the raw method.
-   */
   @Test
   fun testHeightWithoutElevationDataIsNull() {
-    val raw = valhalla.heightRaw("""{"shape":[{"lat":42.5,"lon":1.5}]}""")
+    val response = valhalla.height(HeightRequest(shape = listOf(Coordinate(lat = 42.5, lon = 1.5))))
 
-    val heights = JSONObject(raw).getJSONArray("height")
-    assertEquals(1, heights.length())
-    assertTrue(heights.isNull(0))
+    assertEquals(listOf(null), response.height)
   }
 }

@@ -92,8 +92,8 @@ public final class Valhalla: ValhallaProviding {
     /// Samples terrain heights under a shape, from the elevation tiles in
     /// `additionalData.elevation`. Without them every height is null.
     ///
-    /// - Note: `HeightResponse` cannot represent a null height or a
-    ///   `heightPrecision` above 0; use ``height(rawRequest:)`` for those.
+    /// - Note: `HeightResponse` cannot represent a null height; use
+    ///   ``height(rawRequest:)`` when a point may have no data.
     /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the
     ///   request, or a `DecodingError` when the response cannot be decoded.
     public func height(request: HeightRequest) throws -> HeightResponse {
