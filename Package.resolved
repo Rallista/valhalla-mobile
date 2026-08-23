@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Rallista/valhalla-openapi-models-swift.git",
       "state" : {
-        "revision" : "3b24aab4fd94eb507722e9bd339e97482475c1e9",
-        "version" : "0.5.0"
+        "revision" : "506ace830a4faf2333e82b4519a7240c980eb429",
+        "version" : "0.5.1"
       }
     }
   ],

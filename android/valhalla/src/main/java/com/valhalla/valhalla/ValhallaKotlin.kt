@@ -23,4 +23,6 @@ internal class ValhallaKotlin {
   external fun traceRoute(handle: Long, request: String): String
 
   external fun traceAttributes(handle: Long, request: String): String
+
+  external fun height(handle: Long, request: String): String
 }

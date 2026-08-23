@@ -194,6 +194,13 @@ NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
     }
 }
 
+- (NSString*)height:(NSString*)request
+{
+    @synchronized(self) {
+        return PerformAction(&height, request, _actor);
+    }
+}
+
 - (void) dealloc
 {
     delete_valhalla_actor(_actor);

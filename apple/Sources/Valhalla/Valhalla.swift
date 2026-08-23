@@ -13,6 +13,8 @@ public protocol ValhallaProviding {
     func traceRoute(request: MapMatchRequest) throws -> MapMatchRouteResponse
 
     func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse
+
+    func height(request: HeightRequest) throws -> HeightResponse
 }
 
 public final class Valhalla: ValhallaProviding {
@@ -88,6 +90,17 @@ public final class Valhalla: ValhallaProviding {
         try perform(request) { self.traceAttributes(rawRequest: $0) }
     }
 
+    /// Samples terrain heights under a shape, from the elevation tiles in
+    /// `additionalData.elevation`. Without them every height is null.
+    ///
+    /// - Note: `HeightResponse` cannot represent a null height; use
+    ///   ``height(rawRequest:)`` when a point may have no data.
+    /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the
+    ///   request, or a `DecodingError` when the response cannot be decoded.
+    public func height(request: HeightRequest) throws -> HeightResponse {
+        try perform(request) { self.height(rawRequest: $0) }
+    }
+
     public func route(rawRequest request: String) -> String {
         actor!.route(request)
     }
@@ -108,6 +121,11 @@ public final class Valhalla: ValhallaProviding {
     /// rather than thrown.
     public func traceAttributes(rawRequest request: String) -> String {
         actor!.traceAttributes(request)
+    }
+
+    /// Runs a `height` request supplied as JSON and returns the raw response.
+    public func height(rawRequest request: String) -> String {
+        actor!.height(request)
     }
 
     /// Shared body of the typed actions: encode the request, run it, and decode the

@@ -146,6 +146,26 @@ for edge in response.edges ?? [] {
 Formats other than valhalla's own JSON are reachable through ``Valhalla/traceRoute(rawRequest:)``
 and ``Valhalla/traceAttributes(rawRequest:)``, which return the response body unparsed.
 
+### Sampling elevation
+
+The same instance samples terrain heights under a shape, from a directory of skadi
+elevation tiles. Build the config with ``ValhallaConfig/init(tileExtractTar:elevationDir:)``;
+without elevation tiles every height is null:
+
+```swift
+let config = try ValhallaConfig(tileExtractTar: tarURL, elevationDir: elevationURL)
+let valhalla = try Valhalla(config)
+
+let response = try valhalla.height(
+    request: HeightRequest(shape: [Coordinate(lat: 42.5063, lon: 1.5218)])
+)
+print(response.height ?? [])
+```
+
+The elevation directory is scanned when the instance is created, so put the tiles in
+place first. `HeightResponse` cannot represent a null height; use
+``Valhalla/height(rawRequest:)`` when a point may have no data.
+
 ## Topics
 
 ### Essentials

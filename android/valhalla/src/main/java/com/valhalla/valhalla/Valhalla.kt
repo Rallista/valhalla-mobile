@@ -6,6 +6,8 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.valhalla.api.models.DirectionsOptions
+import com.valhalla.api.models.HeightRequest
+import com.valhalla.api.models.HeightResponse
 import com.valhalla.api.models.MapMatchRequest
 import com.valhalla.api.models.MapMatchRouteResponse
 import com.valhalla.api.models.RouteRequest
@@ -185,6 +187,20 @@ class Valhalla(
   }
 
   /**
+   * Sample terrain heights under a shape, from the elevation tiles in the config's
+   * `additionalData.elevation`. Without them every height is null.
+   *
+   * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
+   */
+  fun height(request: HeightRequest): HeightResponse {
+    val encodedRequest = moshi.adapter(HeightRequest::class.java).toJson(request)
+    val rawResponse = heightRaw(encodedRequest)
+
+    return decodeResponse(rawResponse, HeightResponse::class.java)
+  }
+
+  /**
    * Run a `trace_route` request supplied as JSON and return the raw response.
    *
    * This is the escape hatch for response formats [MapMatchRouteResponse] cannot model, and for
@@ -209,6 +225,11 @@ class Valhalla(
    */
   fun traceAttributesRaw(requestJson: String): String {
     return checkForError(valhallaActor.traceAttributes(requestJson))
+  }
+
+  /** Run a `height` request supplied as JSON and return the raw response. */
+  fun heightRaw(requestJson: String): String {
+    return checkForError(valhallaActor.height(requestJson))
   }
 
   /**
