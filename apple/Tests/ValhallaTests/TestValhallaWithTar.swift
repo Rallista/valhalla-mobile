@@ -242,4 +242,15 @@ final class TestValhallaWithTar: XCTestCase {
             "the message must carry the costing name unchanged, got: \(error.message)"
         )
     }
+
+    /// A pbf response is protobuf bytes, not UTF-8, so the bridge must answer an error, not trap.
+    func testBinaryResponseIsReportedAsError() throws {
+        let valhalla = try Valhalla(defaultConfig)
+        let request = #"{"locations":[{"lat":42.5063,"lon":1.5218},{"lat":42.5086,"lon":1.5394}],"costing":"auto","format":"pbf"}"#
+
+        let response = valhalla.route(rawRequest: request)
+
+        let error = try JSONDecoder().decode(ValhallaErrorModel.self, from: Data(response.utf8))
+        XCTAssertEqual(error.code, -1)
+    }
 }
