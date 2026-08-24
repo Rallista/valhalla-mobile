@@ -19,7 +19,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
 <link href="../../../styles/style.css" rel="Stylesheet">
 <link href="../../../styles/main.css" rel="Stylesheet">
@@ -44,11 +43,11 @@
         </button>
         <div class="navigation-controls--break ui-kit_mobile-only"></div>
         <div class="library-version" id="library-version">
-0.5.0        </div>
+0.6.1        </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
                 <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
-                        data-filter=":valhalla/main">androidJvm</button>
+                        data-filter=":valhalla/release">release</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
                         data-role="dropdown-toggle"
@@ -65,10 +64,10 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":valhalla/main"
-                                       data-filter=":valhalla/main"/>
+                                <input type="checkbox" class="checkbox--input" id=":valhalla/release"
+                                       data-filter=":valhalla/release"/>
                                 <span class="checkbox--icon"></span>
-                                androidJvm
+                                release
                             </label>
                         </li>
                 </ul>
@@ -104,28 +103,28 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageIds="Valhalla Mobile::com.valhalla.valhalla/Valhalla///PointingToDeclaration//531904898">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="Valhalla Mobile::com.valhalla.valhalla/Valhalla///PointingToDeclaration//-1939690287">
   <div class="breadcrumbs"><a href="../../../index.html">Valhalla Mobile</a><span class="delimiter">/</span><a href="../index.html">com.valhalla.valhalla</a><span class="delimiter">/</span><span class="current">Valhalla</span></div>
   <div class="cover ">
     <h1 class="cover"><span><span>Valhalla</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Valhalla</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">config<span class="token operator">: </span><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/">ValhallaConfig</span><span class="token punctuation">, </span></span><span class="parameter ">valhallaConfigManager<span class="token operator">: </span><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html">ValhallaConfigManager</a><span class="token operator"> = </span>ValhallaConfigManager(context)<span class="token punctuation">, </span></span><span class="parameter ">moshi<span class="token operator">: </span><span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span><span class="token operator"> = </span>Moshi.Builder().add(KotlinJsonAdapterFactory()).build()</span></span><span class="token punctuation">)</span></div><p class="paragraph">Main entry point for the Valhalla routing engine on Android.</p><p class="paragraph">This class provides a Kotlin interface to the native Valhalla C++ routing engine. It handles configuration management, JSON serialization, and routing requests.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>context</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The Android context used for file system operations and configuration management.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>config</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The Valhalla configuration specifying tile locations and routing options.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>valhalla</span><wbr></wbr><span>Config</span><wbr></wbr><span><span>Manager</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Manages the Valhalla configuration file on the device. Defaults to a new instance.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>moshi</span></span></u></div></span></div><div><div class="title"><p class="paragraph">JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection support.</p></div></div></div></div></div><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/"><span>Valhalla</span><wbr></wbr><span><span>Config</span></span></span></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html"><span>Valhalla</span><wbr></wbr><span>Config</span><wbr></wbr><span><span>Manager</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span data-unresolved-link="com.valhalla.api.models/RouteRequest///PointingToDeclaration/"><span>Route</span><wbr></wbr><span><span>Request</span></span></span></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-valhalla-response/index.html"><span>Valhalla</span><wbr></wbr><span><span>Response</span></span></a></div></span></div><div></div></div></div></div></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Valhalla</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">config<span class="token operator">: </span><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/">ValhallaConfig</span><span class="token punctuation">, </span></span><span class="parameter ">valhallaConfigManager<span class="token operator">: </span><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html">ValhallaConfigManager</a><span class="token operator"> = </span>ValhallaConfigManager(context)<span class="token punctuation">, </span></span><span class="parameter ">moshi<span class="token operator">: </span><span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span><span class="token operator"> = </span>Moshi.Builder().add(KotlinJsonAdapterFactory()).build()</span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/java/io/Closeable.html">Closeable</a></div><p class="paragraph">Main entry point for the Valhalla routing engine on Android.</p><p class="paragraph">This class provides a Kotlin interface to the native Valhalla C++ routing engine. It handles configuration management, JSON serialization, and routing requests.</p><p class="paragraph">One instance holds one native actor, including the mmapped tile extract, for its whole lifetime. Building it is expensive and happens during construction, so reuse a single instance across many requests. Call <a href="close.html">close</a> when done — ideally through Kotlin's <code class="lang-kotlin">use { }</code> — since nothing else releases the native actor.</p><h4 class="tableheader">Parameters</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>context</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The Android context used for file system operations and configuration management.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>config</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The Valhalla configuration specifying tile locations and routing options.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>valhalla</span><wbr></wbr><span>Config</span><wbr></wbr><span><span>Manager</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Manages the Valhalla configuration file on the device. Defaults to a new instance.</p></div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>moshi</span></span></u></div></span></div><div><div class="title"><p class="paragraph">JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection support.</p></div></div></div></div></div><h4 class="tableheader">See also</h4><div class="table"><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/"><span>Valhalla</span><wbr></wbr><span><span>Config</span></span></span></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html"><span>Valhalla</span><wbr></wbr><span>Config</span><wbr></wbr><span><span>Manager</span></span></a></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span data-unresolved-link="com.valhalla.api.models/RouteRequest///PointingToDeclaration/"><span>Route</span><wbr></wbr><span><span>Request</span></span></span></div></span></div><div></div></div></div><div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-valhalla-response/index.html"><span>Valhalla</span><wbr></wbr><span><span>Response</span></span></a></div></span></div><div></div></div></div></div></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="1007855243%2FConstructors%2F531904898" anchor-label="Valhalla" id="1007855243%2FConstructors%2F531904898" data-filterable-set=":valhalla/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main">
+        <div class="table"><a data-name="1007855243%2FConstructors%2F-1939690287" anchor-label="Valhalla" id="1007855243%2FConstructors%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-valhalla.html"><span><span>Valhalla</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1007855243%2FConstructors%2F531904898"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1007855243%2FConstructors%2F-1939690287"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">config<span class="token operator">: </span><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/">ValhallaConfig</span><span class="token punctuation">, </span></span><span class="parameter ">valhallaConfigManager<span class="token operator">: </span><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html">ValhallaConfigManager</a><span class="token operator"> = </span>ValhallaConfigManager(context)<span class="token punctuation">, </span></span><span class="parameter ">moshi<span class="token operator">: </span><span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span><span class="token operator"> = </span>Moshi.Builder().add(KotlinJsonAdapterFactory()).build()</span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">config<span class="token operator">: </span><span data-unresolved-link="com.valhalla.config.models/ValhallaConfig///PointingToDeclaration/">ValhallaConfig</span><span class="token punctuation">, </span></span><span class="parameter ">valhallaConfigManager<span class="token operator">: </span><a href="../../com.valhalla.valhalla.config/-valhalla-config-manager/index.html">ValhallaConfigManager</a><span class="token operator"> = </span>ValhallaConfigManager(context)<span class="token punctuation">, </span></span><span class="parameter ">moshi<span class="token operator">: </span><span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span><span class="token operator"> = </span>Moshi.Builder().add(KotlinJsonAdapterFactory()).build()</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -134,17 +133,122 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="tableheader">Functions</h2>
-        <div class="table"><a data-name="-1893417326%2FFunctions%2F531904898" anchor-label="route" id="-1893417326%2FFunctions%2F531904898" data-filterable-set=":valhalla/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":valhalla/main" data-filterable-set=":valhalla/main">
+        <div class="table"><a data-name="709733823%2FFunctions%2F-1939690287" anchor-label="close" id="709733823%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="route.html"><span><span>route</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1893417326%2FFunctions%2F531904898"></span>
+                  <div><a href="close.html"><span><span>close</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="709733823%2FFunctions%2F-1939690287"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="route.html"><span class="token function">route</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/RouteRequest///PointingToDeclaration/">RouteRequest</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-valhalla-response/index.html">ValhallaResponse</a></div><div class="brief "><p class="paragraph">Fetch a route from Valhalla.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="close.html"><span class="token function">close</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Release the native actor held by this instance. Safe to call more than once.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-850175020%2FFunctions%2F-1939690287" anchor-label="height" id="-850175020%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="height.html"><span><span>height</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-850175020%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="height.html"><span class="token function">height</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/HeightRequest///PointingToDeclaration/">HeightRequest</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/HeightResponse///PointingToDeclaration/">HeightResponse</span></div><div class="brief "><p class="paragraph">Sample terrain heights under a shape, from the elevation tiles in the config's <code class="lang-kotlin">additionalData.elevation</code>. Without them every height is null.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-838608018%2FFunctions%2F-1939690287" anchor-label="heightRaw" id="-838608018%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="height-raw.html"><span>height</span><wbr></wbr><span><span>Raw</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-838608018%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="height-raw.html"><span class="token function">heightRaw</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">requestJson<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Run a <code class="lang-kotlin">height</code> request supplied as JSON and return the raw response.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1893417326%2FFunctions%2F-1939690287" anchor-label="route" id="-1893417326%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="route.html"><span><span>route</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1893417326%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="route.html"><span class="token function">route</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/RouteRequest///PointingToDeclaration/">RouteRequest</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-valhalla-response/index.html">ValhallaResponse</a></div><div class="brief "><p class="paragraph">Fetch a route from Valhalla.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="735751858%2FFunctions%2F-1939690287" anchor-label="traceAttributes" id="735751858%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="trace-attributes.html"><span>trace</span><wbr></wbr><span><span>Attributes</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="735751858%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="trace-attributes.html"><span class="token function">traceAttributes</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/TraceAttributesRequest///PointingToDeclaration/">TraceAttributesRequest</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/TraceAttributesResponse///PointingToDeclaration/">TraceAttributesResponse</span></div><div class="brief "><p class="paragraph">Map-match a GPS trace onto the road network and return the attributes of every edge along the matched path.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1442114067%2FFunctions%2F-1939690287" anchor-label="traceAttributesRaw" id="-1442114067%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="trace-attributes-raw.html"><span>trace</span><wbr></wbr><span>Attributes</span><wbr></wbr><span><span>Raw</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1442114067%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="trace-attributes-raw.html"><span class="token function">traceAttributesRaw</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">requestJson<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Run a <code class="lang-kotlin">trace_attributes</code> request supplied as JSON and return the raw response.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-903598061%2FFunctions%2F-1939690287" anchor-label="traceRoute" id="-903598061%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="trace-route.html"><span>trace</span><wbr></wbr><span><span>Route</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-903598061%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="trace-route.html"><span class="token function">traceRoute</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/MapMatchRequest///PointingToDeclaration/">MapMatchRequest</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.valhalla.api.models/MapMatchRouteResponse///PointingToDeclaration/">MapMatchRouteResponse</span></div><div class="brief "><p class="paragraph">Map-match a GPS trace onto the road network and return a route along the matched path.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="170009137%2FFunctions%2F-1939690287" anchor-label="traceRouteRaw" id="170009137%2FFunctions%2F-1939690287" data-filterable-set=":valhalla/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":valhalla/release" data-filterable-set=":valhalla/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="trace-route-raw.html"><span>trace</span><wbr></wbr><span>Route</span><wbr></wbr><span><span>Raw</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="170009137%2FFunctions%2F-1939690287"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":valhalla/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="trace-route-raw.html"><span class="token function">traceRouteRaw</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">requestJson<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Run a <code class="lang-kotlin">trace_route</code> request supplied as JSON and return the raw response.</p></div></div></div>
                 </div>
               </div>
             </div>

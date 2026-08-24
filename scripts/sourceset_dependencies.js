@@ -1,1 +1,1 @@
-sourceset_dependencies='{":valhalla/debug":[],":valhalla/main":[],":valhalla/release":[]}'
+sourceset_dependencies='{":valhalla/release":[]}'
