@@ -18,7 +18,8 @@ jobs:
           java-version: "21"
 
       - name: Build Dokka HTML docs
-        run: ./gradlew dokkaGenerateHtml
+        # This runner has no NDK or vcpkg, so skip the native builds preBuild would trigger.
+        run: ./gradlew dokkaGenerateHtml -x buildValhallaFor-arm64-v8a -x buildValhallaFor-armeabi-v7a -x buildValhallaFor-x86_64 -x buildValhallaFor-x86
         working-directory: android
 
       - name: Deploy to GitHub Pages (branch gh-pages)
