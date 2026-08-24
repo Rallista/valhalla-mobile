@@ -11,7 +11,27 @@ This project builds [valhalla](https://github.com/valhalla/valhalla) as a static
 It currently exposes valhalla's `route` action, for the primary purpose of generating turn by turn navigation
 routes using a downloaded pre-parsed valhalla tileset, along with the two map matching actions — `trace_route`,
 which snaps a GPS trace to the road network and returns a route along it, and `trace_attributes`, which returns
-the attributes of every edge the trace matched. Like routing, both run entirely against the tiles on the device.
+the attributes of every edge the trace matched — and `height`, which samples elevations under a shape. All of
+them run entirely against the tiles on the device.
+
+## Supported actions
+
+| Feature | Valhalla action | Android | iOS |
+| --- | --- | :-: | :-: |
+| Routing | `route` | ✅ | ✅ |
+| Map matching | `trace_route`, `trace_attributes` | ✅ | ✅ |
+| Elevation | `height` | ✅ | ✅ |
+| Time-distance matrix | `sources_to_targets` | – | – |
+| Optimized route | `optimized_route` | – | – |
+| Isochrones | `isochrone` | – | – |
+| Nearest edge or node | `locate` | – | – |
+| Graph expansion | `expansion` | – | – |
+
+Responses are valhalla's own JSON on both platforms, decoded into generated model types.
+`route` can also answer in the OSRM format, decoded on Android and returned as raw JSON on iOS.
+GPX is reachable through the raw request methods where they exist: every action on iOS, the
+trace actions on Android. PBF is not supported; requesting it returns an error.
+`height` needs a directory of elevation tiles in the config; without them every height is null.
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
