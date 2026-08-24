@@ -50,6 +50,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -DVCPKG_OVERLAY_TRIPLETS=$vcpkg_triplet_overlay \
     -DVCPKG_TARGET_TRIPLET=$vcpkg_target_triplet \
     -DANDROID_ABI=$android_abi \
+    -DCMAKE_BUILD_TYPE=Release \
     -S $wrapper_dir \
     -B .
 jobs=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
