@@ -18,9 +18,10 @@ them run entirely against the tiles on the device.
 
 | Feature | Valhalla action | Android | iOS |
 | --- | --- | :-: | :-: |
-| Routing | `route` | ✅ | ✅ |
-| Map matching | `trace_route`, `trace_attributes` | ✅ | ✅ |
-| Elevation | `height` | ✅ | ✅ |
+| Routing | `route` | [✅][kt-route] | [✅][ios-route] |
+| Map matching | `trace_route` | [✅][kt-trace-route] | [✅][ios-trace-route] |
+| Map matching | `trace_attributes` | [✅][kt-trace-attributes] | [✅][ios-trace-attributes] |
+| Elevation | `height` | [✅][kt-height] | [✅][ios-height] |
 | Time-distance matrix | `sources_to_targets` | – | – |
 | Optimized route | `optimized_route` | – | – |
 | Isochrones | `isochrone` | – | – |
@@ -35,8 +36,33 @@ trace actions on Android. PBF is not supported; requesting it returns an error.
 
 ## Documentation
 
-- Android: [API reference (Dokka)](https://rallista.github.io/valhalla-mobile/)
-- iOS: [API reference (DocC)](https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla)
+### Android (Kotlin)
+
+[API reference (Dokka)](https://rallista.github.io/valhalla-mobile/)
+
+- [Fetching a route, response formats, and errors](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/index.html)
+- [Managing tile files on the device](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.files/index.html)
+- [Building a valhalla config](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.config/index.html)
+
+### iOS (Swift)
+
+[API reference (DocC)](https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla): installation, sourcing offline tiles, configuring valhalla, and fetching a route, all on one page.
+
+### This repository
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to contribute.
+- [docs/development.md](docs/development.md): local toolchain setup, including the NDK version CI uses.
+- [docs/src/architecture.md](docs/src/architecture.md): how the C++, JNI, and Obj-C++ layers fit together.
+- [docs/src/bumping-valhalla.md](docs/src/bumping-valhalla.md): upgrading the valhalla submodule.
+
+[kt-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/route.html
+[kt-trace-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-route.html
+[kt-trace-attributes]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-attributes.html
+[kt-height]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/height.html
+[ios-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/route(request:)>
+[ios-trace-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceroute(request:)>
+[ios-trace-attributes]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceattributes(request:)>
+[ios-height]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/height(request:)>
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
