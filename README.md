@@ -33,6 +33,11 @@ GPX is reachable through the raw request methods where they exist: every action 
 trace actions on Android. PBF is not supported; requesting it returns an error.
 `height` needs a directory of elevation tiles in the config; without them every height is null.
 
+## Documentation
+
+- Android: [API reference (Dokka)](https://rallista.github.io/valhalla-mobile/)
+- iOS: [API reference (DocC)](https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla)
+
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
 If you've got questions, would like to have informal discussions, or just want to ping us about a question, PR. Feel free 
