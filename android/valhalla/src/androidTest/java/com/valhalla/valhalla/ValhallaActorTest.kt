@@ -219,6 +219,28 @@ class ValhallaActorTest {
   private val andorraRoute =
       "{\"locations\":[{\"lat\":42.5063,\"lon\":1.5218},{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\",\"units\":\"miles\"}"
 
+  /** A character outside the BMP has to survive both crossings of the bridge. */
+  @Test
+  fun testFourByteCharacterSurvivesTheBridge() {
+    val valhalla = actor(configPath)
+
+    val request = andorraRoute.replace("\"costing\":\"auto\"", "\"costing\":\"auto😀\"")
+    val json = JSONObject(valhalla.route(request))
+
+    assertEquals(125, json.getInt("code"))
+    assertTrue(json.getString("message").contains("auto😀"))
+  }
+
+  /** A pbf response is protobuf bytes, not UTF-8, so the bridge must answer an error, not abort. */
+  @Test
+  fun testBinaryResponseIsReportedAsError() {
+    val valhalla = actor(configPath)
+
+    val response = valhalla.route(andorraRoute.replace("\"units\":\"miles\"", "\"format\":\"pbf\""))
+
+    assertEquals("{\"code\":-1,\"message\":\"response was not valid UTF-8\"}", response)
+  }
+
   /** A closed actor must refuse work rather than dereference the freed handle. */
   @Test
   fun testUseAfterCloseThrows() {

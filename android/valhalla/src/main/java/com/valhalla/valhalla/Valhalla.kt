@@ -85,6 +85,12 @@ class Valhalla(
    * @see RouteRequest.Format
    */
   fun route(request: RouteRequest): ValhallaResponse {
+    when (request.format) {
+      RouteRequest.Format.gpx,
+      RouteRequest.Format.pbf -> throw ValhallaException.NotSupported()
+      else -> Unit
+    }
+
     val encodedRequest = moshi.adapter(RouteRequest::class.java).toJson(request)
     val rawResponse = valhallaActor.route(encodedRequest)
 
@@ -98,7 +104,6 @@ class Valhalla(
     }
 
     return when (request.format) {
-      RouteRequest.Format.gpx -> throw ValhallaException.NotSupported()
       RouteRequest.Format.osrm -> {
         val osrmResponse =
             moshi.adapter(OsrmRouteResponse::class.java).fromJson(rawResponse)
@@ -106,7 +111,6 @@ class Valhalla(
         ValhallaResponse.Osrm(osrmResponse)
       }
 
-      RouteRequest.Format.pbf -> throw ValhallaException.NotSupported()
       // else includes default valhalla: RouteRequest.Format.json
       else -> {
         val valhallaResponse =
@@ -133,7 +137,8 @@ class Valhalla(
    * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
    * @throws ValhallaException.NotSupported if the request asks for a format other than JSON.
    *   OSRM map-match responses report their routes under `matchings`, a shape `osrm-openapi` does
-   *   not model, and GPX and PBF are not JSON at all — reach all three through [traceRouteRaw].
+   *   not model, and GPX is not JSON at all; reach both through [traceRouteRaw]. PBF is binary
+   *   and cannot cross the bridge, so it comes back as an error.
    * @see MapMatchRequest
    * @see traceAttributes
    */
