@@ -238,6 +238,22 @@ class Valhalla(
   }
 
   /**
+   * Run a `sources_to_targets` request supplied as JSON and return the raw response.
+   *
+   * There is no typed `matrix(request:)` counterpart: unlike the other actions,
+   * `sources_to_targets` has no generated request or response model in
+   * `com.valhalla.api.models` yet. This is the only way to reach it until one exists.
+   *
+   * @param requestJson A `sources_to_targets` request as JSON. See
+   *   https://valhalla.github.io/valhalla/api/matrix/api-reference/
+   * @return The raw response body, in whichever format the request asked for.
+   * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   */
+  fun matrixRaw(requestJson: String): String {
+    return checkForError(valhallaActor.matrix(requestJson))
+  }
+
+  /**
    * Decodes [rawResponse] into [type].
    *
    * Moshi's own failures are reported as [ValhallaException.InvalidResponse], with the parse error

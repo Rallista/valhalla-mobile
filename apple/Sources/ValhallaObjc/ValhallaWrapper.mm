@@ -201,6 +201,13 @@ NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
     }
 }
 
+- (NSString*)matrix:(NSString*)request
+{
+    @synchronized(self) {
+        return PerformAction(&matrix, request, _actor);
+    }
+}
+
 - (void) dealloc
 {
     delete_valhalla_actor(_actor);

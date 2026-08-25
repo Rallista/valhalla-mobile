@@ -269,6 +269,17 @@ Java_com_valhalla_valhalla_ValhallaKotlin_height(JNIEnv *env,
     return run_jni_action(env, handle, jRequest, &ValhallaActor::height, "height");
 }
 
+extern "C"
+JNIEXPORT jbyteArray
+
+JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_matrix(JNIEnv *env,
+                                                       jobject thiz,
+                                                       jlong handle,
+                                                       jbyteArray jRequest) {
+    return run_jni_action(env, handle, jRequest, &ValhallaActor::matrix, "matrix");
+}
+
 #elif __APPLE__
 void* create_valhalla_actor(const char *config_path, ValhallaMobileHttpClient* http_client) {
     return new ValhallaActor(config_path, http_client);
@@ -299,6 +310,12 @@ std::string trace_attributes(const char *request, void* actor) {
 std::string height(const char *request, void* actor) {
     return invoke_action("height", [&]() {
         return ((ValhallaActor*) actor)->height(request);
+    });
+}
+
+std::string matrix(const char *request, void* actor) {
+    return invoke_action("matrix", [&]() {
+        return ((ValhallaActor*) actor)->matrix(request);
     });
 }
 #endif

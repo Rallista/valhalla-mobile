@@ -128,6 +128,19 @@ public final class Valhalla: ValhallaProviding {
         actor!.height(request)
     }
 
+    /// Runs a `sources_to_targets` request supplied as JSON and returns the raw response,
+    /// computing a matrix of costs and times between every source and every target.
+    ///
+    /// There is no typed `matrix(request:)` counterpart: unlike the other actions,
+    /// `sources_to_targets` has no generated request or response model in `ValhallaModels`
+    /// yet. This is the only way to reach it until one exists.
+    ///
+    /// Errors are returned in the body as `{"code": <int>, "message": "<string>"}`
+    /// rather than thrown.
+    public func matrix(rawRequest request: String) -> String {
+        actor!.matrix(request)
+    }
+
     /// Shared body of the typed actions: encode the request, run it, and decode the
     /// response — surfacing the wrapper's error envelope as a thrown ``ValhallaError``.
     ///
