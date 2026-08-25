@@ -18,9 +18,10 @@ them run entirely against the tiles on the device.
 
 | Feature | Valhalla action | Android | iOS |
 | --- | --- | :-: | :-: |
-| Routing | `route` | ✅ | ✅ |
-| Map matching | `trace_route`, `trace_attributes` | ✅ | ✅ |
-| Elevation | `height` | ✅ | ✅ |
+| Routing | `route` | [✅][kt-route] | [✅][ios-route] |
+| Map matching | `trace_route` | [✅][kt-trace-route] | [✅][ios-trace-route] |
+| | `trace_attributes` | [✅][kt-trace-attributes] | [✅][ios-trace-attributes] |
+| Elevation | `height` | [✅][kt-height] | [✅][ios-height] |
 | Time-distance matrix | `sources_to_targets` | – | – |
 | Optimized route | `optimized_route` | – | – |
 | Isochrones | `isochrone` | – | – |
@@ -33,6 +34,26 @@ GPX is reachable through the raw request methods where they exist: every action 
 trace actions on Android. PBF is not supported; requesting it returns an error.
 `height` needs a directory of elevation tiles in the config; without them every height is null.
 
+## Documentation
+
+### Android (Kotlin)
+
+[API reference (Dokka)](https://rallista.github.io/valhalla-mobile/)
+
+- [Fetching a route, response formats, and errors](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/index.html)
+- [Managing tile files on the device](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.files/index.html)
+- [Building a valhalla config](https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla.config/index.html)
+
+### iOS (Swift)
+
+[API reference (DocC)](https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla): installation, offline tiles, configuration, and fetching a route.
+
+### This repository
+
+- [docs/development.md](docs/development.md): local toolchain setup, including the NDK version CI uses.
+- [docs/src/architecture.md](docs/src/architecture.md): how the C++, JNI, and Obj-C++ layers fit together.
+- [docs/src/bumping-valhalla.md](docs/src/bumping-valhalla.md): upgrading the valhalla submodule.
+
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.
 If you've got questions, would like to have informal discussions, or just want to ping us about a question, PR. Feel free 
@@ -42,29 +63,47 @@ to reach out on the OpenStreetMap Slack (osmus.slack.com) under the [#valhalla-m
 
 ### Android
 
+You need the engine plus the model packages; the models define the request and config types your
+code compiles against.
+
 Using a `libs.versions.toml` with a `build.gradle.kts`
 
 ```toml
-[verisons]
-valhallaMobile = "0.1.0"
+[versions]
+valhallaMobile = "0.6.1"
+valhallaModels = "0.5.0"
+osrm = "0.0.10"
+
 [libraries]
 valhalla-mobile = { group = "io.github.rallista", name = "valhalla-mobile", version.ref = "valhallaMobile" }
+valhalla-models = { group = "io.github.rallista", name = "valhalla-models", version.ref = "valhallaModels" }
+valhalla-models-config = { group = "io.github.rallista", name = "valhalla-models-config", version.ref = "valhallaModels" }
+osrm-openapi = { group = "com.stadiamaps", name = "osrm-openapi", version.ref = "osrm" }
 ```
 
 ```kts
 implementation(libs.valhalla.mobile)
+implementation(libs.valhalla.models)
+implementation(libs.valhalla.models.config)
+implementation(libs.osrm.openapi) // Only needed for the OSRM branch of ValhallaResponse.
 ```
 
 Using a standard `build.gradle.kts`
 
 ```kts
-implementation("io.github.rallista:valhalla-mobile:0.1.0")
+implementation("io.github.rallista:valhalla-mobile:0.6.1")
+implementation("io.github.rallista:valhalla-models:0.5.0")
+implementation("io.github.rallista:valhalla-models-config:0.5.0")
+implementation("com.stadiamaps:osrm-openapi:0.0.10")
 ```
 
 Using a standard `build.gradle`
 
 ```
-implementation 'io.github.rallista:valhalla-mobile:0.1.0'
+implementation 'io.github.rallista:valhalla-mobile:0.6.1'
+implementation 'io.github.rallista:valhalla-models:0.5.0'
+implementation 'io.github.rallista:valhalla-models-config:0.5.0'
+implementation 'com.stadiamaps:osrm-openapi:0.0.10'
 ```
 
 ### iOS
@@ -74,7 +113,7 @@ In a swift package:
 ```swift
 let package = Package(
     dependencies: [
-        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.1.0"),
+        .package(url: "https://github.com/rallista/valhalla-mobile.git", from: "0.6.1"),
     ],
     targets: [
         .target(
@@ -131,3 +170,12 @@ open an issue or PR on that repository to upgrade it to valhalla's latest versio
 
 - Valhalla <https://github.com/valhalla/valhalla>
 - Swift Package Manager C++ (for fun - this repo takes the old approach) <https://www.swift.org/documentation/articles/wrapping-c-cpp-library-in-swift.html>
+
+[kt-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/route.html
+[kt-trace-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-route.html
+[kt-trace-attributes]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-attributes.html
+[kt-height]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/height.html
+[ios-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/route(request:)>
+[ios-trace-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceroute(request:)>
+[ios-trace-attributes]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceattributes(request:)>
+[ios-height]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/height(request:)>
