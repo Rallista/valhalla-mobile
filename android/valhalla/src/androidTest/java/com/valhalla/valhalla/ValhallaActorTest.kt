@@ -219,6 +219,57 @@ class ValhallaActorTest {
   private val andorraRoute =
       "{\"locations\":[{\"lat\":42.5063,\"lon\":1.5218},{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\",\"units\":\"miles\"}"
 
+  @Test
+  fun testSuccessfulMatrix() {
+    val valhalla = actor(configPath)
+
+    val request =
+        JSONObject()
+            .put(
+                "sources",
+                JSONArray()
+                    .put(JSONObject().put("lat", 42.5063).put("lon", 1.5218))
+                    .put(JSONObject().put("lat", 42.5086).put("lon", 1.5394)))
+            .put(
+                "targets",
+                JSONArray().put(JSONObject().put("lat", 42.5086).put("lon", 1.5394)))
+            .put("costing", "auto")
+            .toString()
+    val response = valhalla.matrix(request)
+
+    val sourcesToTargets = JSONObject(response).getJSONArray("sources_to_targets")
+    assertEquals(2, sourcesToTargets.length())
+    val firstRow = sourcesToTargets.getJSONArray(0)
+    assertEquals(1, firstRow.length())
+    val cell = firstRow.getJSONObject(0)
+    assertTrue("expected a real distance in: $response", cell.getDouble("distance") > 0)
+    // The second source is the target itself, so that row costs nothing.
+    val secondRow = sourcesToTargets.getJSONArray(1)
+    assertEquals(0.0, secondRow.getJSONObject(0).getDouble("distance"), 0.0)
+  }
+
+  @Test
+  fun testMatrixNoConfigPath() {
+    val valhalla = actor("invalid.json")
+
+    val request =
+        "{\"sources\":[{\"lat\":45.843812,\"lon\":-123.768205}],\"targets\":[{\"lat\":45.869701,\"lon\":-123.766121}],\"costing\":\"auto\"}"
+    val response = valhalla.matrix(request)
+
+    assertEquals(response, "{\"code\":-1,\"message\":\"Cannot open file invalid.json\"}")
+  }
+
+  @Test
+  fun testMatrixNoSuitableEdges() {
+    val valhalla = actor(configPath)
+
+    val request =
+        "{\"sources\":[{\"lat\":45.843812,\"lon\":-123.768205}],\"targets\":[{\"lat\":45.869701,\"lon\":-123.766121}],\"costing\":\"auto\"}"
+    val response = valhalla.matrix(request)
+
+    assertEquals(response, "{\"code\":171,\"message\":\"No suitable edges near location\"}")
+  }
+
   /** A character outside the BMP has to survive both crossings of the bridge. */
   @Test
   fun testFourByteCharacterSurvivesTheBridge() {
@@ -250,6 +301,10 @@ class ValhallaActorTest {
     assertThrows(IllegalStateException::class.java) { valhalla.route(andorraRoute) }
     assertThrows(IllegalStateException::class.java) { valhalla.traceRoute(andorraRoute) }
     assertThrows(IllegalStateException::class.java) { valhalla.traceAttributes(andorraRoute) }
+    assertThrows(IllegalStateException::class.java) {
+      valhalla.matrix(
+          "{\"sources\":[{\"lat\":42.5063,\"lon\":1.5218}],\"targets\":[{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\"}")
+    }
   }
 
   /** Teardown closes every actor, so closing one twice has to be harmless. */

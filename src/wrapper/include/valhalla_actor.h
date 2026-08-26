@@ -78,6 +78,16 @@ public:
      * @return         the serialized JSON response
      */
     std::string height(const std::string& request);
+
+    /**
+     * Compute a matrix of costs and times between every source and every target. This is
+     * Valhalla's `sources_to_targets` action.
+     *
+     * @param request  a `sources_to_targets` request as JSON. See
+     *                 https://valhalla.github.io/valhalla/api/matrix/api-reference/
+     * @return         the serialized response, in whichever format the request asked for
+     */
+    std::string matrix(const std::string& request);
 };
 
 #endif // VALHALLAACTOR_H

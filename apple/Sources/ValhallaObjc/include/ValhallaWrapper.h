@@ -34,6 +34,10 @@
 /// @param request a `height` request as JSON.
 - (NSString*)height:(NSString*)request;
 
+/// Computes a matrix of costs and times between every source and every target.
+/// @param request a `sources_to_targets` request as JSON.
+- (NSString*)matrix:(NSString*)request;
+
 @end
 
 #endif /* ValhallaWrapperHeader_h */

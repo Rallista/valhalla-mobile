@@ -13,6 +13,8 @@ internal interface ValhallaActorProviding : Closeable {
   fun traceAttributes(request: String): String
 
   fun height(request: String): String
+
+  fun matrix(request: String): String
 }
 
 /**
@@ -77,6 +79,12 @@ internal class ValhallaActor(
 
   /** Run a `height` request to sample heights under a shape. Same assumptions as [route]. */
   override fun height(request: String): String = perform(request, valhallaKotlin::height)
+
+  /**
+   * Run a `sources_to_targets` request, computing a matrix of costs and times between every
+   * source and every target. Same assumptions as [route].
+   */
+  override fun matrix(request: String): String = perform(request, valhallaKotlin::matrix)
 
   /**
    * Release the native actor. Safe to call more than once; later calls do nothing.

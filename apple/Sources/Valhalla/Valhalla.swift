@@ -17,6 +17,8 @@ public protocol ValhallaProviding {
 
     func height(request: HeightRequest) throws -> HeightResponse
 
+    func matrix(request: MatrixRequest) throws -> MatrixResponse
+
     func route(rawRequest: String) throws -> String
 
     func traceRoute(rawRequest: String) throws -> String
@@ -24,6 +26,8 @@ public protocol ValhallaProviding {
     func traceAttributes(rawRequest: String) throws -> String
 
     func height(rawRequest: String) throws -> String
+
+    func matrix(rawRequest: String) throws -> String
 
     func close()
 }
@@ -183,6 +187,17 @@ public final class Valhalla: ValhallaProviding {
         try decode(try height(rawRequest: try encode(request)))
     }
 
+    /// Computes a matrix of costs and times between every source and every target.
+    ///
+    /// This is Valhalla's `sources_to_targets` action. The response reports only distance
+    /// and time between each source/target pair, never geometry — call ``route(request:)``
+    /// separately for the shape of any specific connection you need to draw.
+    /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the
+    ///   request, or a `DecodingError` when the response cannot be decoded.
+    public func matrix(request: MatrixRequest) throws -> MatrixResponse {
+        try decode(try matrix(rawRequest: try encode(request)))
+    }
+
     /// Runs a `route` request supplied as JSON and returns the raw response.
     ///
     /// This is the escape hatch for response formats ``RouteResponse`` cannot model —
@@ -220,6 +235,18 @@ public final class Valhalla: ValhallaProviding {
     ///   or ``ValhallaError/closed`` after ``close()``.
     public func height(rawRequest request: String) throws -> String {
         try checkForError(try withActor { $0.height(request) })
+    }
+
+    /// Runs a `sources_to_targets` request supplied as JSON and returns the raw response,
+    /// computing a matrix of costs and times between every source and every target.
+    ///
+    /// This is the escape hatch for request options ``MatrixRequest`` does not yet model, or
+    /// a response format ``MatrixResponse`` cannot represent.
+    ///
+    /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the request,
+    ///   or ``ValhallaError/closed`` after ``close()``.
+    public func matrix(rawRequest request: String) throws -> String {
+        try checkForError(try withActor { $0.matrix(request) })
     }
 
     /// Releases the native actor held by this instance, and with it the mmapped tile

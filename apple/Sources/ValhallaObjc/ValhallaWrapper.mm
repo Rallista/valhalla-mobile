@@ -276,6 +276,13 @@ NSString* PerformAction(ActorAction action,
     }
 }
 
+- (NSString*)matrix:(NSString*)request
+{
+    @synchronized(self) {
+        return PerformAction(&matrix, request, _actor, "sources_to_targets");
+    }
+}
+
 - (void) dealloc
 {
     [self close];
