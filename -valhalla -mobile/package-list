@@ -28,6 +28,8 @@ $dokka.location:com.valhalla.valhalla/Valhalla/Valhalla/#android.content.Context
 $dokka.location:com.valhalla.valhalla/Valhalla/close/#/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/close.html
 $dokka.location:com.valhalla.valhalla/Valhalla/height/#com.valhalla.api.models.HeightRequest/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/height.html
 $dokka.location:com.valhalla.valhalla/Valhalla/heightRaw/#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/height-raw.html
+$dokka.location:com.valhalla.valhalla/Valhalla/matrix/#com.valhalla.api.models.MatrixRequest/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/matrix.html
+$dokka.location:com.valhalla.valhalla/Valhalla/matrixRaw/#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/matrix-raw.html
 $dokka.location:com.valhalla.valhalla/Valhalla/route/#com.valhalla.api.models.RouteRequest/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/route.html
 $dokka.location:com.valhalla.valhalla/Valhalla/traceAttributes/#com.valhalla.api.models.TraceAttributesRequest/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/trace-attributes.html
 $dokka.location:com.valhalla.valhalla/Valhalla/traceAttributesRaw/#kotlin.String/PointingToDeclaration/-valhalla -mobile/com.valhalla.valhalla/-valhalla/trace-attributes-raw.html
