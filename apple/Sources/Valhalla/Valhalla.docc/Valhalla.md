@@ -94,7 +94,7 @@ let valhalla = try Valhalla(config)
 
 Pass `tilesAreGzFiles: true` if the server serves gzip-compressed tiles.
 
-Fetching goes through `NSURLConnection`, so this adds no networking dependency to your app, and
+Fetching goes through `NSURLSession`, so this adds no networking dependency to your app, and
 nothing to configure beyond the URL. Two things to know:
 
 - Requests are synchronous, on whichever thread ran the routing action. Route off the main thread

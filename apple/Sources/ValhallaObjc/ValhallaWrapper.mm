@@ -3,6 +3,60 @@
 #import <include/main.h>
 #import <Foundation/Foundation.h>
 
+namespace {
+
+/**
+ * Runs one request to completion and hands back what it produced.
+ *
+ * Valhalla's tile getter is synchronous — it asks for a tile and expects the bytes back — so the
+ * asynchronous session API is bridged with a semaphore rather than pushed up into the caller.
+ *
+ * Waiting here cannot deadlock: NSURLSession runs a completion handler on its own delegate queue,
+ * never on the thread that resumed the task, so the thread being blocked is not the thread the
+ * completion needs. It does block, though, which is why a routing action against a config with a
+ * tile URL does not belong on the main thread.
+ *
+ * `sendSynchronousRequest:returningResponse:error:` did this before, and has been deprecated since
+ * iOS 9.
+ *
+ * @param request       the request to run.
+ * @param outResponse   set to the HTTP response, or nil if the request never got one.
+ * @param outError      set to the transport error, if there was one.
+ * @return              the response body, or nil.
+ */
+NSData* PerformSynchronously(NSURLRequest* request,
+                             NSHTTPURLResponse* __strong * outResponse,
+                             NSError* __strong * outError) {
+    __block NSData* data = nil;
+    __block NSURLResponse* response = nil;
+    __block NSError* error = nil;
+
+    dispatch_semaphore_t finished = dispatch_semaphore_create(0);
+
+    NSURLSessionDataTask* task =
+        [[NSURLSession sharedSession] dataTaskWithRequest:request
+                                       completionHandler:^(NSData* taskData,
+                                                           NSURLResponse* taskResponse,
+                                                           NSError* taskError) {
+            data = taskData;
+            response = taskResponse;
+            error = taskError;
+            dispatch_semaphore_signal(finished);
+        }];
+    [task resume];
+    dispatch_semaphore_wait(finished, DISPATCH_TIME_FOREVER);
+
+    // A non-HTTP response cannot carry a status code, so it is treated as no response at all.
+    *outResponse = [response isKindOfClass:[NSHTTPURLResponse class]]
+                       ? (NSHTTPURLResponse*)response
+                       : nil;
+    *outError = error;
+
+    return data;
+}
+
+} // namespace
+
 /**
  * iOS implementation of ValhallaMobileHttpClient using NSMutableURLRequest
  */
@@ -36,9 +90,7 @@ public:
             NSHTTPURLResponse* httpResponse = nil;
             NSError* error = nil;
             
-            NSData* data = [NSURLConnection sendSynchronousRequest:request 
-                                                  returningResponse:&httpResponse 
-                                                              error:&error];
+            NSData* data = PerformSynchronously(request, &httpResponse, &error);
             
             if (error || !httpResponse) {
                 response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;
@@ -84,9 +136,7 @@ public:
             NSHTTPURLResponse* httpResponse = nil;
             NSError* error = nil;
             
-            [NSURLConnection sendSynchronousRequest:request 
-                                  returningResponse:&httpResponse 
-                                              error:&error];
+            PerformSynchronously(request, &httpResponse, &error);
             
             if (error || !httpResponse) {
                 response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;

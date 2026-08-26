@@ -63,7 +63,7 @@ The architecture has three layers:
    - **Android**: JNI functions in `src/wrapper/main.cpp` (guarded by `#ifdef __ANDROID__`) bridge C++ to Kotlin.
    - Tile fetching crosses the same bridge in the other direction. `ValhallaMobileHttpClient`
      is declared in `src/wrapper/include/valhalla_actor.h` for both platforms; iOS implements it
-     in Obj-C++ with `NSURLConnection`, and Android calls back into Kotlin's `ValhallaHttpClient`.
+     in Obj-C++ with `NSURLSession`, and Android calls back into Kotlin's `ValhallaHttpClient`.
 3. **Platform API** — idiomatic Swift/Kotlin classes that consumers use:
    - **iOS**: `Valhalla` class conforming to `ValhallaProviding` protocol (`apple/Sources/Valhalla/`).
    - **Android**: `Valhalla` class using `ValhallaActor` (`android/valhalla/src/main/java/com/valhalla/valhalla/`).
