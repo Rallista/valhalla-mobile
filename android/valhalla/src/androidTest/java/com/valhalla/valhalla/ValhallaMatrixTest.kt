@@ -16,7 +16,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -44,11 +43,6 @@ class ValhallaMatrixTest {
     valhalla.close()
   }
 
-  // The currently-pinned valhalla-models (0.5.0) models MatrixResponse.sources/targets as
-  // List<List<Coordinate>>, but Valhalla actually returns them flat - decoding a real response
-  // throws. Fixed upstream in Rallista/valhalla-openapi-models-kotlin#29; re-enable once a
-  // models release with that fix is out and this repo's dependency is bumped to it.
-  @Ignore("blocked on valhalla-openapi-models-kotlin#29")
   @Test
   fun testSuccessfulTypedMatrix() {
     val request =
