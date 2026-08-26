@@ -1,0 +1,34 @@
+name: Default config
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  in-sync:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-default-config
+      cancel-in-progress: true
+
+    steps:
+      # Only the submodule's scripts directory is used, so this does not need the
+      # recursive checkout the build jobs do.
+      - name: Checkout Valhalla
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          # valhalla_build_config uses PEP 604 unions at runtime, which need 3.10+.
+          python-version: "3.12"
+
+      # Catches a valhalla bump that moved the config without the checked-in copies
+      # following it. Both platforms read the same bytes, so a stale copy is a stale
+      # default on iOS and Android at once.
+      - name: Check the bundled default config matches the pinned valhalla
+        run: scripts/generate_default_config.sh --check
