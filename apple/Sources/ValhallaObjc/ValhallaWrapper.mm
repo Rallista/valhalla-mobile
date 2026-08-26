@@ -131,7 +131,21 @@ using ActorAction = std::string (*)(const char*, void*);
 
 /// Shared body of every action method: hand the request to the C++ wrapper and
 /// bridge the response back. Callers hold the lock; this does not.
-NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
+///
+/// A null actor means the caller ran an action after `close`. Swift guards that
+/// case first, so reaching here is a bug rather than ordinary use — but the
+/// wrapper still has to answer something instead of dereferencing null, and the
+/// envelope it answers matches the Android JNI layer's wording exactly.
+NSString* PerformAction(ActorAction action,
+                        NSString* request,
+                        void* actor,
+                        const char* action_name) {
+    if (actor == nullptr) {
+        return [NSString stringWithFormat:
+                @"{\"code\":-1,\"message\":\"the actor is closed, cannot run %s\"}",
+                action_name];
+    }
+
     std::string result = action([request UTF8String], actor);
 
     // Swift imports this return as implicitly unwrapped, so a nil would trap in
@@ -176,35 +190,45 @@ NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
 - (NSString*)route:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&route, request, _actor);
+        return PerformAction(&route, request, _actor, "route");
     }
 }
 
 - (NSString*)traceRoute:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&trace_route, request, _actor);
+        return PerformAction(&trace_route, request, _actor, "trace_route");
     }
 }
 
 - (NSString*)traceAttributes:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&trace_attributes, request, _actor);
+        return PerformAction(&trace_attributes, request, _actor, "trace_attributes");
     }
 }
 
 - (NSString*)height:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&height, request, _actor);
+        return PerformAction(&height, request, _actor, "height");
+    }
+}
+
+- (void)close
+{
+    // The same lock every action takes, so a close cannot free the actor out from
+    // under a request that is already running on another thread.
+    @synchronized(self) {
+        // Deleting null is well defined, so a double close is harmless.
+        delete_valhalla_actor(_actor);
+        _actor = nil;
     }
 }
 
 - (void) dealloc
 {
-    delete_valhalla_actor(_actor);
-    _actor = nil;
+    [self close];
 }
 
 @end

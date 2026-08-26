@@ -228,19 +228,19 @@ final class TestValhallaWithTar: XCTestCase {
         let requestData = try JSONSerialization.data(withJSONObject: payload)
         let rawRequest = String(data: requestData, encoding: .utf8)!
 
-        let rawResponse = valhalla.route(rawRequest: rawRequest)
+        // The raw methods throw the envelope rather than returning it, so an unescaped message
+        // surfaces as a failure to recognise the envelope at all.
+        XCTAssertThrowsError(try valhalla.route(rawRequest: rawRequest)) { error in
+            guard case ValhallaError.valhallaError(let code, let message) = error else {
+                return XCTFail("expected a valhalla error, got \(error)")
+            }
 
-        // The decode throws if the wrapper did not escape the message.
-        let error = try JSONDecoder().decode(
-            ValhallaErrorModel.self,
-            from: Data(rawResponse.utf8)
-        )
-
-        XCTAssertEqual(error.code, 125)
-        XCTAssertTrue(
-            error.message.contains(costingName),
-            "the message must carry the costing name unchanged, got: \(error.message)"
-        )
+            XCTAssertEqual(code, 125)
+            XCTAssertTrue(
+                message.contains(costingName),
+                "the message must carry the costing name unchanged, got: \(message)"
+            )
+        }
     }
 
     /// A pbf response is protobuf bytes, not UTF-8, so the bridge must answer an error, not trap.
@@ -248,9 +248,11 @@ final class TestValhallaWithTar: XCTestCase {
         let valhalla = try Valhalla(defaultConfig)
         let request = #"{"locations":[{"lat":42.5063,"lon":1.5218},{"lat":42.5086,"lon":1.5394}],"costing":"auto","format":"pbf"}"#
 
-        let response = valhalla.route(rawRequest: request)
-
-        let error = try JSONDecoder().decode(ValhallaErrorModel.self, from: Data(response.utf8))
-        XCTAssertEqual(error.code, -1)
+        XCTAssertThrowsError(try valhalla.route(rawRequest: request)) { error in
+            guard case ValhallaError.valhallaError(let code, _) = error else {
+                return XCTFail("expected a valhalla error, got \(error)")
+            }
+            XCTAssertEqual(code, -1)
+        }
     }
 }
