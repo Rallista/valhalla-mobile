@@ -33,8 +33,6 @@ Responses are valhalla's own JSON on both platforms, decoded into generated mode
 GPX is reachable through the raw request methods where they exist: every action on iOS, the
 trace actions on Android. PBF is not supported; requesting it returns an error.
 `height` needs a directory of elevation tiles in the config; without them every height is null.
-`sources_to_targets` has no generated request or response model yet, on either platform — reach
-it through the raw request methods, `matrixRaw` on Android and `matrix(rawRequest:)` on iOS.
 
 We welcome contributions to expand the functionality of this library. See our [CONTRIBUTING.md](CONTRIBUTING.md)
 for more information.

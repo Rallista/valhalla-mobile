@@ -3,6 +3,9 @@ package com.valhalla.valhalla
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.valhalla.api.models.Coordinate
+import com.valhalla.api.models.MatrixCostingModel
+import com.valhalla.api.models.MatrixRequest
 import com.valhalla.config.ValhallaConfigBuilder
 import com.valhalla.valhalla.config.ValhallaConfigManager
 import com.valhalla.valhalla.files.ValhallaFile
@@ -13,16 +16,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Exercises [Valhalla.matrixRaw] against the bundled Andorra tile extract.
- *
- * There is no generated `MatrixRequest`/`MatrixResponse` model yet, so — unlike the other
- * actions — this one is reached only through the raw JSON escape hatch. See the comment on
- * [Valhalla.matrixRaw] itself.
- */
+/** Exercises [Valhalla.matrix] and [Valhalla.matrixRaw] against the bundled Andorra tile extract. */
 @RunWith(AndroidJUnit4::class)
 class ValhallaMatrixTest {
 
@@ -44,6 +42,43 @@ class ValhallaMatrixTest {
   @After
   fun tearDown() {
     valhalla.close()
+  }
+
+  // The currently-pinned valhalla-models (0.5.0) models MatrixResponse.sources/targets as
+  // List<List<Coordinate>>, but Valhalla actually returns them flat - decoding a real response
+  // throws. Fixed upstream in Rallista/valhalla-openapi-models-kotlin#29; re-enable once a
+  // models release with that fix is out and this repo's dependency is bumped to it.
+  @Ignore("blocked on valhalla-openapi-models-kotlin#29")
+  @Test
+  fun testSuccessfulTypedMatrix() {
+    val request =
+        MatrixRequest(
+            sources =
+                listOf(
+                    Coordinate(lat = 42.5063, lon = 1.5218),
+                    Coordinate(lat = 42.5086, lon = 1.5394)),
+            targets = listOf(Coordinate(lat = 42.5086, lon = 1.5394)),
+            costing = MatrixCostingModel.auto)
+
+    val response = valhalla.matrix(request)
+
+    assertEquals(2, response.sourcesToTargets.size)
+    assertTrue(
+        "expected a real distance in: $response",
+        response.sourcesToTargets[0][0].distance > 0)
+    // The second source is the target itself, so that row costs nothing.
+    assertEquals(0.0, response.sourcesToTargets[1][0].distance, 0.0)
+  }
+
+  @Test
+  fun testTypedMatrixWithNoSuitableEdgesThrows() {
+    val request =
+        MatrixRequest(
+            sources = listOf(Coordinate(lat = 45.843812, lon = -123.768205)),
+            targets = listOf(Coordinate(lat = 45.869701, lon = -123.766121)),
+            costing = MatrixCostingModel.auto)
+
+    assertThrows(ValhallaException.Internal::class.java) { valhalla.matrix(request) }
   }
 
   @Test

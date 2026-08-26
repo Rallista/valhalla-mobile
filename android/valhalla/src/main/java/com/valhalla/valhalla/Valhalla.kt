@@ -10,6 +10,8 @@ import com.valhalla.api.models.HeightRequest
 import com.valhalla.api.models.HeightResponse
 import com.valhalla.api.models.MapMatchRequest
 import com.valhalla.api.models.MapMatchRouteResponse
+import com.valhalla.api.models.MatrixRequest
+import com.valhalla.api.models.MatrixResponse
 import com.valhalla.api.models.RouteRequest
 import com.valhalla.api.models.RouteResponse
 import com.valhalla.api.models.TraceAttributesRequest
@@ -206,6 +208,23 @@ class Valhalla(
   }
 
   /**
+   * Computes a matrix of costs and times between every source and every target.
+   *
+   * This is Valhalla's `sources_to_targets` action. The response reports only distance and
+   * time between each source/target pair, never geometry — request [route] separately for the
+   * shape of any specific connection you need to draw.
+   *
+   * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
+   */
+  fun matrix(request: MatrixRequest): MatrixResponse {
+    val encodedRequest = moshi.adapter(MatrixRequest::class.java).toJson(request)
+    val rawResponse = matrixRaw(encodedRequest)
+
+    return decodeResponse(rawResponse, MatrixResponse::class.java)
+  }
+
+  /**
    * Run a `trace_route` request supplied as JSON and return the raw response.
    *
    * This is the escape hatch for response formats [MapMatchRouteResponse] cannot model, and for
@@ -240,14 +259,14 @@ class Valhalla(
   /**
    * Run a `sources_to_targets` request supplied as JSON and return the raw response.
    *
-   * There is no typed `matrix(request:)` counterpart: unlike the other actions,
-   * `sources_to_targets` has no generated request or response model in
-   * `com.valhalla.api.models` yet. This is the only way to reach it until one exists.
+   * This is the escape hatch for request options [MatrixRequest] does not yet model, or a
+   * response format [MatrixResponse] cannot represent.
    *
    * @param requestJson A `sources_to_targets` request as JSON. See
    *   https://valhalla.github.io/valhalla/api/matrix/api-reference/
    * @return The raw response body, in whichever format the request asked for.
    * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   * @see matrix
    */
   fun matrixRaw(requestJson: String): String {
     return checkForError(valhallaActor.matrix(requestJson))
