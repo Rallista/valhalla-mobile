@@ -11,7 +11,8 @@ This project builds [valhalla](https://github.com/valhalla/valhalla) as a static
 It currently exposes valhalla's `route` action, for the primary purpose of generating turn by turn navigation
 routes using a downloaded pre-parsed valhalla tileset, along with the two map matching actions — `trace_route`,
 which snaps a GPS trace to the road network and returns a route along it, and `trace_attributes`, which returns
-the attributes of every edge the trace matched — and `height`, which samples elevations under a shape. All of
+the attributes of every edge the trace matched — `height`, which samples elevations under a shape, and
+`sources_to_targets`, which computes a matrix of costs and times between every source and every target. All of
 them run entirely against the tiles on the device.
 
 ## Supported actions
@@ -22,7 +23,7 @@ them run entirely against the tiles on the device.
 | Map matching | `trace_route` | [✅][kt-trace-route] | [✅][ios-trace-route] |
 | | `trace_attributes` | [✅][kt-trace-attributes] | [✅][ios-trace-attributes] |
 | Elevation | `height` | [✅][kt-height] | [✅][ios-height] |
-| Time-distance matrix | `sources_to_targets` | – | – |
+| Time-distance matrix | `sources_to_targets` | [✅][kt-matrix] | [✅][ios-matrix] |
 | Optimized route | `optimized_route` | – | – |
 | Isochrones | `isochrone` | – | – |
 | Nearest edge or node | `locate` | – | – |
@@ -175,7 +176,9 @@ open an issue or PR on that repository to upgrade it to valhalla's latest versio
 [kt-trace-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-route.html
 [kt-trace-attributes]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-attributes.html
 [kt-height]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/height.html
+[kt-matrix]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/matrix.html
 [ios-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/route(request:)>
 [ios-trace-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceroute(request:)>
 [ios-trace-attributes]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceattributes(request:)>
 [ios-height]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/height(request:)>
+[ios-matrix]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/matrix(request:)>

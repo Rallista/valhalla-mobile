@@ -15,6 +15,8 @@ public protocol ValhallaProviding {
     func traceAttributes(request: TraceAttributesRequest) throws -> TraceAttributesResponse
 
     func height(request: HeightRequest) throws -> HeightResponse
+
+    func matrix(request: MatrixRequest) throws -> MatrixResponse
 }
 
 public final class Valhalla: ValhallaProviding {
@@ -101,6 +103,17 @@ public final class Valhalla: ValhallaProviding {
         try perform(request) { self.height(rawRequest: $0) }
     }
 
+    /// Computes a matrix of costs and times between every source and every target.
+    ///
+    /// This is Valhalla's `sources_to_targets` action. The response reports only distance
+    /// and time between each source/target pair, never geometry — call ``route(request:)``
+    /// separately for the shape of any specific connection you need to draw.
+    /// - Throws: ``ValhallaError/valhallaError(_:_:)`` when Valhalla rejects the
+    ///   request, or a `DecodingError` when the response cannot be decoded.
+    public func matrix(request: MatrixRequest) throws -> MatrixResponse {
+        try perform(request) { self.matrix(rawRequest: $0) }
+    }
+
     public func route(rawRequest request: String) -> String {
         actor!.route(request)
     }
@@ -126,6 +139,18 @@ public final class Valhalla: ValhallaProviding {
     /// Runs a `height` request supplied as JSON and returns the raw response.
     public func height(rawRequest request: String) -> String {
         actor!.height(request)
+    }
+
+    /// Runs a `sources_to_targets` request supplied as JSON and returns the raw response,
+    /// computing a matrix of costs and times between every source and every target.
+    ///
+    /// This is the escape hatch for request options ``MatrixRequest`` does not yet model, or
+    /// a response format ``MatrixResponse`` cannot represent.
+    ///
+    /// Errors are returned in the body as `{"code": <int>, "message": "<string>"}`
+    /// rather than thrown.
+    public func matrix(rawRequest request: String) -> String {
+        actor!.matrix(request)
     }
 
     /// Shared body of the typed actions: encode the request, run it, and decode the

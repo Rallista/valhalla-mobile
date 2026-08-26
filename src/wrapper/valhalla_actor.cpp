@@ -104,3 +104,7 @@ std::string ValhallaActor::trace_attributes(const std::string& request) {
 std::string ValhallaActor::height(const std::string& request) {
     return actor->height(request);
 }
+
+std::string ValhallaActor::matrix(const std::string& request) {
+    return actor->matrix(request);
+}

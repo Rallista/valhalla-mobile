@@ -26,4 +26,6 @@ internal class ValhallaKotlin {
   external fun traceAttributes(handle: Long, request: ByteArray): ByteArray
 
   external fun height(handle: Long, request: ByteArray): ByteArray
+
+  external fun matrix(handle: Long, request: ByteArray): ByteArray
 }
