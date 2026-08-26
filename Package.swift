@@ -41,7 +41,10 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/Rallista/valhalla-openapi-models-swift.git",
-            .upToNextMinor(from: "0.5.0")),
+            // 0.5.4 is the first release whose config models spell hierarchy_limits,
+            // max_iterations, and allow_modification the way valhalla does. Before it,
+            // every one of those keys was dropped from the config on the way through.
+            .upToNextMinor(from: "0.5.4")),
         .package(
             url: "https://github.com/UInt2048/Light-Swift-Untar.git", .upToNextMajor(from: "1.0.4")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),
