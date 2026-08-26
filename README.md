@@ -176,9 +176,9 @@ open an issue or PR on that repository to upgrade it to valhalla's latest versio
 [kt-trace-route]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-route.html
 [kt-trace-attributes]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/trace-attributes.html
 [kt-height]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/height.html
+[kt-matrix]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/matrix.html
 [ios-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/route(request:)>
 [ios-trace-route]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceroute(request:)>
 [ios-trace-attributes]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/traceattributes(request:)>
 [ios-height]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/height(request:)>
-[kt-matrix]: https://rallista.github.io/valhalla-mobile/-valhalla%20-mobile/com.valhalla.valhalla/-valhalla/matrix.html
 [ios-matrix]: <https://swiftpackageindex.com/Rallista/valhalla-mobile/documentation/valhalla/valhalla/matrix(request:)>
