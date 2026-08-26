@@ -30,30 +30,57 @@ import java.io.IOException
  * requests. Call [close] when done — ideally through Kotlin's `use { }` — since nothing else
  * releases the native actor.
  *
- * @param context The Android context used for file system operations and configuration management.
- * @param config The Valhalla configuration specifying tile locations and routing options.
- * @param valhallaConfigManager Manages the Valhalla configuration file on the device. Defaults to a
- *   new instance.
- * @param moshi JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection
- *   support.
+ * There are two ways in, matching iOS's `Valhalla(_:)` and `Valhalla(configPath:)`: hand it a
+ * [ValhallaConfig] to write out and use, or point it at a config file already on disk.
+ *
  * @see ValhallaConfig
  * @see ValhallaConfigManager
+ * @see com.valhalla.valhalla.config.ValhallaConfigFactory
  * @see RouteRequest
  * @see ValhallaResponse
  */
-class Valhalla(
-    context: Context,
-    config: ValhallaConfig,
-    valhallaConfigManager: ValhallaConfigManager = ValhallaConfigManager(context),
-    private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+class Valhalla
+internal constructor(
+    private val valhallaActor: ValhallaActorProviding,
+    private val moshi: Moshi,
 ) : Closeable {
 
-  private val valhallaActor: ValhallaActorProviding
+  /**
+   * Writes [config] to the device, then builds the engine from it.
+   *
+   * @param context The Android context used for file system operations and configuration
+   *   management.
+   * @param config The Valhalla configuration specifying tile locations and routing options.
+   * @param valhallaConfigManager Manages the Valhalla configuration file on the device. Defaults to
+   *   a new instance, which writes to one fixed `valhalla.json` — give each instance its own
+   *   [com.valhalla.valhalla.files.ValhallaFile] when more than one is alive at a time.
+   * @param moshi JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection
+   *   support.
+   */
+  @JvmOverloads
+  constructor(
+      context: Context,
+      config: ValhallaConfig,
+      valhallaConfigManager: ValhallaConfigManager = ValhallaConfigManager(context),
+      moshi: Moshi = defaultMoshi(),
+  ) : this(actorFor(config, valhallaConfigManager), moshi)
 
-  init {
-    valhallaConfigManager.writeConfig(config)
-    valhallaActor = ValhallaActor(valhallaConfigManager.getAbsolutePath())
-  }
+  /**
+   * Builds the engine from a config file already on disk.
+   *
+   * Use this when the app ships or downloads a complete `valhalla.json` rather than building one
+   * from a [ValhallaConfig]. The tile paths inside it must be absolute and correct for this
+   * device; nothing here rewrites them. This is the counterpart of iOS's `Valhalla(configPath:)`.
+   *
+   * @param configPath Absolute path of the valhalla config JSON.
+   * @param moshi JSON serialization adapter. Defaults to a Moshi instance with Kotlin reflection
+   *   support.
+   */
+  @JvmOverloads
+  constructor(
+      configPath: String,
+      moshi: Moshi = defaultMoshi(),
+  ) : this(ValhallaActor(configPath), moshi)
 
   /**
    * Adapter for the error envelope the native wrapper produces for every failure:
@@ -61,9 +88,9 @@ class Valhalla(
    *
    * `failOnUnknown` is what makes that envelope identifiable. It rejects any object carrying a key
    * beyond those two, and every successful Valhalla payload carries several, so a response either
-   * is the envelope or is not. The substring test [route] uses cannot be reused for the trace
-   * actions: a successful OSRM map-match response also has a top-level `"code"`, and it reports its
-   * routes under `matchings` rather than `routes`, so it would be misread as an error.
+   * is the envelope or is not. That matters most for the responses that look like errors: a
+   * successful OSRM payload also has a top-level `code`, and an OSRM map-match reports its routes
+   * under `matchings`, so no substring test can tell them apart.
    */
   private val errorAdapter = moshi.adapter(ErrorResponse::class.java).failOnUnknown()
 
@@ -77,7 +104,6 @@ class Valhalla(
    * @return The route response wrapped in a [ValhallaResponse] sealed class based on the requested
    *   format.
    * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
-   * @throws ValhallaException.InvalidError if an error response cannot be parsed.
    * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
    * @throws ValhallaException.NotSupported if an unsupported format (GPX or PBF) is requested.
    * @see RouteRequest
@@ -92,41 +118,23 @@ class Valhalla(
     }
 
     val encodedRequest = moshi.adapter(RouteRequest::class.java).toJson(request)
-    val rawResponse = valhallaActor.route(encodedRequest)
-
-    // Check for error response in Valhalla format.
-    // OSRM has a code and message like the valhalla error, but it's not the same format.
-    // If the response contains routes, it's a valid OSRM response.
-    if (rawResponse.contains("code") and !rawResponse.contains("routes")) {
-      val error = moshi.adapter(ErrorResponse::class.java).fromJson(rawResponse)
-      error?.let { throw ValhallaException.Internal(it) }
-      throw ValhallaException.InvalidError()
-    }
+    val rawResponse = routeRaw(encodedRequest)
 
     return when (request.format) {
-      RouteRequest.Format.osrm -> {
-        val osrmResponse =
-            moshi.adapter(OsrmRouteResponse::class.java).fromJson(rawResponse)
-                ?: throw ValhallaException.InvalidResponse()
-        ValhallaResponse.Osrm(osrmResponse)
-      }
+      RouteRequest.Format.osrm ->
+          ValhallaResponse.Osrm(decodeResponse(rawResponse, OsrmRouteResponse::class.java))
 
       // else includes default valhalla: RouteRequest.Format.json
-      else -> {
-        val valhallaResponse =
-            moshi.adapter(RouteResponse::class.java).fromJson(rawResponse)
-                ?: throw ValhallaException.InvalidResponse()
-        ValhallaResponse.Json(valhallaResponse)
-      }
+      else -> ValhallaResponse.Json(decodeResponse(rawResponse, RouteResponse::class.java))
     }
   }
 
   /**
    * Map-match a GPS trace onto the road network and return a route along the matched path.
    *
-   * This is Valhalla's `trace_route` action. Supply the trace either as
-   * [MapMatchRequest.shape] or as a [MapMatchRequest.encodedPolyline] — note that the polyline
-   * must be encoded with six digits of precision rather than the usual five.
+   * This is Valhalla's `trace_route` action. Supply the trace either as [MapMatchRequest.shape] or
+   * as a [MapMatchRequest.encodedPolyline] — note that the polyline must be encoded with six digits
+   * of precision rather than the usual five.
    *
    * Everything runs against the tiles already on the device, so this works with no network.
    *
@@ -135,10 +143,10 @@ class Valhalla(
    * @throws ValhallaException.Internal if the Valhalla engine returns an error response, which
    *   includes the case where the trace cannot be matched to the road network.
    * @throws ValhallaException.InvalidResponse if the response JSON cannot be parsed.
-   * @throws ValhallaException.NotSupported if the request asks for a format other than JSON.
-   *   OSRM map-match responses report their routes under `matchings`, a shape `osrm-openapi` does
-   *   not model, and GPX is not JSON at all; reach both through [traceRouteRaw]. PBF is binary
-   *   and cannot cross the bridge, so it comes back as an error.
+   * @throws ValhallaException.NotSupported if the request asks for a format other than JSON. OSRM
+   *   map-match responses report their routes under `matchings`, a shape `osrm-openapi` does not
+   *   model, and GPX is not JSON at all; reach both through [traceRouteRaw]. PBF is binary and
+   *   cannot cross the bridge, so it comes back as an error.
    * @see MapMatchRequest
    * @see traceAttributes
    */
@@ -206,6 +214,22 @@ class Valhalla(
   }
 
   /**
+   * Run a `route` request supplied as JSON and return the raw response.
+   *
+   * This is the escape hatch for response formats [RouteResponse] cannot model — GPX — and for
+   * request options the generated models do not yet carry. PBF is binary and cannot cross the
+   * bridge, so it comes back as an error.
+   *
+   * @param requestJson A `route` request as JSON.
+   * @return The raw response body, in whichever format the request asked for.
+   * @throws ValhallaException.Internal if the Valhalla engine returns an error response.
+   * @see route
+   */
+  fun routeRaw(requestJson: String): String {
+    return checkForError(valhallaActor.route(requestJson))
+  }
+
+  /**
    * Run a `trace_route` request supplied as JSON and return the raw response.
    *
    * This is the escape hatch for response formats [MapMatchRouteResponse] cannot model, and for
@@ -242,7 +266,7 @@ class Valhalla(
    *
    * Moshi's own failures are reported as [ValhallaException.InvalidResponse], with the parse error
    * kept as the cause. Letting a `JsonDataException` escape would break the documented contract of
-   * the trace methods, and would leave a caller unable to tell "the engine said no" apart from "we
+   * these methods, and would leave a caller unable to tell "the engine said no" apart from "we
    * could not read what it said".
    */
   private fun <T> decodeResponse(rawResponse: String, type: Class<T>): T =
@@ -283,5 +307,24 @@ class Valhalla(
    */
   override fun close() {
     valhallaActor.close()
+  }
+
+  private companion object {
+
+    fun defaultMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    /**
+     * Writes the config, then builds the actor from where it landed.
+     *
+     * Both steps happen before the constructor returns, so the file is read before another
+     * instance sharing the same [ValhallaConfigManager] can overwrite it.
+     */
+    fun actorFor(
+        config: ValhallaConfig,
+        valhallaConfigManager: ValhallaConfigManager
+    ): ValhallaActorProviding {
+      valhallaConfigManager.writeConfig(config)
+      return ValhallaActor(valhallaConfigManager.getAbsolutePath())
+    }
   }
 }

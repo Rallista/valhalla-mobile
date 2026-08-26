@@ -19,6 +19,17 @@ sealed class ValhallaException(message: String? = null, cause: Throwable? = null
    */
   class Internal(response: ErrorResponse) : ValhallaException(response.toString(), null)
 
+  /**
+   * No longer thrown.
+   *
+   * [Valhalla.route] used to guess at whether a response was an error by looking for substrings in
+   * it, and raised this when the guess was wrong. It now applies the same `failOnUnknown` test as
+   * every other action, which either recognises the envelope or does not — so a response that
+   * cannot be read is reported as [InvalidResponse], carrying the parse failure that explains it.
+   */
+  @Deprecated(
+      "Never thrown; a response that cannot be read is reported as InvalidResponse.",
+      ReplaceWith("ValhallaException.InvalidResponse"))
   class InvalidError : ValhallaException("Invalid error response data")
 
   /**
