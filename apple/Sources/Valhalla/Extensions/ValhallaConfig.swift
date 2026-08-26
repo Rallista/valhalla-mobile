@@ -117,8 +117,19 @@ extension ValhallaConfig {
                   statsd: defaultConfig.statsd,
                   thor: defaultConfig.thor)
     }
-    
-    
+
+    /// Initialize ValhallaConfig for a specific tiles directory and elevation tiles.
+    ///
+    /// Without elevation tiles the `height` action answers null for every point.
+    ///
+    /// - Parameters:
+    ///   - tilesDir: The local folder path URL for the tiles directory.
+    ///   - elevationDir: The local directory holding skadi elevation tiles.
+    public init(tilesDir: URL, elevationDir: URL) throws {
+        try self.init(tilesDir: tilesDir)
+        additionalData?.elevation = elevationDir.relativePath
+    }
+
     /// Initialize ValhallaConfig for a specific tiles_url and tiles directory.
     ///
     /// Use this to download tiles from a http server on demand, and store them in the specified directory
