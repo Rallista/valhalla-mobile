@@ -107,6 +107,304 @@ private:
 };
 
 /**
+ * Resolves a JNIEnv for the calling thread, attaching it if the JVM does not know it yet and
+ * detaching again on scope exit.
+ *
+ * Valhalla runs the tile getter on whichever thread called the action, and that thread came from
+ * Kotlin, so it is normally attached already — in which case nothing is attached or detached here.
+ * The attach path exists because GraphReader is free to fetch from a thread of its own, and
+ * calling into the JVM from an unattached thread is undefined behaviour.
+ */
+class ScopedEnv {
+public:
+    explicit ScopedEnv(JavaVM* vm) : vm(vm) {
+        if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_OK) {
+            return;
+        }
+        if (vm->AttachCurrentThread(&env, nullptr) == JNI_OK) {
+            attached = true;
+        } else {
+            env = nullptr;
+        }
+    }
+
+    ~ScopedEnv() {
+        if (attached) {
+            vm->DetachCurrentThread();
+        }
+    }
+
+    ScopedEnv(const ScopedEnv&) = delete;
+    ScopedEnv& operator=(const ScopedEnv&) = delete;
+
+    JNIEnv* get() const {
+        return env;
+    }
+
+private:
+    JavaVM* vm;
+    JNIEnv* env = nullptr;
+    bool attached = false;
+};
+
+/**
+ * Frees every local reference made inside the scope.
+ *
+ * A tile fetch makes several, and the JVM only reclaims them automatically when a native method
+ * returns to Java. These calls run the other way round — C++ into Java and back — so without this
+ * the references accumulate for as long as routing continues and eventually overflow the local
+ * reference table.
+ */
+class ScopedLocalFrame {
+public:
+    explicit ScopedLocalFrame(JNIEnv* env) : env(env) {
+        if (env->PushLocalFrame(kCapacity) == 0) {
+            pushed = true;
+        } else {
+            env->ExceptionClear();
+        }
+    }
+
+    ~ScopedLocalFrame() {
+        if (pushed) {
+            env->PopLocalFrame(nullptr);
+        }
+    }
+
+    ScopedLocalFrame(const ScopedLocalFrame&) = delete;
+    ScopedLocalFrame& operator=(const ScopedLocalFrame&) = delete;
+
+    bool entered() const {
+        return pushed;
+    }
+
+private:
+    static constexpr jint kCapacity = 8;
+
+    JNIEnv* env;
+    bool pushed = false;
+};
+
+/// The Kotlin client object plus the ids needed to call it. Borrowed by every JniHttpClient;
+/// owned by the JniHttpClientFactory that outlives them.
+struct JniHttpBinding {
+    JavaVM* vm = nullptr;
+    jobject client = nullptr;
+    jmethodID get = nullptr;
+    jmethodID head = nullptr;
+    jfieldID success = nullptr;
+    jfieldID http_code = nullptr;
+    jfieldID last_modified = nullptr;
+    jfieldID body = nullptr;
+};
+
+/**
+ * Runs tile fetches by calling back into Kotlin's ValhallaHttpClient.
+ *
+ * The Android counterpart of ValhallaMobileHttpClientImpl in ValhallaWrapper.mm. Only the
+ * transport differs: iOS talks to NSURLConnection directly from Obj-C++, and here the request
+ * crosses back into the JVM.
+ *
+ * Holds the binding by pointer rather than owning it. ValhallaActor takes ownership of the client
+ * it is given and frees it when the config turns out to have no tile_url, and the actor is rebuilt
+ * on the deferred-construction path — so a client cannot own anything that must survive one actor.
+ * JniHttpClientFactory owns the global reference instead, and outlives every client it makes.
+ *
+ * Neither entry point lets an exception escape: Kotlin's client catches its own, and anything
+ * still pending afterwards (an OutOfMemoryError, a class that failed to initialise) is cleared and
+ * reported as a failed fetch. Letting one stay pending would corrupt the next JNI call.
+ */
+class JniHttpClient : public ValhallaMobileHttpClient {
+public:
+    explicit JniHttpClient(const JniHttpBinding* binding) : binding(binding) {
+    }
+
+    valhalla::baldr::tile_getter_t::GET_response_t
+    get(const std::string& url, uint64_t range_offset = 0, uint64_t range_size = 0) override {
+        valhalla::baldr::tile_getter_t::GET_response_t response;
+        response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;
+
+        ScopedEnv env(binding->vm);
+        if (env.get() == nullptr) {
+            return response;
+        }
+
+        ScopedLocalFrame frame(env.get());
+        if (!frame.entered()) {
+            return response;
+        }
+
+        jstring j_url = env.get()->NewStringUTF(url.c_str());
+        if (j_url == nullptr) {
+            env.get()->ExceptionClear();
+            return response;
+        }
+
+        jobject result = env.get()->CallObjectMethod(binding->client, binding->get, j_url,
+                                                     static_cast<jlong>(range_offset),
+                                                     static_cast<jlong>(range_size));
+        if (!completed(env.get(), result)) {
+            return response;
+        }
+
+        response.http_code_ = env.get()->GetIntField(result, binding->http_code);
+        if (env.get()->GetBooleanField(result, binding->success) == JNI_TRUE) {
+            auto body = static_cast<jbyteArray>(env.get()->GetObjectField(result, binding->body));
+            if (body != nullptr) {
+                const jsize length = env.get()->GetArrayLength(body);
+                response.bytes_.resize(static_cast<size_t>(length));
+                env.get()->GetByteArrayRegion(body, 0, length,
+                                              reinterpret_cast<jbyte*>(response.bytes_.data()));
+            }
+            response.status_ = valhalla::baldr::tile_getter_t::status_code_t::SUCCESS;
+        }
+
+        return response;
+    }
+
+    valhalla::baldr::tile_getter_t::HEAD_response_t
+    head(const std::string& url,
+         valhalla::baldr::tile_getter_t::header_mask_t header_mask) override {
+        valhalla::baldr::tile_getter_t::HEAD_response_t response;
+        response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;
+
+        ScopedEnv env(binding->vm);
+        if (env.get() == nullptr) {
+            return response;
+        }
+
+        ScopedLocalFrame frame(env.get());
+        if (!frame.entered()) {
+            return response;
+        }
+
+        jstring j_url = env.get()->NewStringUTF(url.c_str());
+        if (j_url == nullptr) {
+            env.get()->ExceptionClear();
+            return response;
+        }
+
+        jobject result = env.get()->CallObjectMethod(binding->client, binding->head, j_url,
+                                                     static_cast<jint>(header_mask));
+        if (!completed(env.get(), result)) {
+            return response;
+        }
+
+        response.http_code_ = env.get()->GetIntField(result, binding->http_code);
+        if (env.get()->GetBooleanField(result, binding->success) == JNI_TRUE) {
+            response.last_modified_time_ =
+                static_cast<uint64_t>(env.get()->GetLongField(result, binding->last_modified));
+            response.status_ = valhalla::baldr::tile_getter_t::status_code_t::SUCCESS;
+        }
+
+        return response;
+    }
+
+private:
+    /**
+     * Whether a call into Kotlin produced a usable result.
+     *
+     * Clears anything pending, because a JNI call made while an exception is pending is undefined
+     * behaviour, and the next tile fetch would make one.
+     */
+    static bool completed(JNIEnv* env, jobject result) {
+        if (env->ExceptionCheck() == JNI_TRUE) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            return false;
+        }
+        return result != nullptr;
+    }
+
+    const JniHttpBinding* binding;
+};
+
+/**
+ * Owns the global reference to the Kotlin client, and mints a fresh JniHttpClient for each actor
+ * build.
+ *
+ * The local reference createActor is handed dies when that call returns, so it is promoted to a
+ * global one here and released when the handle is deleted. Field and method ids are looked up once
+ * and cached — they stay valid as long as the class is not unloaded, and the class is reachable
+ * from the referenced object, so it cannot be.
+ */
+class JniHttpClientFactory {
+public:
+    /**
+     * @param env     the environment of the thread calling createActor.
+     * @param client  a Kotlin ValhallaHttpClient. May be null, for a caller that wants no fetching.
+     * @return        the factory, or nullptr when the JNI plumbing could not be set up, in which
+     *                case the actor is built without a client and behaves as it did before.
+     */
+    static std::unique_ptr<JniHttpClientFactory> create(JNIEnv* env, jobject client) {
+        if (client == nullptr) {
+            return nullptr;
+        }
+
+        JniHttpBinding binding;
+        if (env->GetJavaVM(&binding.vm) != JNI_OK || binding.vm == nullptr) {
+            return nullptr;
+        }
+
+        jclass client_class = env->GetObjectClass(client);
+        jclass response_class = env->FindClass("com/valhalla/valhalla/http/ValhallaHttpResponse");
+        if (client_class == nullptr || response_class == nullptr) {
+            env->ExceptionClear();
+            return nullptr;
+        }
+
+        binding.get =
+            env->GetMethodID(client_class, "get",
+                             "(Ljava/lang/String;JJ)Lcom/valhalla/valhalla/http/ValhallaHttpResponse;");
+        binding.head =
+            env->GetMethodID(client_class, "head",
+                             "(Ljava/lang/String;I)Lcom/valhalla/valhalla/http/ValhallaHttpResponse;");
+        binding.success = env->GetFieldID(response_class, "success", "Z");
+        binding.http_code = env->GetFieldID(response_class, "httpCode", "I");
+        binding.last_modified = env->GetFieldID(response_class, "lastModified", "J");
+        binding.body = env->GetFieldID(response_class, "body", "[B");
+
+        if (binding.get == nullptr || binding.head == nullptr || binding.success == nullptr ||
+            binding.http_code == nullptr || binding.last_modified == nullptr ||
+            binding.body == nullptr) {
+            env->ExceptionClear();
+            return nullptr;
+        }
+
+        binding.client = env->NewGlobalRef(client);
+        if (binding.client == nullptr) {
+            env->ExceptionClear();
+            return nullptr;
+        }
+
+        return std::unique_ptr<JniHttpClientFactory>(new JniHttpClientFactory(binding));
+    }
+
+    ~JniHttpClientFactory() {
+        // Deleting the handle can happen on a thread other than the one that built it, so the
+        // environment is resolved the same way as for a request.
+        ScopedEnv env(binding.vm);
+        if (env.get() != nullptr) {
+            env.get()->DeleteGlobalRef(binding.client);
+        }
+    }
+
+    JniHttpClientFactory(const JniHttpClientFactory&) = delete;
+    JniHttpClientFactory& operator=(const JniHttpClientFactory&) = delete;
+
+    /// A client for one actor. ValhallaActor takes ownership of it.
+    JniHttpClient* new_client() const {
+        return new JniHttpClient(&binding);
+    }
+
+private:
+    explicit JniHttpClientFactory(const JniHttpBinding& binding) : binding(binding) {
+    }
+
+    JniHttpBinding binding;
+};
+
+/**
  * Owns the actor for the lifetime of one Kotlin ValhallaActor.
  *
  * Building an actor parses the config and opens the GraphReader, which mmaps the
@@ -125,10 +423,21 @@ private:
  * ValhallaActor.kt.
  */
 struct ActorHandle {
-    explicit ActorHandle(std::string config_path) : config_path(std::move(config_path)) {
+    ActorHandle(std::string config_path, std::unique_ptr<JniHttpClientFactory> http_clients)
+        : config_path(std::move(config_path)), http_clients(std::move(http_clients)) {
+    }
+
+    /// A client for the next actor build, or null when there is no factory. Ownership passes to
+    /// the actor, which is why a new one is minted for every attempt rather than reused.
+    ValhallaMobileHttpClient* new_http_client() const {
+        return http_clients ? http_clients->new_client() : nullptr;
     }
 
     std::string config_path;
+
+    // Declared before `actor` so it is destroyed after it: the actor's client borrows the
+    // factory's global reference, and must not outlive it.
+    std::unique_ptr<JniHttpClientFactory> http_clients;
     std::unique_ptr<ValhallaActor> actor;
 };
 
@@ -163,7 +472,8 @@ jbyteArray run_jni_action(JNIEnv *env,
             const std::string request = copy_bytes(env, jRequest);
             // Normally already built by createActor; this is the retry path.
             if (!actor_handle->actor) {
-                actor_handle->actor = std::make_unique<ValhallaActor>(actor_handle->config_path);
+                actor_handle->actor = std::make_unique<ValhallaActor>(
+                    actor_handle->config_path, actor_handle->new_http_client());
             }
             return ((*actor_handle->actor).*action)(request);
         });
@@ -186,24 +496,34 @@ JNIEXPORT jlong
 JNICALL
 Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
                                                        jobject thiz,
-                                                       jstring jConfigPath) {
+                                                       jstring jConfigPath,
+                                                       jobject jHttpClient) {
     ScopedUtfChars config_path(env, jConfigPath);
     if (config_path.get() == nullptr) {
         env->ExceptionClear();
         return 0;
     }
 
+    // A null factory is not fatal. The actor is then built without a client, which is exactly how
+    // Android behaved before it had one: a config with no tile_url is unaffected, and one with a
+    // tile_url reports every fetch as a failure.
+    std::unique_ptr<JniHttpClientFactory> http_clients = JniHttpClientFactory::create(env, jHttpClient);
+    if (jHttpClient != nullptr && !http_clients) {
+        printf("[ValhallaActor] createActor could not bind the HTTP client; tile fetching is off\n");
+    }
+
     // Returning 0 lets Kotlin raise a typed error instead of taking a C++
     // exception across the boundary.
     std::unique_ptr<ActorHandle> handle;
     try {
-        handle = std::make_unique<ActorHandle>(config_path.get());
+        handle = std::make_unique<ActorHandle>(config_path.get(), std::move(http_clients));
     } catch (...) {
         printf("[ValhallaActor] createActor failed to allocate the handle\n");
         return 0;
     }
     try {
-        handle->actor = std::make_unique<ValhallaActor>(handle->config_path);
+        handle->actor = std::make_unique<ValhallaActor>(handle->config_path,
+                                                       handle->new_http_client());
     } catch (const std::exception &err) {
         printf("[ValhallaActor] createActor deferred, will retry on first use: %s\n", err.what());
     } catch (...) {
