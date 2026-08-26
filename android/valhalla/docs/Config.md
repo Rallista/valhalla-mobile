@@ -36,10 +36,22 @@ val config = ValhallaConfigFactory.usingTileUrl(
 )
 ```
 
-Valhalla fills the `{tilePath}` portion in with the tile it wants. This needs the consuming app to
-declare `<uses-permission android:name="android.permission.INTERNET" />`; this library does not
-declare it, so that offline-only consumers do not inherit it. Fetches are synchronous on whichever
-thread ran the routing action, so do not route on the main thread with a config built this way.
+Valhalla fills the `{tilePath}` portion in with the tile it wants, and `tilesAreGzFiles = true`
+tells it the server serves gzip-compressed tiles.
+
+Fetching goes through `java.net.HttpURLConnection`, so this adds no networking dependency to your
+app. Three things to know:
+
+- The consuming app must declare `<uses-permission android:name="android.permission.INTERNET" />`.
+  This library does not declare it, so that offline-only consumers do not inherit it. Without it
+  every fetch fails.
+- Fetches are synchronous, on whichever thread ran the routing action. Do not route on the main
+  thread with a config built this way.
+- This turns Loki's connectivity map off. It is built from the tiles that are present, so it
+  cannot answer for tiles that have not been downloaded yet.
+
+A config built for offline use — `usingTileExtract` or `usingTilesDir` — carries no tile URL, and
+no fetching is attempted.
 
 A config that already exists as JSON can be read back with `ValhallaConfigFactory.fromJson` or
 `fromFile`, and `ValhallaConfigFactory.default()` hands you valhalla's defaults to adjust yourself.

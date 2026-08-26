@@ -75,6 +75,36 @@ let config = try ValhallaConfig(tilesDir: tilesDirectoryURL)
 let valhalla = try Valhalla(config)
 ```
 
+#### Downloading tiles on demand
+
+Rather than shipping every tile up front, Valhalla can fetch them from a tile server as it needs
+them and cache them in a directory you choose. It fills the `{tilePath}` portion of the URL in
+with the tile it wants.
+
+```swift
+import Valhalla
+import ValhallaConfigModels
+
+let config = try ValhallaConfig(
+    tilesUrl: "https://your.tileserver/{tilePath}",
+    tilesDir: tilesDirectoryURL
+)
+let valhalla = try Valhalla(config)
+```
+
+Pass `tilesAreGzFiles: true` if the server serves gzip-compressed tiles.
+
+Fetching goes through `NSURLConnection`, so this adds no networking dependency to your app, and
+nothing to configure beyond the URL. Two things to know:
+
+- Requests are synchronous, on whichever thread ran the routing action. Route off the main thread
+  when the config has a tiles URL.
+- This turns Loki's connectivity map off. It is built from the tiles that are present, so it
+  cannot answer for tiles that have not been downloaded yet.
+
+A config built for offline use — ``ValhallaConfig/init(tileExtractTar:)`` or
+``ValhallaConfig/init(tilesDir:)`` — carries no tiles URL, and no fetching is attempted.
+
 ### Getting a route
 
 Now that `let valhalla` is initialized, you can use it to get a route.
