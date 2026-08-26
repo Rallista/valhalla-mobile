@@ -11,6 +11,25 @@ if [ -z ${VCPKG_ROOT+x} ]; then
   exit 1
 fi
 
+# The install tree carries only the headers that the public wrapper API reaches.
+# Compile a probe the same way a consumer does, so a missing header fails here
+# and not in a downstream Xcode build.
+verify_installed_headers() {
+    local probe status
+    probe=`mktemp -t valhalla_header_probe`
+    printf '#import <include/main.h>\n' > $probe
+
+    xcrun --sdk $sdk clang++ -x objective-c++ -std=c++20 -fsyntax-only \
+        -target $verify_target \
+        -isysroot `xcrun --sdk $sdk --show-sdk-path` \
+        -I $build_dir/install/include \
+        $probe
+    status=$?
+
+    rm -f $probe
+    return $status
+}
+
 # Set the path to the toolchains
 vcpkg_toolchain_file=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
 vcpkg_triplet_overlay=`pwd`/triplets
@@ -21,24 +40,28 @@ if [ "$1" == "arm64-ios" ]; then
     system_name=iOS
     min_deployment_target=16.4
     arch=arm64
+    verify_target=arm64-apple-ios$min_deployment_target
     vcpkg_target_triplet=arm64-ios
 elif [ "$1" == "arm64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
     min_deployment_target=16.4
     arch=arm64
+    verify_target=arm64-apple-ios$min_deployment_target-simulator
     vcpkg_target_triplet=arm64-ios-simulator
 elif [ "$1" == "x64-ios-simulator" ]; then
     sdk=iphonesimulator
     system_name=iOS
     min_deployment_target=16.4
     arch=x86_64
+    verify_target=x86_64-apple-ios$min_deployment_target-simulator
     vcpkg_target_triplet=x64-ios-simulator
 elif [ "$1" == "macos" ]; then
     sdk=macosx
     system_name=Darwin
     min_deployment_target=10.14
     arch=arm64 # TODO: Add x86_64 for older macs?
+    verify_target=arm64-apple-macos$min_deployment_target
     vcpkg_target_triplet=arm64-osx # TODO: Try the normal one that's not in the community releases.
 elif [ "$1" == "tvos" ]; then
     echo "Error tvos not supported yet." # error: 'fork' is unavailable: not available on watchOS, tvOS (& 'execvp')
@@ -81,4 +104,12 @@ cmake -DCMAKE_TOOLCHAIN_FILE=$vcpkg_toolchain_file \
     -S $wrapper_dir \
     -B . \
     -G Xcode
-cmake --build . --config Release --target install -- -jobs $(sysctl -n hw.ncpu)
+cmake --build . --config Release --target install -- -jobs $(sysctl -n hw.ncpu) || exit $?
+
+echo "Verifying the installed headers..."
+if ! verify_installed_headers; then
+    echo "Error: the installed headers do not compile on their own."
+    echo "Add what the scan missed to BOOST_HEADERS_KEEP in"
+    echo "install_minimal_boost_headers() in src/CMakeLists.txt."
+    exit 1
+fi
