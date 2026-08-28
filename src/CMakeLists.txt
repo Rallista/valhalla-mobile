@@ -121,13 +121,71 @@ function(install_vcpkg_libs)
     endforeach()
 endfunction()
 
+# Install the vcpkg headers that the public wrapper API reaches, and no others.
+#
+# Boost_INCLUDE_DIRS is the whole vcpkg include tree, not the Boost directory
+# inside it. Installing that tree ships 123 MB per xcframework slice, and Boost
+# is 114 MB of it. The public API reaches about 200 of those headers.
+#
+# cmake/install_minimal_boost_headers.cmake does the work, at install time,
+# because it has to see the headers that the build generates. This function only
+# collects the flags it needs. scripts/build_apple.sh then compiles a probe
+# against the install tree and fails the build if a header is missing.
+function(install_minimal_boost_headers)
+    # Under the Xcode generator CMAKE_OSX_SYSROOT holds an SDK name. The
+    # compiler needs the path.
+    set(sysroot "${CMAKE_OSX_SYSROOT}")
+    if(sysroot AND NOT IS_DIRECTORY "${sysroot}")
+        execute_process(COMMAND xcrun --sdk "${CMAKE_OSX_SYSROOT}" --show-sdk-path
+                        OUTPUT_VARIABLE sysroot
+                        OUTPUT_STRIP_TRAILING_WHITESPACE
+                        ERROR_QUIET)
+    endif()
+
+    # The scan must read the headers the way a consumer does, so give it the
+    # same language, architecture, and platform as the build.
+    set(scan_flags -x c++ -std=c++${CMAKE_CXX_STANDARD})
+    foreach(scan_arch IN LISTS CMAKE_OSX_ARCHITECTURES)
+        list(APPEND scan_flags -arch ${scan_arch})
+    endforeach()
+    if(sysroot)
+        list(APPEND scan_flags -isysroot ${sysroot})
+    endif()
+    # CMake picks the right form of this flag for the device and for the
+    # simulator. The visionOS and Catalyst forms are templates, and this project
+    # does not build for those platforms yet.
+    if(CMAKE_OSX_DEPLOYMENT_TARGET
+       AND CMAKE_CXX_OSX_DEPLOYMENT_TARGET_FLAG
+       AND NOT CMAKE_CXX_OSX_DEPLOYMENT_TARGET_FLAG MATCHES "<")
+        list(APPEND scan_flags
+             "${CMAKE_CXX_OSX_DEPLOYMENT_TARGET_FLAG}${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    endif()
+
+    file(GLOB public_headers "${CMAKE_CURRENT_SOURCE_DIR}/wrapper/include/*.h")
+
+    install(CODE "
+        set(BOOST_HEADERS_COMPILER \"${CMAKE_CXX_COMPILER}\")
+        set(BOOST_HEADERS_FLAGS \"${scan_flags}\")
+        set(BOOST_HEADERS_INCLUDE_DIRS
+            \"${CMAKE_CURRENT_SOURCE_DIR}/wrapper/include\"
+            \"${VALHALLA_SOURCE_DIR}\"
+            \"${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include\"
+            \"${Boost_INCLUDE_DIRS}\"
+            \"$<TARGET_PROPERTY:valhalla,INTERFACE_INCLUDE_DIRECTORIES>\")
+        set(BOOST_HEADERS_PUBLIC \"${public_headers}\")
+        set(BOOST_HEADERS_ROOT \"${Boost_INCLUDE_DIRS}\")
+        set(BOOST_HEADERS_KEEP \"boost/config/*\")
+        set(BOOST_HEADERS_DESTINATION \"${CMAKE_INSTALL_PREFIX}/include\")
+        set(BOOST_HEADERS_SCRATCH \"${CMAKE_BINARY_DIR}\")
+    ")
+    install(SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/cmake/install_minimal_boost_headers.cmake)
+endfunction()
+
 if (APPLE)
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/valhalla/third_party/date/include
             DESTINATION ${CMAKE_INSTALL_PREFIX})
 
-    install(DIRECTORY ${Boost_INCLUDE_DIRS}
-            DESTINATION ${CMAKE_INSTALL_PREFIX}
-            COMPONENT development)
+    install_minimal_boost_headers()
 
     install_vcpkg_libs(liblz4 libprotobuf-lite)
     install_vcpkg_libs_wildcard("libabsl*")
