@@ -29,6 +29,18 @@ public:
     head(const std::string& url, valhalla::baldr::tile_getter_t::header_mask_t header_mask) = 0;
 };
 
+/**
+ * Owns one Valhalla actor and runs actions against it.
+ *
+ * Every action runs on a dedicated thread with a 16 MB stack, joined before the call
+ * returns: Valhalla's map matcher recurses once per matched edge, which overflows the
+ * ~1 MB stack a mobile worker thread has on a long trace. Actions stay synchronous, and
+ * the calling thread is otherwise untouched — see valhalla_actor.cpp for why that matters
+ * to the JNI and Obj-C++ layers.
+ *
+ * The actor is not safe to use from several threads at once, and this class does not make
+ * it so; the Kotlin and Obj-C wrappers serialize calls.
+ */
 class ValhallaActor {
 private:
     std::unique_ptr<valhalla::tyr::actor_t> actor;

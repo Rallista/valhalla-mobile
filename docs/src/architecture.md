@@ -44,6 +44,13 @@ The wrapper contains simplified C++ functions that wrap valhalla features, only 
 and returning primitive types. This layer is responsible for taking parameters from the Swift,
 Kotlin, or other language APIs, executing a valhalla function, and returning the result.
 
+Actions do not run on the thread that calls in. Each one is handed to a dedicated thread
+with a 16 MB stack and joined before the call returns, because valhalla's map matcher recurses
+once per matched edge and a long trace overflows the ~1 MB stack a mobile worker thread has
+([#89](https://github.com/Rallista/valhalla-mobile/issues/89)). Calls stay synchronous, and the
+JNI and Obj-C++ code above keeps running on the platform's own thread, so no JNI attach is
+involved. See [`valhalla_actor.cpp`](src/wrapper/valhalla_actor.cpp).
+
 For Android, this layer requires JNI. See [`main.cpp`](src/wrapper/main.cpp#L14). JNI is tricky,
 but there are many resources available:
 
