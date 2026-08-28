@@ -93,7 +93,7 @@ The architecture has three layers:
 ### Kotlin (android/)
 
 - **Build system**: Gradle with Kotlin DSL.
-- **Minimum SDK**: 26. **Compile SDK**: 34.
+- **Minimum SDK**: 24. **Compile SDK**: 34.
 - **JVM target**: 17.
 - **Formatting**: `ktfmt` — enforced in CI. Run formatting before committing.
 - Use `Moshi` for JSON serialization (not Gson or kotlinx.serialization).
