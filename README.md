@@ -31,8 +31,8 @@ them run entirely against the tiles on the device.
 
 Responses are valhalla's own JSON on both platforms, decoded into generated model types.
 `route` can also answer in the OSRM format, decoded on Android and returned as raw JSON on iOS.
-GPX is reachable through the raw request methods where they exist: every action on iOS, the
-trace actions on Android. PBF is not supported; requesting it returns an error.
+GPX is reachable through the raw request methods, which every action has on both platforms.
+PBF is not supported; requesting it returns an error.
 `height` needs a directory of elevation tiles in the config; without them every height is null.
 
 ## Documentation
@@ -72,7 +72,7 @@ Using a `libs.versions.toml` with a `build.gradle.kts`
 ```toml
 [versions]
 valhallaMobile = "0.6.1"
-valhallaModels = "0.5.0"
+valhallaModels = "0.5.2"
 osrm = "0.0.10"
 
 [libraries]
@@ -93,8 +93,8 @@ Using a standard `build.gradle.kts`
 
 ```kts
 implementation("io.github.rallista:valhalla-mobile:0.6.1")
-implementation("io.github.rallista:valhalla-models:0.5.0")
-implementation("io.github.rallista:valhalla-models-config:0.5.0")
+implementation("io.github.rallista:valhalla-models:0.5.2")
+implementation("io.github.rallista:valhalla-models-config:0.5.2")
 implementation("com.stadiamaps:osrm-openapi:0.0.10")
 ```
 
@@ -102,8 +102,8 @@ Using a standard `build.gradle`
 
 ```
 implementation 'io.github.rallista:valhalla-mobile:0.6.1'
-implementation 'io.github.rallista:valhalla-models:0.5.0'
-implementation 'io.github.rallista:valhalla-models-config:0.5.0'
+implementation 'io.github.rallista:valhalla-models:0.5.2'
+implementation 'io.github.rallista:valhalla-models-config:0.5.2'
 implementation 'com.stadiamaps:osrm-openapi:0.0.10'
 ```
 

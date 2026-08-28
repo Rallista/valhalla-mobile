@@ -1,5 +1,6 @@
 package com.valhalla.valhalla
 
+import com.valhalla.valhalla.http.ValhallaHttpClient
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
@@ -30,13 +31,18 @@ internal interface ValhallaActorProviding : Closeable {
  * Call [close] to release the native actor; nothing else frees it.
  *
  * @property configPath
+ * @param httpClient fetches tiles when the config sets `mjolnir.tile_url`. Pass null to turn
+ *   fetching off, which leaves such a config reporting every fetch as a failure.
  */
-internal class ValhallaActor(configPath: String) : ValhallaActorProviding {
+internal class ValhallaActor(
+    configPath: String,
+    httpClient: ValhallaHttpClient? = ValhallaHttpClient(),
+) : ValhallaActorProviding {
   private val valhallaKotlin = ValhallaKotlin()
   private val lock = Any()
 
   /** Zero once closed. Guarded by [lock]. */
-  private var handle: Long = valhallaKotlin.createActor(configPath)
+  private var handle: Long = valhallaKotlin.createActor(configPath, httpClient)
 
   init {
     check(handle != 0L) { "could not allocate the native Valhalla actor" }

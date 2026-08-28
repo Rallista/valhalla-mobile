@@ -14,10 +14,15 @@ extern "C" {
 // Android holds one native actor per Kotlin ValhallaActor, the way iOS holds one
 // per ValhallaWrapper. createActor hands back an opaque handle that every action
 // takes and deleteActor frees; 0 means the handle could not be allocated.
+//
+// jHttpClient is a com.valhalla.valhalla.http.ValhallaHttpClient used to fetch
+// tiles when the config sets mjolnir.tile_url, and fills the role
+// ValhallaMobileHttpClientImpl fills on iOS. Null turns tile fetching off.
 
 JNIEXPORT jlong JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
                                                 jobject thiz,
-                                                jstring jConfigPath);
+                                                jstring jConfigPath,
+                                                jobject jHttpClient);
 
 JNIEXPORT void JNICALL Java_com_valhalla_valhalla_ValhallaKotlin_deleteActor(JNIEnv *env,
                                                 jobject thiz,

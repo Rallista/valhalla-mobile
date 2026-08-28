@@ -41,7 +41,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/Rallista/valhalla-openapi-models-swift.git",
-            .upToNextMinor(from: "0.5.0")),
+            .upToNextMinor(from: "0.5.4")),
         .package(
             url: "https://github.com/UInt2048/Light-Swift-Untar.git", .upToNextMajor(from: "1.0.4")),
         .package(url: "https://github.com/apple/swift-docc-plugin", .upToNextMajor(from: "1.0.0")),

@@ -61,6 +61,9 @@ The architecture has three layers:
 2. **Platform bridge** — connects C++ to each platform's native language:
    - **iOS**: Objective-C++ (`apple/Sources/ValhallaObjc/`) bridges C++ to Swift via `ValhallaWrapper`.
    - **Android**: JNI functions in `src/wrapper/main.cpp` (guarded by `#ifdef __ANDROID__`) bridge C++ to Kotlin.
+   - Tile fetching crosses the same bridge in the other direction. `ValhallaMobileHttpClient`
+     is declared in `src/wrapper/include/valhalla_actor.h` for both platforms; iOS implements it
+     in Obj-C++ with `NSURLSession`, and Android calls back into Kotlin's `ValhallaHttpClient`.
 3. **Platform API** — idiomatic Swift/Kotlin classes that consumers use:
    - **iOS**: `Valhalla` class conforming to `ValhallaProviding` protocol (`apple/Sources/Valhalla/`).
    - **Android**: `Valhalla` class using `ValhallaActor` (`android/valhalla/src/main/java/com/valhalla/valhalla/`).
@@ -156,6 +159,8 @@ The architecture has three layers:
 - `scripts/build_android.sh` — builds C++ for a specific Android ABI via CMake/NDK/VCPKG.
 - `scripts/create_xcframework.sh` — combines architecture slices into an xcframework.
 - `scripts/move_android_so.sh` — places `.so` files into the Gradle `jniLibs` layout.
+- `scripts/generate_default_config.sh` — regenerates the bundled default valhalla config for
+  both platforms from the pinned submodule. Run it after bumping valhalla; `--check` is what CI runs.
 
 ### VCPKG triplets
 
@@ -172,7 +177,7 @@ Custom triplets live in `triplets/`. These configure VCPKG for cross-compilation
 ```bash
 # Run tests on simulator (from repo root)
 xcodebuild test \
-  -scheme Valhalla \
+  -scheme ValhallaMobile \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   -skipPackagePluginValidation
 ```

@@ -9,12 +9,22 @@ enum ValhallaFileManagerError: Error {
 
 enum ValhallaFileManager {
     
-    static func saveConfigTo(_ config: ValhallaConfig) throws -> URL {
+    /// Writes `config` into Application Support under `name`.
+    ///
+    /// The name is a parameter so two instances can hold two different configs at
+    /// once. Android gets the same freedom by passing a `ValhallaFile` to its
+    /// `ValhallaConfigManager`.
+    ///
+    /// - Parameters:
+    ///   - config: the configuration to write.
+    ///   - name: the file name to write it under.
+    /// - Returns: the URL it was written to.
+    static func saveConfigTo(_ config: ValhallaConfig, named name: String) throws -> URL {
         guard let applicationDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             throw ValhallaFileManagerError.systemDirNotFound("applicationSupport")
         }
         try FileManager.default.createDirectory(at: applicationDir, withIntermediateDirectories: true)
-        let configURL = applicationDir.appendingPathComponent("valhalla-config.json")
+        let configURL = applicationDir.appendingPathComponent(name)
         let data = try JSONEncoder().encode(config)
 
         try data.write(to: configURL)

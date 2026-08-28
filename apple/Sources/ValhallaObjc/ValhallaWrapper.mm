@@ -3,6 +3,60 @@
 #import <include/main.h>
 #import <Foundation/Foundation.h>
 
+namespace {
+
+/**
+ * Runs one request to completion and hands back what it produced.
+ *
+ * Valhalla's tile getter is synchronous — it asks for a tile and expects the bytes back — so the
+ * asynchronous session API is bridged with a semaphore rather than pushed up into the caller.
+ *
+ * Waiting here cannot deadlock: NSURLSession runs a completion handler on its own delegate queue,
+ * never on the thread that resumed the task, so the thread being blocked is not the thread the
+ * completion needs. It does block, though, which is why a routing action against a config with a
+ * tile URL does not belong on the main thread.
+ *
+ * `sendSynchronousRequest:returningResponse:error:` did this before, and has been deprecated since
+ * iOS 9.
+ *
+ * @param request       the request to run.
+ * @param outResponse   set to the HTTP response, or nil if the request never got one.
+ * @param outError      set to the transport error, if there was one.
+ * @return              the response body, or nil.
+ */
+NSData* PerformSynchronously(NSURLRequest* request,
+                             NSHTTPURLResponse* __strong * outResponse,
+                             NSError* __strong * outError) {
+    __block NSData* data = nil;
+    __block NSURLResponse* response = nil;
+    __block NSError* error = nil;
+
+    dispatch_semaphore_t finished = dispatch_semaphore_create(0);
+
+    NSURLSessionDataTask* task =
+        [[NSURLSession sharedSession] dataTaskWithRequest:request
+                                       completionHandler:^(NSData* taskData,
+                                                           NSURLResponse* taskResponse,
+                                                           NSError* taskError) {
+            data = taskData;
+            response = taskResponse;
+            error = taskError;
+            dispatch_semaphore_signal(finished);
+        }];
+    [task resume];
+    dispatch_semaphore_wait(finished, DISPATCH_TIME_FOREVER);
+
+    // A non-HTTP response cannot carry a status code, so it is treated as no response at all.
+    *outResponse = [response isKindOfClass:[NSHTTPURLResponse class]]
+                       ? (NSHTTPURLResponse*)response
+                       : nil;
+    *outError = error;
+
+    return data;
+}
+
+} // namespace
+
 /**
  * iOS implementation of ValhallaMobileHttpClient using NSMutableURLRequest
  */
@@ -36,9 +90,7 @@ public:
             NSHTTPURLResponse* httpResponse = nil;
             NSError* error = nil;
             
-            NSData* data = [NSURLConnection sendSynchronousRequest:request 
-                                                  returningResponse:&httpResponse 
-                                                              error:&error];
+            NSData* data = PerformSynchronously(request, &httpResponse, &error);
             
             if (error || !httpResponse) {
                 response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;
@@ -84,9 +136,7 @@ public:
             NSHTTPURLResponse* httpResponse = nil;
             NSError* error = nil;
             
-            [NSURLConnection sendSynchronousRequest:request 
-                                  returningResponse:&httpResponse 
-                                              error:&error];
+            PerformSynchronously(request, &httpResponse, &error);
             
             if (error || !httpResponse) {
                 response.status_ = valhalla::baldr::tile_getter_t::status_code_t::FAILURE;
@@ -131,7 +181,21 @@ using ActorAction = std::string (*)(const char*, void*);
 
 /// Shared body of every action method: hand the request to the C++ wrapper and
 /// bridge the response back. Callers hold the lock; this does not.
-NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
+///
+/// A null actor means the caller ran an action after `close`. Swift guards that
+/// case first, so reaching here is a bug rather than ordinary use — but the
+/// wrapper still has to answer something instead of dereferencing null, and the
+/// envelope it answers matches the Android JNI layer's wording exactly.
+NSString* PerformAction(ActorAction action,
+                        NSString* request,
+                        void* actor,
+                        const char* action_name) {
+    if (actor == nullptr) {
+        return [NSString stringWithFormat:
+                @"{\"code\":-1,\"message\":\"the actor is closed, cannot run %s\"}",
+                action_name];
+    }
+
     std::string result = action([request UTF8String], actor);
 
     // Swift imports this return as implicitly unwrapped, so a nil would trap in
@@ -176,42 +240,52 @@ NSString* PerformAction(ActorAction action, NSString* request, void* actor) {
 - (NSString*)route:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&route, request, _actor);
+        return PerformAction(&route, request, _actor, "route");
     }
 }
 
 - (NSString*)traceRoute:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&trace_route, request, _actor);
+        return PerformAction(&trace_route, request, _actor, "trace_route");
     }
 }
 
 - (NSString*)traceAttributes:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&trace_attributes, request, _actor);
+        return PerformAction(&trace_attributes, request, _actor, "trace_attributes");
     }
 }
 
 - (NSString*)height:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&height, request, _actor);
+        return PerformAction(&height, request, _actor, "height");
+    }
+}
+
+- (void)close
+{
+    // The same lock every action takes, so a close cannot free the actor out from
+    // under a request that is already running on another thread.
+    @synchronized(self) {
+        // Deleting null is well defined, so a double close is harmless.
+        delete_valhalla_actor(_actor);
+        _actor = nil;
     }
 }
 
 - (NSString*)matrix:(NSString*)request
 {
     @synchronized(self) {
-        return PerformAction(&matrix, request, _actor);
+        return PerformAction(&matrix, request, _actor, "sources_to_targets");
     }
 }
 
 - (void) dealloc
 {
-    delete_valhalla_actor(_actor);
-    _actor = nil;
+    [self close];
 }
 
 @end

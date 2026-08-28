@@ -57,7 +57,7 @@ final class TestValhallaHeight: XCTestCase {
     /// Without elevation data every height is null, which the typed
     /// `HeightResponse` cannot represent, so this goes through the raw method.
     func testHeightWithoutElevationDataIsNull() throws {
-        let raw = valhalla.height(rawRequest: #"{"shape":[{"lat":42.5,"lon":1.5}]}"#)
+        let raw = try valhalla.height(rawRequest: #"{"shape":[{"lat":42.5,"lon":1.5}]}"#)
 
         let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any])
         XCTAssertEqual(json["height"] as? [NSNull], [NSNull()])
