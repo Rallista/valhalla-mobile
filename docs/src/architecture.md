@@ -48,8 +48,9 @@ Actions do not run on the thread that calls in. Each one is handed to a dedicate
 with a 16 MB stack and joined before the call returns, because valhalla's map matcher recurses
 once per matched edge and a long trace overflows the ~1 MB stack a mobile worker thread has
 ([#89](https://github.com/Rallista/valhalla-mobile/issues/89)). Calls stay synchronous, and the
-JNI and Obj-C++ code above keeps running on the platform's own thread, so no JNI attach is
-involved. See [`valhalla_actor.cpp`](src/wrapper/valhalla_actor.cpp).
+JNI and Obj-C++ entry points keep running on the platform's own thread. The tile getter does not:
+valhalla calls it back out of the action, so on Android it reaches the JVM from the action's
+thread and attaches per fetch. See [`valhalla_actor.cpp`](src/wrapper/valhalla_actor.cpp).
 
 For Android, this layer requires JNI. See [`main.cpp`](src/wrapper/main.cpp#L14). JNI is tricky,
 but there are many resources available:

@@ -110,10 +110,10 @@ private:
  * Resolves a JNIEnv for the calling thread, attaching it if the JVM does not know it yet and
  * detaching again on scope exit.
  *
- * Valhalla runs the tile getter on whichever thread called the action, and that thread came from
- * Kotlin, so it is normally attached already — in which case nothing is attached or detached here.
- * The attach path exists because GraphReader is free to fetch from a thread of its own, and
- * calling into the JVM from an unattached thread is undefined behaviour.
+ * Valhalla runs the tile getter on whichever thread called the action, and since actions moved
+ * onto a thread of their own (valhalla_actor.cpp) the JVM has never seen it, so a fetch during an
+ * action does attach and detach here. The GetEnv fast path still covers callers that are already
+ * attached, and calling into the JVM from an unattached thread is undefined behaviour.
  */
 class ScopedEnv {
 public:

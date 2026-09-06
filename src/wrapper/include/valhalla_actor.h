@@ -34,9 +34,9 @@ public:
  *
  * Every action runs on a dedicated thread with a 16 MB stack, joined before the call
  * returns: Valhalla's map matcher recurses once per matched edge, which overflows the
- * ~1 MB stack a mobile worker thread has on a long trace. Actions stay synchronous, and
- * the calling thread is otherwise untouched — see valhalla_actor.cpp for why that matters
- * to the JNI and Obj-C++ layers.
+ * ~1 MB stack a mobile worker thread has on a long trace. The recursion is unbounded, so
+ * this raises the ceiling rather than removing it. Actions stay synchronous, and anything
+ * Valhalla calls back out of an action runs on that thread too — see valhalla_actor.cpp.
  *
  * The actor is not safe to use from several threads at once, and this class does not make
  * it so; the Kotlin and Obj-C wrappers serialize calls.

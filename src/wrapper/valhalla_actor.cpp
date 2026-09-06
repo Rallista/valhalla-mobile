@@ -97,14 +97,16 @@ template <typename Action> void* run_action(void* arg) {
 }
 
 /**
- * Runs one actor action on a thread with a stack deep enough for the matcher, joining it
- * before returning.
+ * Runs one actor action on a thread with a 16 MB stack, joining it before returning.
  *
- * Only the actor call moves. Every JNIEnv use in main.cpp, and every Obj-C++ call in
- * ValhallaWrapper.mm, stays on the thread the platform called in on, so this needs no JNI
- * attach and no autorelease pool of its own. The call remains synchronous, and callers are
- * serialized one layer up (`synchronized` in Kotlin, `@synchronized` in Obj-C), so the
- * actor is still only ever touched by one thread at a time.
+ * The platform entry points stay where they are: every JNIEnv use in main.cpp's JNI functions,
+ * and every Obj-C++ call in ValhallaWrapper.mm, still runs on the thread the platform called in
+ * on. What moves with the action is whatever Valhalla calls back out of it, which is the tile
+ * getter. On Android that is JniHttpClient, which reaches the JVM from this thread, so ScopedEnv
+ * attaches and detaches around each fetch; on Apple the getter brings its own @autoreleasepool,
+ * so this thread needs none. The call remains synchronous, and callers are serialized one layer
+ * up (`synchronized` in Kotlin, `@synchronized` in Obj-C), so the actor is still only ever
+ * touched by one thread at a time.
  *
  * Anything the action throws is rethrown on the caller's thread, where the platform
  * boundary turns it into the error envelope exactly as before.
