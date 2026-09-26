@@ -5,6 +5,7 @@
 #include <exception>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -122,13 +123,28 @@ public:
    *                      ownership is transferred to the wrapper. May be null,
    *                      in which case requests report FAILURE.
    * @param is_gzipped  whether valhalla stores tiles gzip-compressed
+   * @param failures  counts fetches that fail other than with a 404 or 410; owned by the actor
+   * @param before_fetch  run before every request once it is set, and throws to stop the
+   *                      action; owned by the actor, which outlives the reader that owns this
+   * @param fetch_time  the time the running action has spent in requests, which each request
+   *                    adds to; owned by the actor
    */
-  TileGetterWrapper(std::unique_ptr<ValhallaMobileHttpClient> http_client, bool is_gzipped): http_client(std::move(http_client)), is_gzipped(is_gzipped) {
+  TileGetterWrapper(std::unique_ptr<ValhallaMobileHttpClient> http_client, bool is_gzipped,
+                    std::atomic<uint32_t>* failures, const std::function<void()>* before_fetch,
+                    std::atomic<std::chrono::steady_clock::rep>* fetch_time)
+      : is_gzipped(is_gzipped), failures_(failures), before_fetch_(before_fetch),
+        fetch_time_(fetch_time), http_client(std::move(http_client)) {
   }
 
   GET_response_t get(const std::string& url,
                      const uint64_t range_offset = 0,
                      const uint64_t range_size = 0) override {
+    // Before the request, not after: the point is to stop paying for fetches once the
+    // caller has given up, and a check that runs only afterwards still pays for this one.
+    if (*before_fetch_) {
+      (*before_fetch_)();
+    }
+    const FetchTimer timer{fetch_time_};
     GET_response_t result;
     if (!http_client) {
       result.status_ = tile_getter_t::status_code_t::FAILURE;
@@ -137,10 +153,12 @@ public:
     // A range is a slice of a remote tar, passed through as is if it's the size asked for.
     if (range_size > 0) {
       result = http_client->get(url, range_offset, range_size, false);
-      if (result.status_ == tile_getter_t::status_code_t::SUCCESS &&
-          result.bytes_.size() != range_size) {
+      if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
+        count_failure(result);
+      } else if (result.bytes_.size() != range_size) {
         printf("[ValhallaActor] range of %s returned %zu bytes, not %llu\n", url.c_str(),
                result.bytes_.size(), static_cast<unsigned long long>(range_size));
+        // The server ignores Range, which a retry won't change.
         result.status_ = tile_getter_t::status_code_t::FAILURE;
       }
       return result;
@@ -152,10 +170,17 @@ public:
         result.status_ = tile_getter_t::status_code_t::FAILURE;
       }
     }
+    if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
+      count_failure(result);
+    }
     return result;
   }
 
   HEAD_response_t head(const std::string& url, header_mask_t header_mask) override {
+    if (*before_fetch_) {
+      (*before_fetch_)();
+    }
+    const FetchTimer timer{fetch_time_};
     HEAD_response_t result;
     if (http_client) { 
         result = http_client->head(url, header_mask);
@@ -170,6 +195,24 @@ public:
   }
 
 private:
+  /// Adds the time one request takes, however it returns, to the action's fetch time.
+  struct FetchTimer {
+    std::atomic<std::chrono::steady_clock::rep>* total;
+    std::chrono::steady_clock::time_point started = std::chrono::steady_clock::now();
+    ~FetchTimer() {
+      total->fetch_add((std::chrono::steady_clock::now() - started).count(),
+                       std::memory_order_relaxed);
+    }
+  };
+
+  // Anything but a 404 or 410 may be the connection, so RetryingGraphReader lets the next action
+  // retry it.
+  void count_failure(const GET_response_t& result) const {
+    if (result.http_code_ != 404 && result.http_code_ != 410) {
+      failures_->fetch_add(1, std::memory_order_relaxed);
+    }
+  }
+
   // Valhalla caches whatever it's handed, so anything but one whole tile is rejected here.
   // A tile is then gzipped or inflated to match how valhalla stores it.
   bool validate_and_encode(const std::string& url, std::vector<char>& bytes) const {
@@ -197,7 +240,46 @@ private:
   }
 
   bool is_gzipped;
+  std::atomic<uint32_t>* failures_;
+  const std::function<void()>* before_fetch_;
+  std::atomic<std::chrono::steady_clock::rep>* fetch_time_;
   std::unique_ptr<ValhallaMobileHttpClient> http_client;
+};
+
+// GraphReader remembers every tile it failed to fetch until it's rebuilt. This one forgets
+// those that failed other than with a 404 or 410 when [forget_failures] is called, so an action
+// still skips them, as it would offline, but the next one retries.
+class RetryingGraphReader : public valhalla::baldr::GraphReader {
+public:
+  RetryingGraphReader(const boost::property_tree::ptree& config,
+                      std::unique_ptr<valhalla::baldr::tile_getter_t>&& tile_getter,
+                      const std::atomic<uint32_t>* failures)
+      : GraphReader(config, std::move(tile_getter)), failures_(failures) {
+  }
+
+  using GraphReader::GetGraphTile;
+
+  valhalla::baldr::graph_tile_ptr GetGraphTile(const valhalla::baldr::GraphId& graphid) override {
+    const auto before = failures_->load(std::memory_order_relaxed);
+    auto tile = GraphReader::GetGraphTile(graphid);
+    if (!tile && failures_->load(std::memory_order_relaxed) != before) {
+      std::lock_guard<std::mutex> lock(_404s_lock);
+      retry_.push_back(graphid.tile_base());
+    }
+    return tile;
+  }
+
+  void forget_failures() {
+    std::lock_guard<std::mutex> lock(_404s_lock);
+    for (const auto& id : retry_) {
+      _404s.erase(id);
+    }
+    retry_.clear();
+  }
+
+private:
+  const std::atomic<uint32_t>* failures_;
+  std::vector<valhalla::baldr::GraphId> retry_;
 };
 
 
@@ -299,7 +381,12 @@ template <typename Action> std::string run_on_deep_stack(Action&& action) {
 
 } // namespace
 
-ValhallaActor::ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client) {
+ValhallaActor::ValhallaActor(const std::string& config_path,
+                             ValhallaMobileHttpClient* http_client,
+                             std::atomic<bool>* cancel_flag) {
+    if (cancel_flag != nullptr) {
+      cancelled = cancel_flag;
+    }
     // Take ownership of the client immediately so it is freed on any early
     // return or exception below, and regardless of whether a getter is attached.
     std::unique_ptr<ValhallaMobileHttpClient> http_client_owned(http_client);
@@ -333,31 +420,139 @@ ValhallaActor::ValhallaActor(const std::string& config_path, ValhallaMobileHttpC
       if (wants_gzip && !gzipped) {
         printf("[ValhallaActor] tile_url_gz is ignored for a tar tile_url or without a tile_dir\n");
       }
-      tile_getter = std::make_unique<TileGetterWrapper>(std::move(http_client_owned), gzipped);
+      tile_getter = std::make_unique<TileGetterWrapper>(std::move(http_client_owned), gzipped,
+                                                        &fetch_failures, &before_fetch,
+                                                        &fetch_time);
     }
-    graph_reader = std::make_unique<valhalla::baldr::GraphReader>(
-      mjolnir_config, std::move(tile_getter)
+    graph_reader = std::make_unique<RetryingGraphReader>(
+      mjolnir_config, std::move(tile_getter), &fetch_failures
     );
+    // From the config, not from an API call, so a consumer configures the engine in one
+    // place instead of two. It sits beside the other `mjolnir.tile_url*` keys, named the
+    // way valhalla names its own. Seconds, and absent or 0 means no limit, matching every
+    // other optional mjolnir key.
+    tile_fetch_timeout_seconds =
+        std::max(0.0, mjolnir_config.get<double>("tile_url_timeout", 0.0));
+
+    // Set only now, so fetches the reader makes while it is built, such as a remote tar's
+    // index, are never stopped. Throwing is how both stop an action.
+    interrupt = [this]() {
+      if (cancelled->load(std::memory_order_relaxed)) {
+        record_stop(Stop::cancelled);
+        throw Cancelled(kCancelledMessage);
+      }
+    };
+    before_fetch = [this]() {
+      // Cancellation first: a user who pressed stop should not wait out the deadline.
+      interrupt();
+      const auto budget = fetch_budget.load(std::memory_order_relaxed);
+      if (budget != 0 && fetch_time.load(std::memory_order_relaxed) > budget) {
+        record_stop(Stop::timed_out);
+        throw TimedOut(kTimedOutMessage);
+      }
+    };
+
     // Setup the actor
     actor = std::make_unique<valhalla::tyr::actor_t>(config, *graph_reader, true);
 }
 
+void ValhallaActor::cancel() {
+    cancelled->store(true, std::memory_order_relaxed);
+}
+
+void ValhallaActor::resume() {
+    cancelled->store(false, std::memory_order_relaxed);
+}
+
+bool ValhallaActor::fetch_failed() const {
+    return fetch_failures.load(std::memory_order_relaxed) != fetch_failures_at_arm;
+}
+
+void ValhallaActor::record_stop(Stop reason) {
+    Stop none = Stop::none;
+    stopped.compare_exchange_strong(none, reason, std::memory_order_relaxed);
+}
+
+std::string ValhallaActor::with_deadline(const std::function<std::string()>& action) {
+    arm_deadline();
+    // Checked after, not relied on to propagate. Loki catches what a tile fetch throws during
+    // its search and answers 171 "No suitable edges near location" -- indistinguishable from a
+    // genuinely unroutable address. A caller needs to tell "the origin is gone" from "this
+    // route does not exist", so the recorded stop is what says so.
+    std::string answer;
+    try {
+        answer = action();
+    } catch (...) {
+        throw_if_stopped();
+        if (fetch_failed()) {
+            throw std::runtime_error(kFetchFailedMessage);
+        }
+        throw;
+    }
+    throw_if_stopped();
+    return answer;
+}
+
+void ValhallaActor::throw_if_stopped() const {
+    // Fixed strings, and no numbers in them. A caller has to tell these two apart from a
+    // genuine routing failure, and the only signal that survives the trip to Swift and Kotlin
+    // is the text -- so it has to be stable, and std::to_string(double) writes "15.000000".
+    // The caller configured the timeout, so it already knows the number.
+    switch (stopped.load(std::memory_order_relaxed)) {
+    case Stop::none:
+        return;
+    case Stop::timed_out:
+        throw TimedOut(kTimedOutMessage);
+    case Stop::cancelled:
+        throw Cancelled(kCancelledMessage);
+    }
+}
+
+void ValhallaActor::arm_deadline() {
+    stopped.store(Stop::none, std::memory_order_relaxed);
+    fetch_failures_at_arm = fetch_failures.load(std::memory_order_relaxed);
+    // The reader is always a RetryingGraphReader; see the constructor.
+    static_cast<RetryingGraphReader&>(*graph_reader).forget_failures();
+    // Per action, not per construction: the budget is "this route may spend N seconds
+    // fetching", not "this engine may spend N seconds in its lifetime".
+    fetch_time.store(0, std::memory_order_relaxed);
+    const auto seconds = tile_fetch_timeout_seconds;
+    if (seconds <= 0) {
+        fetch_budget.store(0, std::memory_order_relaxed);
+    } else {
+        const auto budget = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(seconds));
+        fetch_budget.store(std::max<std::chrono::steady_clock::rep>(budget.count(), 1),
+                           std::memory_order_relaxed);
+    }
+}
+
 std::string ValhallaActor::route(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->route(request); });
+    return with_deadline([&]() {
+        return run_on_deep_stack([&]() { return actor->route(request, &interrupt); });
+    });
 }
 
 std::string ValhallaActor::trace_route(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->trace_route(request); });
+    return with_deadline([&]() {
+        return run_on_deep_stack([&]() { return actor->trace_route(request, &interrupt); });
+    });
 }
 
 std::string ValhallaActor::trace_attributes(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->trace_attributes(request); });
+    return with_deadline([&]() {
+        return run_on_deep_stack([&]() { return actor->trace_attributes(request, &interrupt); });
+    });
 }
 
 std::string ValhallaActor::height(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->height(request); });
+    return with_deadline([&]() {
+        return run_on_deep_stack([&]() { return actor->height(request, &interrupt); });
+    });
 }
 
 std::string ValhallaActor::matrix(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->matrix(request); });
+    return with_deadline([&]() {
+        return run_on_deep_stack([&]() { return actor->matrix(request, &interrupt); });
+    });
 }

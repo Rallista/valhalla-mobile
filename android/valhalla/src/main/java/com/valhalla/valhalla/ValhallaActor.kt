@@ -15,6 +15,10 @@ internal interface ValhallaActorProviding : Closeable {
   fun height(request: String): String
 
   fun matrix(request: String): String
+
+  fun cancel()
+
+  fun resume()
 }
 
 /**
@@ -41,7 +45,10 @@ internal class ValhallaActor(
   private val valhallaKotlin = ValhallaKotlin()
   private val lock = Any()
 
-  /** Zero once closed. Guarded by [lock]. */
+  /** Held while [handle] is freed, and by [cancel], which can't wait for [lock]. */
+  private val handleLock = Any()
+
+  /** Zero once closed. Written under both [lock] and [handleLock]. */
   private var handle: Long = valhallaKotlin.createActor(configPath, httpClient)
 
   init {
@@ -87,15 +94,34 @@ internal class ValhallaActor(
   override fun matrix(request: String): String = perform(request, valhallaKotlin::matrix)
 
   /**
+   * Ask the action running now to stop, before its next tile fetch or during its path search.
+   * Sticky until [resume].
+   *
+   * Takes [handleLock], not [lock]: every other method holds [lock] for its whole native call, so
+   * taking it here would mean waiting for the very thing being cancelled. [close] frees the handle
+   * under [handleLock], so a cancel racing it never writes to a freed handle.
+   */
+  override fun cancel() {
+    synchronized(handleLock) { if (handle != 0L) valhallaKotlin.setCancelled(handle, true) }
+  }
+
+  /** Clear a previous [cancel] so further actions can run. Takes [handleLock], like [cancel]. */
+  override fun resume() {
+    synchronized(handleLock) { if (handle != 0L) valhallaKotlin.setCancelled(handle, false) }
+  }
+
+  /**
    * Release the native actor. Safe to call more than once; later calls do nothing.
    *
    * Any action attempted after this throws [IllegalStateException].
    */
   override fun close() {
     synchronized(lock) {
-      if (handle != 0L) {
-        valhallaKotlin.deleteActor(handle)
-        handle = 0L
+      synchronized(handleLock) {
+        if (handle != 0L) {
+          valhallaKotlin.deleteActor(handle)
+          handle = 0L
+        }
       }
     }
   }

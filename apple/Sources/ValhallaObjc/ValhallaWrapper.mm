@@ -1,3 +1,5 @@
+#include <atomic>
+
 #import "ValhallaWrapper.h"
 
 #import <include/main.h>
@@ -223,7 +225,12 @@ NSString* PerformAction(ActorAction action,
     try {
         // Create the network interface implementation for iOS
         ValhallaMobileHttpClient* httpClient = new ValhallaMobileHttpClientImpl();
-        _actor = create_valhalla_actor(path.c_str(), httpClient);
+        // Owned here, not by the actor, and freed in dealloc rather than close: `cancel`
+        // has to reach a RUNNING action without taking the monitor or reading _actor, and
+        // close() nulls _actor and frees the actor underneath it.
+        _cancelFlag = new std::atomic<bool>(false);
+        _actor = create_valhalla_actor(path.c_str(), httpClient,
+                                       static_cast<std::atomic<bool>*>(_cancelFlag));
     } catch (NSException *exception) {
         *error = [[NSError alloc] initWithDomain:exception.name code:0 userInfo:@{
             NSUnderlyingErrorKey: exception,
@@ -287,9 +294,27 @@ NSString* PerformAction(ActorAction action,
     }
 }
 
+- (void)cancel
+{
+    // NOT @synchronized, and it does not touch _actor. The whole point is to reach an action
+    // that is RUNNING, and every other method holds the monitor for its duration -- so taking
+    // it here would mean waiting for the thing being cancelled. Reading _actor without the
+    // monitor would race with close(), which nulls it and frees the actor, so the flag lives
+    // here instead and outlives the actor by construction.
+    static_cast<std::atomic<bool>*>(_cancelFlag)->store(true, std::memory_order_relaxed);
+}
+
+- (void)resume
+{
+    static_cast<std::atomic<bool>*>(_cancelFlag)->store(false, std::memory_order_relaxed);
+}
+
 - (void) dealloc
 {
     [self close];
+    // After close, so nothing can still be reading it.
+    delete static_cast<std::atomic<bool>*>(_cancelFlag);
+    _cancelFlag = nullptr;
 }
 
 @end
