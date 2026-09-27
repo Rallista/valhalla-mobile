@@ -56,8 +56,17 @@ class ValhallaHttpClientTest {
   }
 
   @Test
-  fun leavesEncodingToPlatformForWholeTile() {
-    val response = ValhallaHttpClient().get(baseUrl, 0, 0)
+  fun asksForGzipWhenAccepted() {
+    val response = ValhallaHttpClient().get(baseUrl, 0, 0, acceptGzip = true)
+
+    assertEquals("gzip", sentAcceptEncoding)
+    assertTrue(response.success)
+    assertArrayEquals(gzip(payload), response.body)
+  }
+
+  @Test
+  fun leavesEncodingToPlatformWhenGzipNotAccepted() {
+    val response = ValhallaHttpClient().get(baseUrl, 0, 0, acceptGzip = false)
 
     assertNull(sentAcceptEncoding)
     assertTrue(response.success)
@@ -66,7 +75,7 @@ class ValhallaHttpClientTest {
 
   @Test
   fun asksForIdentityOnRangeRequest() {
-    ValhallaHttpClient().get(baseUrl, 0, 4)
+    ValhallaHttpClient().get(baseUrl, 0, 4, acceptGzip = false)
 
     assertEquals("identity", sentAcceptEncoding)
   }

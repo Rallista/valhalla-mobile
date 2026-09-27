@@ -62,8 +62,10 @@ NSData* PerformSynchronously(NSURLRequest* request,
  */
 class ValhallaMobileHttpClientImpl : public ValhallaMobileHttpClient {
 public:
-    valhalla::baldr::tile_getter_t::GET_response_t 
-    get(const std::string& url, uint64_t range_offset = 0, uint64_t range_size = 0) override {
+    /// NSURLSession always decompresses, so accept_gzip is ignored; the tile getter recompresses.
+    valhalla::baldr::tile_getter_t::GET_response_t
+    get(const std::string& url, uint64_t range_offset, uint64_t range_size,
+        bool /*accept_gzip*/) override {
         valhalla::baldr::tile_getter_t::GET_response_t response;
         
         @autoreleasepool {
@@ -85,6 +87,8 @@ public:
                 NSString* rangeHeader = [NSString stringWithFormat:@"bytes=%llu-%llu", 
                                                   range_offset, range_offset + range_size - 1];
                 [request setValue:rangeHeader forHTTPHeaderField:@"Range"];
+                // Keep a slice of a tar uncompressed.
+                [request setValue:@"identity" forHTTPHeaderField:@"Accept-Encoding"];
             }
             
             NSHTTPURLResponse* httpResponse = nil;

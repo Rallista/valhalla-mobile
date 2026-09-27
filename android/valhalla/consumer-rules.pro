@@ -5,7 +5,7 @@
 # after which the method lookups in src/wrapper/main.cpp fail and every tile fetch reports a
 # failure, with no error to explain why.
 -keep,includedescriptorclasses class com.valhalla.valhalla.http.ValhallaHttpClient {
-    com.valhalla.valhalla.http.ValhallaHttpResponse get(java.lang.String, long, long);
+    com.valhalla.valhalla.http.ValhallaHttpResponse get(java.lang.String, long, long, boolean);
     com.valhalla.valhalla.http.ValhallaHttpResponse head(java.lang.String, int);
 }
 

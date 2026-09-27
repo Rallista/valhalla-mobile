@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
  *   thread with a `tile_url` config therefore trips `NetworkOnMainThreadException`, which is
  *   reported here as a failed fetch.
  */
-internal class ValhallaHttpClient(
+internal open class ValhallaHttpClient(
     private val connectTimeoutMillis: Int = DEFAULT_TIMEOUT_MILLIS,
     private val readTimeoutMillis: Int = DEFAULT_TIMEOUT_MILLIS,
 ) {
@@ -38,8 +38,14 @@ internal class ValhallaHttpClient(
    * @param url the tile URL, already filled in by valhalla.
    * @param rangeOffset first byte to request. Only used when [rangeSize] is positive.
    * @param rangeSize how many bytes to request; `0` asks for the whole resource.
+   * @param acceptGzip whether a gzip body is acceptable (whole tiles with `tile_url_gz` on).
    */
-  fun get(url: String, rangeOffset: Long, rangeSize: Long): ValhallaHttpResponse =
+  open fun get(
+      url: String,
+      rangeOffset: Long,
+      rangeSize: Long,
+      acceptGzip: Boolean
+  ): ValhallaHttpResponse =
       perform(url, method = "GET", headerMask = 0) { connection ->
         if (rangeSize > 0) {
           // Inclusive on both ends, so the last byte is offset + size - 1.
@@ -47,6 +53,9 @@ internal class ValhallaHttpClient(
               "Range", "bytes=$rangeOffset-${rangeOffset + rangeSize - 1}")
           // Keep a slice of a tar uncompressed.
           connection.setRequestProperty("Accept-Encoding", "identity")
+        } else if (acceptGzip) {
+          // Set explicitly, so HttpURLConnection leaves the body compressed.
+          connection.setRequestProperty("Accept-Encoding", "gzip")
         }
       }
 
@@ -57,7 +66,7 @@ internal class ValhallaHttpClient(
    * @param headerMask which headers the caller wants. Only [HEADER_LAST_MODIFIED] is understood;
    *   anything else is ignored, and the corresponding field is left at zero.
    */
-  fun head(url: String, headerMask: Int): ValhallaHttpResponse =
+  open fun head(url: String, headerMask: Int): ValhallaHttpResponse =
       perform(url, method = "HEAD", headerMask = headerMask) {}
 
   private fun perform(
