@@ -35,7 +35,8 @@ android {
     }
 
     sourceSets.getByName("androidTest") {
-        // The elevation tile is shared with the Apple tests rather than checked in twice.
+        // The tiles and the elevation tile are shared with the Apple tests rather than checked in twice.
+        assets.srcDir("../../apple/Tests/ValhallaTests/TestData")
         resources.srcDir("../../apple/Tests/ValhallaTests/TestData/elevation")
     }
 }
