@@ -1,4 +1,9 @@
 {
+  "logging": {
+    "type": "std_out",
+    "color": true,
+    "file_name": "path_to_some_file.log"
+  },
   "mjolnir": {
     "max_cache_size": 1000000000,
     "id_table_size": 1300000000,
@@ -28,22 +33,18 @@
     "global_synchronized_cache": false,
     "max_concurrent_reader_users": 1,
     "reclassify_links": true,
+    "pedestrian_areas": false,
     "data_processing": {
       "infer_internal_intersections": true,
       "infer_turn_channels": true,
       "apply_country_overrides": true,
-      "grid_divisions_within_tile": 32,
       "use_admin_db": true,
       "use_direction_on_ways": false,
       "allow_alt_name": false,
       "use_urban_tag": false,
       "use_rest_area": false,
-      "scan_tar": false
-    },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
+      "scan_tar": false,
+      "build_bounding_circles": true
     }
   },
   "additional_data": {
@@ -84,25 +85,14 @@
         13,
         14
       ],
-      "mvt_cache_min_zoom": 11
-    },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 100.0
+      "mvt_cache_min_zoom": 11,
+      "mvt_max_age": "1800"
     },
     "service": {
       "proxy": "ipc:///tmp/loki"
     }
   },
   "thor": {
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log",
-      "long_request": 110.0
-    },
     "source_to_target_algorithm": "select_optimal",
     "service": {
       "proxy": "ipc:///tmp/thor"
@@ -119,6 +109,7 @@
       "max_reserved_locations": 25,
       "max_iterations": 2800,
       "min_iterations": 100,
+      "dijkstra_distance": 0,
       "hierarchy_limits": {
         "max_up_transitions": {
           "1": 400,
@@ -162,11 +153,6 @@
     }
   },
   "odin": {
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
-    },
     "service": {
       "proxy": "ipc:///tmp/odin"
     },
@@ -217,11 +203,6 @@
     "multimodal": {
       "turn_penalty_factor": 70
     },
-    "logging": {
-      "type": "std_out",
-      "color": true,
-      "file_name": "path_to_some_file.log"
-    },
     "service": {
       "proxy": "ipc:///tmp/meili"
     },
@@ -264,8 +245,8 @@
       "max_locations": 50,
       "max_matrix_distance": 200000.0,
       "max_matrix_location_pairs": 2500,
-      "min_transit_walking_distance": 1,
-      "max_transit_walking_distance": 10000
+      "min_multimodal_walking_distance": 1,
+      "max_multimodal_walking_distance": 10000
     },
     "motor_scooter": {
       "max_distance": 500000.0,
@@ -331,6 +312,11 @@
       "max_matrix_distance": 200000.0,
       "max_matrix_location_pairs": 2500
     },
+    "auto_pedestrian": {
+      "max_distance": 5000000.0,
+      "max_matrix_distance": 400000.0,
+      "max_matrix_location_pairs": 2500
+    },
     "centroid": {
       "max_distance": 200000.0,
       "max_locations": 5
@@ -342,6 +328,7 @@
     "max_timedep_distance_matrix": 0,
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
+    "max_exclude_polygons_vertices": 100,
     "min_linear_cost_factor": 1,
     "max_linear_cost_edges": 50000,
     "max_distance_disable_hierarchy_culling": 0,
@@ -385,6 +372,7 @@
   },
   "statsd": {
     "port": 8125,
-    "prefix": "valhalla"
+    "prefix": "valhalla",
+    "batch_size": 500
   }
 }
