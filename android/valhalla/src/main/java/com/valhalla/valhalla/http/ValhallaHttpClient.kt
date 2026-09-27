@@ -45,6 +45,8 @@ internal class ValhallaHttpClient(
           // Inclusive on both ends, so the last byte is offset + size - 1.
           connection.setRequestProperty(
               "Range", "bytes=$rangeOffset-${rangeOffset + rangeSize - 1}")
+          // Keep a slice of a tar uncompressed.
+          connection.setRequestProperty("Accept-Encoding", "identity")
         }
       }
 
@@ -71,10 +73,6 @@ internal class ValhallaHttpClient(
             requestMethod = method
             connectTimeout = connectTimeoutMillis
             readTimeout = readTimeoutMillis
-            // HttpURLConnection otherwise offers gzip on its own and silently inflates what comes
-            // back. Valhalla decides for itself whether tiles are gzipped, from `tile_url_gz`, and
-            // inflates them itself — so it has to receive exactly the bytes on the wire.
-            setRequestProperty("Accept-Encoding", "identity")
             configure(this)
           }
 
