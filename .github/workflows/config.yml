@@ -27,8 +27,8 @@ jobs:
           # valhalla_build_config uses PEP 604 unions at runtime, which need 3.10+.
           python-version: "3.12"
 
-      # Catches a valhalla bump that moved the config without the checked-in copies
-      # following it. Both platforms read the same bytes, so a stale copy is a stale
+      # Catches a valhalla bump that moved the config without the checked-in config
+      # following it. Both platforms read the same file, so a stale config is a stale
       # default on iOS and Android at once.
       - name: Check the bundled default config matches the pinned valhalla
         run: scripts/generate_default_config.sh --check

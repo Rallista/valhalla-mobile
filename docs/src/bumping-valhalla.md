@@ -31,10 +31,9 @@ changes it. Regenerate it from the submodule you just moved:
 scripts/generate_default_config.sh
 ```
 
-That writes the same bytes to both platforms:
-
-- `apple/Sources/Valhalla/SupportData/default.json`, bundled as an SPM resource.
-- `android/valhalla/src/main/resources/com/valhalla/valhalla/default.json`, a java resource.
+That writes `apple/Sources/Valhalla/SupportData/default.json`, which iOS bundles as an SPM
+resource. SPM only bundles files inside its target, so Android's java resource,
+`android/valhalla/src/main/resources/com/valhalla/valhalla/default.json`, is a symlink to it.
 
 Review the diff. A changed value is usually fine; an added or removed key is not, because the
 generated config models have to cover every key valhalla writes. A key they do not cover is
@@ -47,8 +46,8 @@ When a key is missing, update `openapi.yaml` in
 [valhalla-openapi-models-swift](https://github.com/Rallista/valhalla-openapi-models-swift),
 release both, and bump the versions here.
 
-`scripts/generate_default_config.sh --check` fails when the checked-in copies are out of date, and
-is what CI runs.
+`scripts/generate_default_config.sh --check` fails when the checked-in config is out of date or the
+Android symlink is gone, and is what CI runs.
 
 Do not hand-edit `default.json`. The placeholder paths it carries (`mjolnir.tile_dir`,
 `mjolnir.admin`, `mjolnir.timezone`) point at server locations that exist on no device, and every

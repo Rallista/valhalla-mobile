@@ -8,22 +8,23 @@
 # that adds, removes, or re-defaults a config key is otherwise invisible until
 # something misbehaves at runtime.
 #
-# Both platforms read the same bytes: iOS bundles it as an SPM resource, Android
-# as a java resource on the classpath. Writing both from one generator is what
-# keeps the two defaults from drifting apart.
+# Both platforms read the same file. iOS bundles it as an SPM resource, and
+# Android's java resource is a symlink to it, since SPM only bundles files inside
+# its target.
 #
 # Usage:
-#   scripts/generate_default_config.sh           # rewrite the checked-in copies
-#   scripts/generate_default_config.sh --check   # fail if they are out of date (CI)
+#   scripts/generate_default_config.sh           # rewrite the checked-in config
+#   scripts/generate_default_config.sh --check   # fail if it is out of date (CI)
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERATOR="${REPO_ROOT}/src/valhalla/scripts/valhalla_build_config"
 
-# Both destinations are byte-for-byte identical. See the note above.
 APPLE_CONFIG="${REPO_ROOT}/apple/Sources/Valhalla/SupportData/default.json"
+# A symlink to APPLE_CONFIG. See the note above.
 ANDROID_CONFIG="${REPO_ROOT}/android/valhalla/src/main/resources/com/valhalla/valhalla/default.json"
+ANDROID_LINK="../../../../../../../../apple/Sources/Valhalla/SupportData/default.json"
 
 CHECK_ONLY=false
 if [[ "${1:-}" == "--check" ]]; then
@@ -85,16 +86,18 @@ VALHALLA_VERSION="$(cd "${REPO_ROOT}/src/valhalla" && git describe --tags --alwa
 
 if [[ "${CHECK_ONLY}" == true ]]; then
     status=0
-    for destination in "${APPLE_CONFIG}" "${ANDROID_CONFIG}"; do
-        if [[ ! -f "${destination}" ]]; then
-            echo "error: ${destination#"${REPO_ROOT}/"} is missing." >&2
-            status=1
-        elif ! diff -u "${destination}" "${FORMATTED}" > /dev/null; then
-            echo "error: ${destination#"${REPO_ROOT}/"} is out of date for valhalla ${VALHALLA_VERSION}." >&2
-            diff -u "${destination}" "${FORMATTED}" >&2 || true
-            status=1
-        fi
-    done
+    if [[ ! -f "${APPLE_CONFIG}" ]]; then
+        echo "error: ${APPLE_CONFIG#"${REPO_ROOT}/"} is missing." >&2
+        status=1
+    elif ! diff -u "${APPLE_CONFIG}" "${FORMATTED}" > /dev/null; then
+        echo "error: ${APPLE_CONFIG#"${REPO_ROOT}/"} is out of date for valhalla ${VALHALLA_VERSION}." >&2
+        diff -u "${APPLE_CONFIG}" "${FORMATTED}" >&2 || true
+        status=1
+    fi
+    if [[ "$(readlink "${ANDROID_CONFIG}" || true)" != "${ANDROID_LINK}" ]]; then
+        echo "error: ${ANDROID_CONFIG#"${REPO_ROOT}/"} is not a symlink to ${ANDROID_LINK}." >&2
+        status=1
+    fi
     if [[ ${status} -eq 0 ]]; then
         echo "default config is up to date for valhalla ${VALHALLA_VERSION}."
     else
@@ -103,10 +106,9 @@ if [[ "${CHECK_ONLY}" == true ]]; then
     exit ${status}
 fi
 
-for destination in "${APPLE_CONFIG}" "${ANDROID_CONFIG}"; do
-    mkdir -p "$(dirname "${destination}")"
-    cp "${FORMATTED}" "${destination}"
-    echo "wrote ${destination#"${REPO_ROOT}/"}"
-done
+cp "${FORMATTED}" "${APPLE_CONFIG}"
+echo "wrote ${APPLE_CONFIG#"${REPO_ROOT}/"}"
+mkdir -p "$(dirname "${ANDROID_CONFIG}")"
+ln -sfn "${ANDROID_LINK}" "${ANDROID_CONFIG}"
 
 echo "default config regenerated from valhalla ${VALHALLA_VERSION}."
