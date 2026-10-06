@@ -260,14 +260,16 @@ class ValhallaActorTest {
   }
 
   @Test
-  fun testMatrixNoSuitableEdges() {
+  fun testMatrixWithNoRoadsNearby() {
     val valhalla = actor(configPath)
 
     val request =
         "{\"sources\":[{\"lat\":45.843812,\"lon\":-123.768205}],\"targets\":[{\"lat\":45.869701,\"lon\":-123.766121}],\"costing\":\"auto\"}"
     val response = valhalla.matrix(request)
 
-    assertEquals(response, "{\"code\":171,\"message\":\"No suitable edges near location\"}")
+    assertEquals(
+        response,
+        "{\"code\":170,\"message\":\"Locations are in unconnected regions. Go check/edit the map at osm.org\"}")
   }
 
   /** A character outside the BMP has to survive both crossings of the bridge. */

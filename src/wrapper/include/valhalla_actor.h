@@ -12,12 +12,13 @@ public:
     /**
      * Makes a synchronous GET request to fetch tile data
      * @param url the URL to fetch
-     * @param range_offset optional offset for range requests
-     * @param range_size optional size for range requests
+     * @param range_offset offset for range requests
+     * @param range_size size for range requests, or 0 for the whole resource
+     * @param accept_gzip whether a gzip body is acceptable (whole tiles with tile_url_gz on)
      * @return GET_response_t with the response data and status
      */
-    virtual valhalla::baldr::tile_getter_t::GET_response_t 
-    get(const std::string& url, uint64_t range_offset = 0, uint64_t range_size = 0) = 0;
+    virtual valhalla::baldr::tile_getter_t::GET_response_t
+    get(const std::string& url, uint64_t range_offset, uint64_t range_size, bool accept_gzip) = 0;
     
     /**
      * Makes a synchronous HEAD request to fetch response headers
