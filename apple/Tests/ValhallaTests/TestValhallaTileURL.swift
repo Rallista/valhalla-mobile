@@ -10,6 +10,23 @@ import ValhallaConfigModels
 /// Bodies are plain, as NSURLSession hands them over after decompressing.
 final class FixtureTileProtocol: URLProtocol {
 
+    /// Runs before each request is answered, on the URL loading system's thread.
+    static var beforeAnswering: (() -> Void)? {
+        get {
+            hookLock.lock()
+            defer { hookLock.unlock() }
+            return hook
+        }
+        set {
+            hookLock.lock()
+            defer { hookLock.unlock() }
+            hook = newValue
+        }
+    }
+
+    private static let hookLock = NSLock()
+    private static var hook: (() -> Void)?
+
     override class func canInit(with request: URLRequest) -> Bool {
         request.url?.host == "tiles.invalid"
     }
@@ -19,6 +36,7 @@ final class FixtureTileProtocol: URLProtocol {
     }
 
     override func startLoading() {
+        Self.beforeAnswering?()
         guard let url = request.url else { return }
         let tiles = Bundle.module.resourceURL!.appendingPathComponent("TestData/valhalla_tiles")
         let tile = try? Data(contentsOf: tiles.appendingPathComponent(url.path))

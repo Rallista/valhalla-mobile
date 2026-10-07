@@ -37,12 +37,15 @@ private fun gunzip(bytes: ByteArray): ByteArray =
     GZIPInputStream(bytes.inputStream()).use { it.readBytes() }
 
 /** Serves tiles from the test assets without a network, as whatever body a test asks for. */
-private class FakeTileClient(private val assets: AssetManager) : ValhallaHttpClient() {
+internal class FakeTileClient(private val assets: AssetManager) : ValhallaHttpClient() {
 
   data class Request(val path: String, val acceptGzip: Boolean)
 
   /** Turns a stored tile into the body sent for it. */
   @Volatile var body: (ByteArray) -> ByteArray = { it }
+
+  /** Sees each request first, and answers it in place of the assets when it returns non-null. */
+  @Volatile var answer: (path: String) -> ValhallaHttpResponse? = { null }
 
   val requests = CopyOnWriteArrayList<Request>()
 
@@ -56,6 +59,9 @@ private class FakeTileClient(private val assets: AssetManager) : ValhallaHttpCli
   ): ValhallaHttpResponse {
     val path = url.substringAfter(BASE_URL)
     requests += Request(path, acceptGzip)
+    answer(path)?.let {
+      return it
+    }
     val bytes =
         try {
           tile(path)

@@ -421,7 +421,8 @@ private:
  * tiles finished downloading recover on a later call.
  *
  * Kotlin serialises every call on one instance, so no lock is needed here. See
- * ValhallaActor.kt.
+ * ValhallaActor.kt. The exception is setCancelled, which runs while an action does and
+ * touches only the atomic `cancelled`.
  */
 struct ActorHandle {
     ActorHandle(std::string config_path, std::unique_ptr<JniHttpClientFactory> http_clients)
@@ -435,6 +436,11 @@ struct ActorHandle {
     }
 
     std::string config_path;
+
+    /// Owned here, not by the actor, so `cancel` can reach a RUNNING action without touching
+    /// the actor pointer -- which the lazy rebuild in run_jni_action replaces underneath it.
+    /// Declared before `actor` so it outlives every actor built against it.
+    std::atomic<bool> cancelled{false};
 
     // Declared before `actor` so it is destroyed after it: the actor's client borrows the
     // factory's global reference, and must not outlive it.
@@ -474,7 +480,8 @@ jbyteArray run_jni_action(JNIEnv *env,
             // Normally already built by createActor; this is the retry path.
             if (!actor_handle->actor) {
                 actor_handle->actor = std::make_unique<ValhallaActor>(
-                    actor_handle->config_path, actor_handle->new_http_client());
+                    actor_handle->config_path, actor_handle->new_http_client(),
+                    &actor_handle->cancelled);
             }
             return ((*actor_handle->actor).*action)(request);
         });
@@ -524,7 +531,8 @@ Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
     }
     try {
         handle->actor = std::make_unique<ValhallaActor>(handle->config_path,
-                                                       handle->new_http_client());
+                                                       handle->new_http_client(),
+                                                       &handle->cancelled);
     } catch (const std::exception &err) {
         printf("[ValhallaActor] createActor deferred, will retry on first use: %s\n", err.what());
     } catch (...) {
@@ -532,6 +540,22 @@ Java_com_valhalla_valhalla_ValhallaKotlin_createActor(JNIEnv *env,
     }
 
     return reinterpret_cast<jlong>(handle.release());
+}
+
+extern "C"
+JNIEXPORT void
+
+JNICALL
+Java_com_valhalla_valhalla_ValhallaKotlin_setCancelled(JNIEnv *env,
+                                                      jobject thiz,
+                                                      jlong handle,
+                                                      jboolean cancelled) {
+    // Sets the flag on the HANDLE, never the actor: this has to reach an action that is
+    // running, and run_jni_action may be replacing the actor at the same moment.
+    auto* actor_handle = reinterpret_cast<ActorHandle*>(handle);
+    if (actor_handle != nullptr) {
+        actor_handle->cancelled.store(cancelled == JNI_TRUE, std::memory_order_relaxed);
+    }
 }
 
 extern "C"
@@ -602,8 +626,10 @@ Java_com_valhalla_valhalla_ValhallaKotlin_matrix(JNIEnv *env,
 }
 
 #elif __APPLE__
-void* create_valhalla_actor(const char *config_path, ValhallaMobileHttpClient* http_client) {
-    return new ValhallaActor(config_path, http_client);
+void* create_valhalla_actor(const char *config_path,
+                            ValhallaMobileHttpClient* http_client,
+                            std::atomic<bool>* cancel_flag) {
+    return new ValhallaActor(config_path, http_client, cancel_flag);
 }
 
 void delete_valhalla_actor(void* actor) {

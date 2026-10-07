@@ -336,6 +336,15 @@ internal constructor(
   }
 
   /**
+   * Ask the action running now to stop, before its next tile fetch or during its path search.
+   * Sticky until [resume].
+   */
+  fun cancel() = valhallaActor.cancel()
+
+  /** Clear a previous [cancel] so further actions can run. */
+  fun resume() = valhallaActor.resume()
+
+  /**
    * Release the native actor held by this instance. Safe to call more than once.
    *
    * Any request attempted after this throws [IllegalStateException].
