@@ -44,6 +44,9 @@ private class FakeTileClient(private val assets: AssetManager) : ValhallaHttpCli
   /** Turns a stored tile into the body sent for it. */
   @Volatile var body: (ByteArray) -> ByteArray = { it }
 
+  /** Answers a request in place of the assets when it returns non-null. */
+  @Volatile var answer: (path: String) -> ValhallaHttpResponse? = { null }
+
   val requests = CopyOnWriteArrayList<Request>()
 
   fun tile(path: String) = assets.open("valhalla_tiles/$path").use { it.readBytes() }
@@ -56,6 +59,9 @@ private class FakeTileClient(private val assets: AssetManager) : ValhallaHttpCli
   ): ValhallaHttpResponse {
     val path = url.substringAfter(BASE_URL)
     requests += Request(path, acceptGzip)
+    answer(path)?.let {
+      return it
+    }
     val bytes =
         try {
           tile(path)
@@ -71,7 +77,7 @@ private class FakeTileClient(private val assets: AssetManager) : ValhallaHttpCli
   }
 }
 
-/** How the shared C++ tile getter stores what a client hands it. */
+/** How the shared C++ tile getter handles what a client hands it. */
 @RunWith(AndroidJUnit4::class)
 class ValhallaTileUrlTest {
 
@@ -91,14 +97,18 @@ class ValhallaTileUrlTest {
     if (::tilesDir.isInitialized) tilesDir.deleteRecursively()
   }
 
-  /** Routes with a new actor, as a fresh app launch does, and returns the trip status. */
-  private fun route(gzipped: Boolean): String? {
+  private fun actor(gzipped: Boolean = false): ValhallaActor {
     val config =
         ValhallaConfigFactory.usingTileUrl(
             "${FakeTileClient.BASE_URL}{tilePath}", tilesDir.absolutePath, gzipped)
     val file = ValhallaFile(context, "tile-url.json")
     ValhallaConfigManager(context, file).writeConfig(config)
-    val actor = ValhallaActor(file.absolutePath(), client)
+    return ValhallaActor(file.absolutePath(), client)
+  }
+
+  /** Routes with a new actor, as a fresh app launch does, and returns the trip status. */
+  private fun route(gzipped: Boolean): String? {
+    val actor = actor(gzipped)
     try {
       return JSONObject(actor.route(ANDORRA_ROUTE))
           .optJSONObject("trip")
@@ -106,6 +116,13 @@ class ValhallaTileUrlTest {
     } finally {
       actor.close()
     }
+  }
+
+  /** Routes, and returns the trip's status message or the error's message. */
+  private fun ValhallaActor.routeStatus(): String {
+    val response = JSONObject(route(ANDORRA_ROUTE))
+    return response.optJSONObject("trip")?.getString("status_message")
+        ?: response.getString("message")
   }
 
   private fun storedTiles(): Map<String, ByteArray> =
@@ -185,8 +202,20 @@ class ValhallaTileUrlTest {
     }
   }
 
+  @Test
+  fun testFailedFetchFailsTheActionAndTheNextRetriesIt() {
+    client.answer = { ValhallaHttpResponse.failure(503) }
+    actor().use { actor ->
+      assertEquals(FETCH_FAILED, actor.routeStatus())
+
+      client.answer = { null }
+      assertEquals(FOUND, actor.routeStatus())
+    }
+  }
+
   private companion object {
     const val FOUND = "Found route between points"
+    const val FETCH_FAILED = "valhalla-mobile: tile fetch failed"
     const val ANDORRA_ROUTE =
         "{\"locations\":[{\"lat\":42.5063,\"lon\":1.5218},{\"lat\":42.5086,\"lon\":1.5394}],\"costing\":\"auto\",\"units\":\"miles\"}"
   }

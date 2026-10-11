@@ -122,8 +122,11 @@ public:
    *                      ownership is transferred to the wrapper. May be null,
    *                      in which case requests report FAILURE.
    * @param is_gzipped  whether valhalla stores tiles gzip-compressed
+   * @param failures  counts downloads that fail other than with a 404 or 410
    */
-  TileGetterWrapper(std::unique_ptr<ValhallaMobileHttpClient> http_client, bool is_gzipped): http_client(std::move(http_client)), is_gzipped(is_gzipped) {
+  TileGetterWrapper(std::unique_ptr<ValhallaMobileHttpClient> http_client, bool is_gzipped,
+                    uint32_t* failures)
+      : is_gzipped(is_gzipped), failures_(failures), http_client(std::move(http_client)) {
   }
 
   GET_response_t get(const std::string& url,
@@ -143,6 +146,9 @@ public:
                result.bytes_.size(), static_cast<unsigned long long>(range_size));
         result.status_ = tile_getter_t::status_code_t::FAILURE;
       }
+      if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
+        count_failure(result);
+      }
       return result;
     }
     result = http_client->get(url, 0, 0, is_gzipped);
@@ -151,6 +157,9 @@ public:
       if (!is_tile) {
         result.status_ = tile_getter_t::status_code_t::FAILURE;
       }
+    }
+    if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
+      count_failure(result);
     }
     return result;
   }
@@ -170,6 +179,13 @@ public:
   }
 
 private:
+  // Anything but a 404 or 410 may be the connection, so the next action tries it again.
+  void count_failure(const GET_response_t& result) const {
+    if (result.http_code_ != 404 && result.http_code_ != 410) {
+      ++*failures_;
+    }
+  }
+
   // Valhalla caches whatever it's handed, so anything but one whole tile is rejected here.
   // A tile is then gzipped or inflated to match how valhalla stores it.
   bool validate_and_encode(const std::string& url, std::vector<char>& bytes) const {
@@ -197,7 +213,41 @@ private:
   }
 
   bool is_gzipped;
+  uint32_t* failures_;
   std::unique_ptr<ValhallaMobileHttpClient> http_client;
+};
+
+// GraphReader remembers every tile it failed to fetch until it's rebuilt. This one forgets
+// those that failed other than with a 404 or 410 when asked, so the next action retries them.
+class RetryingGraphReader : public valhalla::baldr::GraphReader {
+public:
+  RetryingGraphReader(const boost::property_tree::ptree& config,
+                      std::unique_ptr<valhalla::baldr::tile_getter_t>&& tile_getter,
+                      const uint32_t* failures)
+      : GraphReader(config, std::move(tile_getter)), failures_(failures) {
+  }
+
+  using GraphReader::GetGraphTile;
+
+  valhalla::baldr::graph_tile_ptr GetGraphTile(const valhalla::baldr::GraphId& graphid) override {
+    const auto before = *failures_;
+    auto tile = GraphReader::GetGraphTile(graphid);
+    if (!tile && *failures_ != before) {
+      retry_.push_back(graphid.tile_base());
+    }
+    return tile;
+  }
+
+  void forget_failures() {
+    for (const auto& id : retry_) {
+      _404s.erase(id);
+    }
+    retry_.clear();
+  }
+
+private:
+  const uint32_t* failures_;
+  std::vector<valhalla::baldr::GraphId> retry_;
 };
 
 
@@ -333,31 +383,58 @@ ValhallaActor::ValhallaActor(const std::string& config_path, ValhallaMobileHttpC
       if (wants_gzip && !gzipped) {
         printf("[ValhallaActor] tile_url_gz is ignored for a tar tile_url or without a tile_dir\n");
       }
-      tile_getter = std::make_unique<TileGetterWrapper>(std::move(http_client_owned), gzipped);
+      tile_getter = std::make_unique<TileGetterWrapper>(std::move(http_client_owned), gzipped,
+                                                        &fetch_failures);
     }
-    graph_reader = std::make_unique<valhalla::baldr::GraphReader>(
-      mjolnir_config, std::move(tile_getter)
+    graph_reader = std::make_unique<RetryingGraphReader>(
+      mjolnir_config, std::move(tile_getter), &fetch_failures
     );
     // Setup the actor
     actor = std::make_unique<valhalla::tyr::actor_t>(config, *graph_reader, true);
 }
 
+ValhallaActor::~ValhallaActor() = default;
+
+std::string ValhallaActor::run(const std::function<std::string()>& action) {
+    graph_reader->forget_failures();
+    const auto failures = fetch_failures;
+    try {
+        return action();
+    } catch (...) {
+        // Loki answers for a tile it could not fetch as for a location with no roads (171).
+        if (fetch_failures != failures) {
+            throw std::runtime_error(kFetchFailedMessage);
+        }
+        throw;
+    }
+}
+
 std::string ValhallaActor::route(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->route(request); });
+    return run([&]() {
+        return run_on_deep_stack([&]() { return actor->route(request); });
+    });
 }
 
 std::string ValhallaActor::trace_route(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->trace_route(request); });
+    return run([&]() {
+        return run_on_deep_stack([&]() { return actor->trace_route(request); });
+    });
 }
 
 std::string ValhallaActor::trace_attributes(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->trace_attributes(request); });
+    return run([&]() {
+        return run_on_deep_stack([&]() { return actor->trace_attributes(request); });
+    });
 }
 
 std::string ValhallaActor::height(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->height(request); });
+    return run([&]() {
+        return run_on_deep_stack([&]() { return actor->height(request); });
+    });
 }
 
 std::string ValhallaActor::matrix(const std::string& request) {
-    return run_on_deep_stack([&]() { return actor->matrix(request); });
+    return run([&]() {
+        return run_on_deep_stack([&]() { return actor->matrix(request); });
+    });
 }

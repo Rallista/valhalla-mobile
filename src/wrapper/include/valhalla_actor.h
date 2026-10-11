@@ -30,6 +30,8 @@ public:
     head(const std::string& url, valhalla::baldr::tile_getter_t::header_mask_t header_mask) = 0;
 };
 
+class RetryingGraphReader;
+
 /**
  * Owns one Valhalla actor and runs actions against it.
  *
@@ -44,10 +46,21 @@ public:
  */
 class ValhallaActor {
 private:
+    /// Tile downloads that failed other than with a 404 or 410. Declared before the reader,
+    /// whose tile getter counts into it.
+    uint32_t fetch_failures = 0;
     std::unique_ptr<valhalla::tyr::actor_t> actor;
-    std::unique_ptr<valhalla::baldr::GraphReader> graph_reader;
+    std::unique_ptr<RetryingGraphReader> graph_reader;
+
+    /// Runs one action, after letting it retry tiles that failed to download in earlier ones.
+    std::string run(const std::function<std::string()>& action);
 public:
     ValhallaActor(const std::string& config_path, ValhallaMobileHttpClient* http_client = nullptr);
+    ~ValhallaActor();
+
+    /// The message of an action that failed after a tile download failed other than with a
+    /// 404 or 410.
+    static constexpr const char* kFetchFailedMessage = "valhalla-mobile: tile fetch failed";
 
     /**
      * Compute a route between the given locations. This is Valhalla's `route`
