@@ -61,6 +61,7 @@ fi
 platform=""
 arch=""
 clean=false
+clean_all=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
