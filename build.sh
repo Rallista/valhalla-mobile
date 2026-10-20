@@ -61,6 +61,7 @@ fi
 platform=""
 arch=""
 clean=false
+clean_all=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -87,20 +88,6 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
-
-# if the first argument is clean, then clean the build directory
-if [ "$2" == "clean" ]; then
-    if [ "$1" == "ios" ]; then
-        echo "Cleaning the iOS build directory..."
-        rm -rf build/apple
-    elif [ "$1" == "android" ]; then
-        echo "Cleaning the Android build directory..."
-        rm -rf build/android
-    else
-        echo "Cleaning the build directory..."
-        rm -rf build
-    fi
-fi
 
 # Handle cleaning
 if $clean_all; then
