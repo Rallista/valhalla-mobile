@@ -41,6 +41,10 @@ dropped in silence — `JSONDecoder` and Moshi both skip what they do not recogn
 that reaches the engine quietly loses that setting. `ValhallaConfigFactoryTest` on Android and
 `TestDefaultConfigCoverage` in the models repos are what catch it; run them after regenerating.
 
+The mobile coverage test permits `service_limits.tile.allow_verbose: false`.
+The wrapper does not expose `/tile`, and omitting this setting preserves Valhalla's own default.
+Any other unmodelled key, added `/tile` field, or changed default still fails coverage.
+
 When a key is missing, update `openapi.yaml` in
 [valhalla-openapi-models-kotlin](https://github.com/Rallista/valhalla-openapi-models-kotlin) and
 [valhalla-openapi-models-swift](https://github.com/Rallista/valhalla-openapi-models-swift),
