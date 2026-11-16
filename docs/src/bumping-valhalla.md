@@ -21,6 +21,18 @@ At this point valhalla's src folder has been updated and prepared.
 Now it's time to test if the existing `src/CMakeLists.txt` still builds by running
 an iOS and Android build.
 
+## Update vcpkg
+
+Move vcpkg to its [newest release](https://github.com/microsoft/vcpkg/releases) in the same change.
+The tag and the baseline move together:
+
+- The tag in each `git -C vcpkg checkout <tag>` line under `.github/workflows/`.
+  It supplies vcpkg's tool and scripts, which must support the runner image's CMake.
+- `builtin-baseline` in `src/vcpkg.json`, set to that tag's commit
+  (`git -C vcpkg rev-parse <tag>^{commit}`). It picks the dependency versions.
+
+Check the new versions against what valhalla's own CI builds with, before relying on them.
+
 ## Regenerate the default config
 
 The config both platforms start from is not hand-written. It is the output of valhalla's own

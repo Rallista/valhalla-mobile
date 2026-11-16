@@ -253,6 +253,10 @@ git submodule update --init --recursive
 # 6. Update version references
 #    - README.md version badge
 #    - version.txt (if present)
+
+# 7. Move vcpkg to its newest release tag (see "Update vcpkg" in the doc)
+#    - the tag in every workflow's `git -C vcpkg checkout`
+#    - builtin-baseline in src/vcpkg.json
 ```
 
 **Why step 4 matters**: `git submodule add` records whatever commit the remote's
