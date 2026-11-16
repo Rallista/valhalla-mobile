@@ -17,12 +17,12 @@ jobs:
       # Only the submodule's scripts directory is used, so this does not need the
       # recursive checkout the build jobs do.
       - name: Checkout Valhalla
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           # valhalla_build_config uses PEP 604 unions at runtime, which need 3.10+.
           python-version: "3.12"

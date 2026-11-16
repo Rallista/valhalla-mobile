@@ -168,7 +168,8 @@ Custom triplets live in `triplets/`. These configure VCPKG for cross-compilation
 
 ### C++ dependencies (via VCPKG)
 
-- Protobuf (lite), Boost, RapidJSON, LZ4, Abseil, robin-hood-hashing, unordered-dense.
+- Protobuf (lite), Boost, RapidJSON, LZ4, and Abseil.
+- unordered_dense is not one of them: valhalla builds with its own copy in `third_party`.
 
 ## Testing
 
@@ -252,6 +253,10 @@ git submodule update --init --recursive
 # 6. Update version references
 #    - README.md version badge
 #    - version.txt (if present)
+
+# 7. Move vcpkg to its newest release tag (see "Update vcpkg" in the doc)
+#    - the tag in every workflow's `git -C vcpkg checkout`
+#    - builtin-baseline in src/vcpkg.json
 ```
 
 **Why step 4 matters**: `git submodule add` records whatever commit the remote's

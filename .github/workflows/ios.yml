@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout Valhalla
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: "recursive"
 
@@ -28,7 +28,7 @@ jobs:
 
       - name: Setup VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2025.10.17
+          git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout 2026.10.16
           ./vcpkg/bootstrap-vcpkg.sh
           export VCPKG_ROOT=`pwd`/vcpkg
 
@@ -36,7 +36,7 @@ jobs:
         run: ./build.sh --ios ${{ matrix.arch }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.arch }}
           path: |
@@ -47,14 +47,14 @@ jobs:
     runs-on: macos-15
     steps:
       - name: Checkout Valhalla
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: "16.4.0"
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: build/apple
 
@@ -70,7 +70,7 @@ jobs:
           ./scripts/create_xcframework.sh
 
       - name: Upload XCFramework
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: valhalla-wrapper.xcframework
           path: build/apple/valhalla-wrapper.xcframework
@@ -88,14 +88,14 @@ jobs:
 
     steps:
       - name: Checkout Valhalla
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: "16.4.0"
 
       - name: Download xcframework artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: valhalla-wrapper.xcframework
           path: build/apple/valhalla-wrapper.xcframework
@@ -106,7 +106,7 @@ jobs:
           VALHALLA_MOBILE_DEV: "true"
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-artifacts
