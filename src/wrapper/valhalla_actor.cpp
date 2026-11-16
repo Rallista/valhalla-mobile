@@ -33,16 +33,6 @@ bool has_gzip_magic(const std::vector<char>& bytes) {
            static_cast<unsigned char>(bytes[1]) == 0x8b;
 }
 
-// Valhalla refuses a tile whose size isn't the one its header records.
-bool is_whole_tile(const std::vector<char>& bytes) {
-    valhalla::baldr::GraphTileHeader header;
-    if (bytes.size() < sizeof(header)) {
-        return false;
-    }
-    std::memcpy(&header, bytes.data(), sizeof(header));
-    return header.end_offset() == bytes.size();
-}
-
 // Grows `out` as valhalla's deflate fills it, and trims it once it finishes.
 void grow(z_stream& s, std::vector<char>& out, size_t step) {
     const size_t size = out.size();
@@ -104,6 +94,9 @@ bool gunzip(const std::vector<char>& gzip, std::vector<char>& out) {
 }
 
 bool gzip_tile(const std::vector<char>& plain, std::vector<char>& out) {
+    if (plain.size() > std::numeric_limits<uInt>::max()) {
+        return false;
+    }
     auto src = [&](z_stream& s) {
         s.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(plain.data()));
         s.avail_in = static_cast<uInt>(plain.size());
@@ -146,11 +139,9 @@ public:
       return result;
     }
     result = http_client->get(url, 0, 0, is_gzipped);
-    if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      const bool is_tile = validate_and_encode(url, result.bytes_);
-      if (!is_tile) {
-        result.status_ = tile_getter_t::status_code_t::FAILURE;
-      }
+    if (result.status_ == tile_getter_t::status_code_t::SUCCESS &&
+        !encode_tile(url, result.bytes_)) {
+      result.status_ = tile_getter_t::status_code_t::FAILURE;
     }
     return result;
   }
@@ -170,28 +161,19 @@ public:
   }
 
 private:
-  // Valhalla caches whatever it's handed, so anything but one whole tile is rejected here.
-  // A tile is then gzipped or inflated to match how valhalla stores it.
-  bool validate_and_encode(const std::string& url, std::vector<char>& bytes) const {
-    bool ok = true;
-    if (has_gzip_magic(bytes)) {
-      std::vector<char> plain;
-      ok = gunzip(bytes, plain) && is_whole_tile(plain);
-      if (ok && !is_gzipped) {
-        bytes.swap(plain);
-      }
-    } else if (!is_whole_tile(bytes)) {
-      ok = false;
-    } else if (is_gzipped) {
-      std::vector<char> gzip;
-      if (!gzip_tile(bytes, gzip)) {
-        printf("[ValhallaActor] could not compress tile %s\n", url.c_str());
-        return false;
-      }
-      bytes.swap(gzip);
+  // Valhalla validates the tile before caching it. Only convert when the HTTP body
+  // and the requested storage encoding differ, avoiding a second inflate for gzip tiles.
+  bool encode_tile(const std::string& url, std::vector<char>& bytes) const {
+    const bool body_gzipped = has_gzip_magic(bytes);
+    if (body_gzipped == is_gzipped) {
+      return true;
     }
-    if (!ok) {
-      printf("[ValhallaActor] tile %s is not one whole tile\n", url.c_str());
+    std::vector<char> encoded;
+    const bool ok = is_gzipped ? gzip_tile(bytes, encoded) : gunzip(bytes, encoded);
+    if (ok) {
+      bytes.swap(encoded);
+    } else {
+      printf("[ValhallaActor] could not convert tile encoding for %s\n", url.c_str());
     }
     return ok;
   }

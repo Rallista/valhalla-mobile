@@ -48,14 +48,14 @@ class ValhallaConfigFactoryTest {
   }
 
   /**
-   * Every key in the bundled config is one the models know.
+   * Every key is modelled except the unused `/tile` verbosity setting.
    *
    * Without `failOnUnknown` Moshi skips what it does not recognise, so a key the models have
    * drifted away from would be dropped in silence — which is exactly what three misspelled keys
    * did to all 32 hierarchy-limit settings.
    */
   @Test
-  fun defaultResourceIsFullyModelled() {
+  fun defaultResourceIsModelledForMobile() {
     val json =
         requireNotNull(
                 ValhallaConfigFactory::class
@@ -63,7 +63,14 @@ class ValhallaConfigFactoryTest {
                     .getResourceAsStream("/com/valhalla/valhalla/default.json"))
             .use { it.readBytes().decodeToString() }
 
-    val config = moshi.adapter(ValhallaConfig::class.java).failOnUnknown().fromJson(json)
+    val fields = requireNotNull(moshi.adapter(Map::class.java).fromJson(json)).toMutableMap()
+    val serviceLimits = (fields["service_limits"] as Map<*, *>).toMutableMap()
+    // Mobile exposes no /tile action, and omitting false keeps Valhalla's default.
+    // Check the whole section so changed defaults or added keys still fail coverage.
+    assertEquals(mapOf("allow_verbose" to false), serviceLimits.remove("tile"))
+    fields["service_limits"] = serviceLimits
+
+    val config = moshi.adapter(ValhallaConfig::class.java).failOnUnknown().fromJsonValue(fields)
 
     assertNotNull(config)
   }
