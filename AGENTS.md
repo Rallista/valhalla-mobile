@@ -168,7 +168,8 @@ Custom triplets live in `triplets/`. These configure VCPKG for cross-compilation
 
 ### C++ dependencies (via VCPKG)
 
-- Protobuf (lite), Boost, RapidJSON, LZ4, Abseil, robin-hood-hashing, unordered-dense.
+- Protobuf (lite), Boost, RapidJSON, LZ4, and Abseil.
+- unordered_dense is not one of them: valhalla builds with its own copy in `third_party`.
 
 ## Testing
 

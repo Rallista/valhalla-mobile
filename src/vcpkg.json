@@ -12,11 +12,9 @@
     "boost-property-tree",
     "boost-range",
     "boost-tokenizer",
-    "robin-hood-hashing",
     "rapidjson",
     "lz4",
-    "abseil",
-    "unordered-dense"
+    "abseil"
   ],
   "overrides": [
     {
