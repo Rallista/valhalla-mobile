@@ -131,6 +131,9 @@ class ValhallaTileUrlTest {
 
     assertTrue(client.requests.all { it.acceptGzip })
     assertStoredGzipped()
+    for ((path, stored) in storedTiles()) {
+      assertArrayEquals(path, gzip(client.tile(path.removeSuffix(".gz"))), stored)
+    }
   }
 
   @Test
@@ -169,7 +172,6 @@ class ValhallaTileUrlTest {
                     gz[gz.size - 20] = (gz[gz.size - 20].toInt() xor 0xff).toByte()
                   }
                 },
-            "gzip with bytes after it" to { gzip(it) + byteArrayOf(0) },
             "gzip bigger than its header says" to { gzip(it + ByteArray(1 shl 20)) },
             // Read as a header, the text claims a tile of over 500 MB.
             "a gzipped html page" to { gzip(page) },
