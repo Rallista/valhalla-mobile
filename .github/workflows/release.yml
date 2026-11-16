@@ -168,9 +168,11 @@ jobs:
           path: valhalla-jniLibs.zip
           retention-days: 1
 
+  # Waits for both platforms. This job tags, commits to main, and creates the
+  # release, so a failed build must stop the run before it starts.
   draft-release:
     runs-on: macos-15
-    needs: create-xcframework-release
+    needs: [create-xcframework-release, combine-android]
     outputs:
       version: ${{ steps.version.outputs.version }}
       release_id: ${{ steps.release.outputs.id }}
