@@ -66,11 +66,11 @@ dokka {
 dependencies {
     implementation(libs.core.ktx)
 
-    implementation(libs.moshi.kotlin)
+    api(libs.moshi.kotlin)
     implementation(libs.moshi.adapters)
 
-    implementation(libs.valhalla.models.api)
-    implementation(libs.valhalla.models.config)
+    api(libs.valhalla.models.api)
+    api(libs.valhalla.models.config)
     implementation(libs.osrm.api)
 
     testImplementation(libs.junit)
